@@ -1,0 +1,4 @@
+Model,Accuracy (%),Loss,Parameters (M),FLOPs (G),Training Time (s)
+AlexNet,76.5,0.62,57.04,1.42,320.62
+VGG16,78.2,0.5718,134.3,30.93,6556.92
+ResNet50,84.3,0.5028,23.53,8.17,2432.23
