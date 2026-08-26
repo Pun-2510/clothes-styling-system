@@ -1,0 +1,14 @@
+torch
+transformers
+datasets
+scikit-learn
+numpy
+pandas
+matplotlib
+Pillow
+requests
+ddgs
+accelerate
+sentencepiece
+rapidfuzz
+sentence-transformers

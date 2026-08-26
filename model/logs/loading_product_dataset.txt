@@ -1,0 +1,10 @@
+============================================================
+LOADING PRODUCT DATASET
+============================================================
+Dataset: nreimers/fashion-dataset
+Products: 44424
+
+Removed duplicates: 13296
+Unique products: 31121
+
+Products used for embedding: 5000
