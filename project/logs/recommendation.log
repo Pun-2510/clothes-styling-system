@@ -648,3 +648,115 @@ KeyError: 'no_metrics'
 2026-08-24 19:39:50 | INFO | request=03c684aa | CATEGORY_CANDIDATE | rank=5 | category=Sweatshirts | score=0.915095
 2026-08-24 19:39:50 | INFO | request=03c684aa | COMPARISON_COMPLETE | category=Tshirts | confidence=0.3913 | no_category=0.0166s | hard_category=0.0063s | soft_category=0.0184s | total=0.1893s
 2026-08-24 19:39:50 | INFO | request=03c684aa | UI_COMPARISON_COMPLETE | processing_time=0.3002s
+2026-08-24 20:09:40 | INFO | Initializing Fashion Recommender
+2026-08-24 20:09:40 | INFO | Device=cpu
+2026-08-24 20:09:40 | INFO | Loading CLIP model
+2026-08-24 20:09:52 | INFO | Loaded products=5,015
+2026-08-24 20:09:52 | INFO | Loaded categories=142
+2026-08-24 20:09:52 | INFO | Recommender initialized successfully
+2026-08-24 20:10:09 | INFO | request=132da228 | IMAGE_UPLOAD | filename=1626.jpg | size=10465
+2026-08-24 20:10:12 | INFO | request=44dddb2b | IMAGE_UPLOAD | filename=1626.jpg | size=10465
+2026-08-24 20:10:12 | INFO | request=44dddb2b | COMPARISON_STARTED | top_k=5
+2026-08-24 20:10:12 | INFO | request=44dddb2b | CATEGORY | predicted=Tshirts | confidence=0.3494
+2026-08-24 20:10:12 | INFO | request=44dddb2b | CATEGORY_CANDIDATE | rank=1 | category=Tshirts | score=2.910196
+2026-08-24 20:10:12 | INFO | request=44dddb2b | CATEGORY_CANDIDATE | rank=2 | category=Sports Shoes | score=1.858613
+2026-08-24 20:10:12 | INFO | request=44dddb2b | CATEGORY_CANDIDATE | rank=3 | category=Caps | score=0.783029
+2026-08-24 20:10:12 | INFO | request=44dddb2b | CATEGORY_CANDIDATE | rank=4 | category=Casual Shoes | score=0.762360
+2026-08-24 20:10:12 | INFO | request=44dddb2b | CATEGORY_CANDIDATE | rank=5 | category=Backpacks | score=0.613815
+2026-08-24 20:10:12 | INFO | request=44dddb2b | COMPARISON_COMPLETE | category=Tshirts | confidence=0.3494 | no_category=0.0168s | hard_category=0.0072s | soft_category=0.0184s | total=0.2617s
+2026-08-24 20:10:12 | INFO | request=44dddb2b | UI_COMPARISON_COMPLETE | processing_time=0.4974s
+2026-08-25 13:31:13 | INFO | Initializing Fashion Recommender
+2026-08-25 13:31:13 | INFO | Device=cpu
+2026-08-25 13:31:13 | INFO | Loading CLIP model
+2026-08-25 13:31:24 | INFO | Loaded products=5,015
+2026-08-25 13:31:24 | INFO | Loaded categories=142
+2026-08-25 13:31:24 | INFO | Recommender initialized successfully
+2026-08-25 13:31:43 | INFO | request=a35187da | IMAGE_UPLOAD | filename=1540.jpg | size=11778
+2026-08-25 13:31:47 | INFO | request=a983e825 | IMAGE_UPLOAD | filename=1540.jpg | size=11778
+2026-08-25 13:31:47 | INFO | request=a983e825 | COMPARISON_STARTED | top_k=5
+2026-08-25 13:31:48 | INFO | request=a983e825 | CATEGORY | predicted=Tshirts | confidence=0.9025
+2026-08-25 13:31:48 | INFO | request=a983e825 | CATEGORY_CANDIDATE | rank=1 | category=Tshirts | score=22.128991
+2026-08-25 13:31:48 | INFO | request=a983e825 | CATEGORY_CANDIDATE | rank=2 | category=Shirts | score=1.917031
+2026-08-25 13:31:48 | INFO | request=a983e825 | CATEGORY_CANDIDATE | rank=3 | category=Jackets | score=0.472938
+2026-08-25 13:31:48 | INFO | request=a983e825 | COMPARISON_COMPLETE | category=Tshirts | confidence=0.9025 | no_category=0.0177s | hard_category=0.0136s | soft_category=0.0196s | total=0.6877s
+2026-08-25 13:31:48 | INFO | request=a983e825 | UI_COMPARISON_COMPLETE | processing_time=0.9131s
+2026-08-25 13:32:03 | INFO | request=852bdd72 | IMAGE_UPLOAD | filename=10014.jpg | size=4526
+2026-08-25 13:32:05 | INFO | request=787b14f0 | IMAGE_UPLOAD | filename=10014.jpg | size=4526
+2026-08-25 13:32:05 | INFO | request=787b14f0 | COMPARISON_STARTED | top_k=5
+2026-08-25 13:32:05 | INFO | request=787b14f0 | CATEGORY | predicted=Tshirts | confidence=0.3913
+2026-08-25 13:32:05 | INFO | request=787b14f0 | CATEGORY_CANDIDATE | rank=1 | category=Tshirts | score=9.447048
+2026-08-25 13:32:05 | INFO | request=787b14f0 | CATEGORY_CANDIDATE | rank=2 | category=Caps | score=9.362646
+2026-08-25 13:32:05 | INFO | request=787b14f0 | CATEGORY_CANDIDATE | rank=3 | category=Backpacks | score=1.745467
+2026-08-25 13:32:05 | INFO | request=787b14f0 | CATEGORY_CANDIDATE | rank=4 | category=Jackets | score=0.949918
+2026-08-25 13:32:05 | INFO | request=787b14f0 | CATEGORY_CANDIDATE | rank=5 | category=Sweatshirts | score=0.915095
+2026-08-25 13:32:05 | INFO | request=787b14f0 | COMPARISON_COMPLETE | category=Tshirts | confidence=0.3913 | no_category=0.0152s | hard_category=0.0056s | soft_category=0.0159s | total=0.1600s
+2026-08-25 13:32:05 | INFO | request=787b14f0 | UI_COMPARISON_COMPLETE | processing_time=0.2638s
+2026-08-25 13:33:20 | INFO | request=c7bd5c76 | IMAGE_UPLOAD | filename=1581.jpg | size=6674
+2026-08-25 13:33:21 | INFO | request=3831fb32 | IMAGE_UPLOAD | filename=1581.jpg | size=6674
+2026-08-25 13:33:21 | INFO | request=3831fb32 | COMPARISON_STARTED | top_k=5
+2026-08-25 13:33:21 | INFO | request=3831fb32 | CATEGORY | predicted=Briefs | confidence=0.2184
+2026-08-25 13:33:21 | INFO | request=3831fb32 | CATEGORY_CANDIDATE | rank=1 | category=Briefs | score=2.663264
+2026-08-25 13:33:21 | INFO | request=3831fb32 | CATEGORY_CANDIDATE | rank=2 | category=Bra | score=1.438850
+2026-08-25 13:33:21 | INFO | request=3831fb32 | CATEGORY_CANDIDATE | rank=3 | category=Tshirts | score=1.208965
+2026-08-25 13:33:21 | INFO | request=3831fb32 | CATEGORY_CANDIDATE | rank=4 | category=Socks | score=0.956695
+2026-08-25 13:33:21 | INFO | request=3831fb32 | CATEGORY_CANDIDATE | rank=5 | category=Track Pants | score=0.754752
+2026-08-25 13:33:22 | INFO | request=3831fb32 | COMPARISON_COMPLETE | category=Briefs | confidence=0.2184 | no_category=0.0134s | hard_category=0.0025s | soft_category=0.0144s | total=0.1351s
+2026-08-25 13:33:22 | INFO | request=3831fb32 | UI_COMPARISON_COMPLETE | processing_time=0.2346s
+2026-08-27 21:19:32 | INFO | Initializing Fashion Recommender
+2026-08-27 21:19:32 | INFO | Device=cpu
+2026-08-27 21:19:32 | INFO | Loading CLIP model
+2026-08-27 21:19:33 | INFO | Loaded products=5,015
+2026-08-27 21:19:33 | INFO | Loaded categories=142
+2026-08-27 21:19:33 | INFO | Recommender initialized successfully
+2026-08-27 21:19:33 | INFO | TEXT_SEARCH | query='a red floral summer dress for women' | top_k=3 | image_weight=0.50 | elapsed=0.1961s
+2026-08-27 21:19:57 | INFO | Initializing Fashion Recommender
+2026-08-27 21:19:57 | INFO | Device=cpu
+2026-08-27 21:19:57 | INFO | Loading CLIP model
+2026-08-27 21:19:58 | INFO | Loaded products=5,015
+2026-08-27 21:19:58 | INFO | Loaded categories=142
+2026-08-27 21:19:58 | INFO | Recommender initialized successfully
+2026-08-27 21:20:21 | INFO | Initializing Fashion Recommender
+2026-08-27 21:20:21 | INFO | Device=cpu
+2026-08-27 21:20:21 | INFO | Loading CLIP model
+2026-08-27 21:20:22 | INFO | Loaded products=5,015
+2026-08-27 21:20:22 | INFO | Loaded categories=142
+2026-08-27 21:20:22 | INFO | Recommender initialized successfully
+2026-08-27 21:20:23 | INFO | TEXT_SEARCH | query='a black leather handbag' | top_k=5 | image_weight=0.50 | elapsed=0.1281s
+2026-08-27 21:23:06 | INFO | Initializing Fashion Recommender
+2026-08-27 21:23:06 | INFO | Device=cpu
+2026-08-27 21:23:06 | INFO | Loading CLIP model
+2026-08-27 21:23:15 | INFO | Loaded products=5,015
+2026-08-27 21:23:15 | INFO | Loaded categories=142
+2026-08-27 21:23:15 | INFO | Recommender initialized successfully
+2026-08-27 21:23:43 | INFO | TEXT_SEARCH | query='a white tshirt' | top_k=5 | image_weight=0.50 | elapsed=0.2753s
+2026-08-27 21:24:17 | INFO | request=08777be7 | IMAGE_SEARCH_STARTED | filename=1532.jpg | top_k=5
+2026-08-27 21:24:18 | INFO | request=08777be7 | CATEGORY | predicted=Tshirts | confidence=0.8069
+2026-08-27 21:24:18 | INFO | request=08777be7 | CATEGORY_CANDIDATE | rank=1 | category=Tshirts | score=17.292970
+2026-08-27 21:24:18 | INFO | request=08777be7 | CATEGORY_CANDIDATE | rank=2 | category=Shirts | score=2.486079
+2026-08-27 21:24:18 | INFO | request=08777be7 | CATEGORY_CANDIDATE | rank=3 | category=Innerwear Vests | score=1.235642
+2026-08-27 21:24:18 | INFO | request=08777be7 | CATEGORY_CANDIDATE | rank=4 | category=Sweaters | score=0.417802
+2026-08-27 21:24:18 | INFO | request=08777be7 | COMPARISON_COMPLETE | category=Tshirts | confidence=0.8069 | no_category=0.0416s | hard_category=0.0279s | soft_category=0.0516s | total=0.8575s
+2026-08-27 21:25:14 | INFO | TEXT_SEARCH | query='a red dress' | top_k=5 | image_weight=0.50 | elapsed=0.0973s
+2026-08-27 21:25:21 | INFO | TEXT_SEARCH | query='a red dress' | top_k=1 | image_weight=0.20 | elapsed=0.1173s
+2026-08-27 21:25:25 | INFO | TEXT_SEARCH | query='a red dress' | top_k=5 | image_weight=0.20 | elapsed=0.1366s
+2026-08-27 21:26:00 | INFO | TEXT_SEARCH | query='a red bag' | top_k=5 | image_weight=0.20 | elapsed=0.0711s
+2026-08-27 21:26:59 | INFO | TEXT_SEARCH | query='a red bag' | top_k=5 | image_weight=0.70 | elapsed=0.0640s
+2026-08-27 21:27:48 | INFO | TEXT_SEARCH | query='váy đỏ' | top_k=5 | image_weight=0.70 | elapsed=0.0667s
+2026-08-27 21:27:50 | INFO | TEXT_SEARCH | query='váy đỏ' | top_k=5 | image_weight=0.70 | elapsed=0.0621s
+2026-08-27 21:27:59 | INFO | TEXT_SEARCH | query='a red dress' | top_k=5 | image_weight=0.70 | elapsed=0.0673s
+2026-08-27 21:28:04 | INFO | TEXT_SEARCH | query='a red dress' | top_k=5 | image_weight=0.55 | elapsed=0.0651s
+2026-08-27 21:28:07 | INFO | TEXT_SEARCH | query='a red dress' | top_k=5 | image_weight=0.20 | elapsed=0.0714s
+2026-08-27 21:33:59 | INFO | Initializing Fashion Recommender
+2026-08-27 21:33:59 | INFO | Device=cpu
+2026-08-27 21:33:59 | INFO | Loading CLIP model
+2026-08-27 21:34:00 | INFO | Loaded products=5,015
+2026-08-27 21:34:00 | INFO | Loaded categories=142
+2026-08-27 21:34:00 | INFO | Recommender initialized successfully
+2026-08-27 21:34:03 | INFO | TEXT_SEARCH | query="I'm looking for a black bag." | top_k=5 | image_weight=0.50 | elapsed=0.2958s
+2026-08-27 21:34:47 | INFO | Initializing Fashion Recommender
+2026-08-27 21:34:47 | INFO | Device=cpu
+2026-08-27 21:34:47 | INFO | Loading CLIP model
+2026-08-27 21:34:55 | INFO | Loaded products=5,015
+2026-08-27 21:34:55 | INFO | Loaded categories=142
+2026-08-27 21:34:55 | INFO | Recommender initialized successfully
+2026-08-27 21:35:18 | INFO | TEXT_SEARCH | query='Red dress.' | top_k=5 | image_weight=0.50 | elapsed=0.2211s

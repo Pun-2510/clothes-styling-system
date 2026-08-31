@@ -1,6 +1,8 @@
 torch
 torchvision
 transformers>=4.45
+sentencepiece
+sacremoses
 pillow
 pandas
 numpy

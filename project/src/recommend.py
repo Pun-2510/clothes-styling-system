@@ -31,6 +31,7 @@ from src.config import (
     CLIP_MODEL,
     PROCESSED_CSV,
     EMBEDDINGS_FILE,
+    TEXT_EMBEDDINGS_FILE,
     TOP_K,
     CATEGORY_NEIGHBORS,
     CATEGORY_BONUS,
@@ -114,6 +115,13 @@ class FashionRecommender:
             EMBEDDINGS_FILE
         )
 
+        # Optional so image search still works before offline text encoding.
+        self.text_embeddings = (
+            np.load(TEXT_EMBEDDINGS_FILE)
+            if TEXT_EMBEDDINGS_FILE.exists()
+            else None
+        )
+
         # -------------------------------------------------
         # Check consistency
         # -------------------------------------------------
@@ -126,6 +134,15 @@ class FashionRecommender:
             raise RuntimeError(
                 "Số dòng products.csv "
                 "khác số embedding."
+            )
+
+        if (
+            self.text_embeddings is not None
+            and len(self.products) != len(self.text_embeddings)
+        ):
+            raise RuntimeError(
+                "Số dòng products.csv khác số text embedding. "
+                "Hãy chạy lại: python -m src.generate_text_embeddings"
             )
 
         # -------------------------------------------------
@@ -234,6 +251,79 @@ class FashionRecommender:
             .numpy()[0]
             .astype(np.float32)
         )
+
+    # =====================================================
+    # ENCODE AND SEARCH TEXT
+    # =====================================================
+
+    def encode_text(self, text):
+        """Encode one text query into the normalized CLIP space."""
+        text = str(text).strip()
+        if not text:
+            raise ValueError("Vui lòng nhập nội dung cần tìm kiếm.")
+
+        max_length = self.model.config.text_config.max_position_embeddings
+        inputs = self.processor(
+            text=[text],
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=max_length,
+        )
+        inputs = {
+            key: value.to(self.device)
+            for key, value in inputs.items()
+        }
+
+        with torch.inference_mode():
+            text_outputs = self.model.text_model(
+                input_ids=inputs["input_ids"],
+                attention_mask=inputs.get("attention_mask"),
+                return_dict=True,
+            )
+            features = self.model.text_projection(text_outputs.pooler_output)
+            features = features / features.norm(
+                dim=-1,
+                keepdim=True,
+            ).clamp_min(1e-12)
+
+        return features.detach().cpu().numpy()[0].astype(np.float32)
+
+    @property
+    def has_text_embeddings(self):
+        return self.text_embeddings is not None
+
+    def recommend_by_text(self, text, top_k=TOP_K, image_weight=0.5):
+        """Search with combined text-to-image and text-to-text scores."""
+        start_time = time.perf_counter()
+        query_embedding = self.encode_text(text)
+        cross_modal_scores = cosine_similarity(query_embedding, self.embeddings)
+
+        image_weight = float(np.clip(image_weight, 0.0, 1.0))
+        if self.text_embeddings is not None:
+            text_scores = cosine_similarity(query_embedding, self.text_embeddings)
+            final_scores = (
+                image_weight * cross_modal_scores
+                + (1.0 - image_weight) * text_scores
+            )
+        else:
+            text_scores = None
+            final_scores = cross_modal_scores
+
+        actual_k = min(int(top_k), len(final_scores))
+        top_indices = top_k_indices(final_scores, k=actual_k)
+        results = self.products.iloc[top_indices].copy().reset_index(drop=True)
+        results["cross_modal_similarity"] = cross_modal_scores[top_indices]
+        if text_scores is not None:
+            results["text_similarity"] = text_scores[top_indices]
+        results["similarity"] = final_scores[top_indices]
+
+        elapsed = time.perf_counter() - start_time
+        log_info(
+            f"TEXT_SEARCH | query={str(text)[:80]!r} | top_k={actual_k} | "
+            f"image_weight={image_weight:.2f} | elapsed={elapsed:.4f}s"
+        )
+        return results, elapsed, query_embedding
 
     # =====================================================
     # PREDICT CATEGORY FROM VISUAL NEIGHBORS

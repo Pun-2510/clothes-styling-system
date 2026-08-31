@@ -45,6 +45,11 @@ EMBEDDINGS_FILE = (
     "image_embeddings.npy"
 )
 
+TEXT_EMBEDDINGS_FILE = (
+    EMBEDDING_DIR /
+    "text_embeddings.npy"
+)
+
 
 # =========================================================
 # LOGGING
@@ -78,12 +83,19 @@ CLIP_MODEL = (
     "openai/clip-vit-base-patch32"
 )
 
+# Vietnamese -> English translation before CLIP text encoding
+TRANSLATION_MODEL = (
+    "Helsinki-NLP/opus-mt-vi-en"
+)
+
 
 # =========================================================
 # EMBEDDING
 # =========================================================
 
 EMBEDDING_BATCH_SIZE = 8
+
+TEXT_EMBEDDING_BATCH_SIZE = 64
 
 
 # =========================================================
