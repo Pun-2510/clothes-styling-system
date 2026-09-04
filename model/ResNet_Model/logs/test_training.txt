@@ -1,0 +1,39 @@
+(.venv) PS C:\DACNTT\ResNet_Model> python resnet_model.py
+==================================================
+LOADING DATASET
+==================================================
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Number of images: 2000
+Train: 1600
+Validation: 400
+
+==================================================
+TRAINING BASELINE
+==================================================
+Epoch [1/5] Loss: 1.0316 Train: 60.12% Val: 75.75%
+Saved best model!
+Epoch [2/5] Loss: 0.7141 Train: 72.75% Val: 76.00%
+Saved best model!
+Epoch [3/5] Loss: 0.6300 Train: 76.44% Val: 81.50%
+Saved best model!
+Epoch [4/5] Loss: 0.5237 Train: 81.50% Val: 82.25%
+Saved best model!
+Epoch [5/5] Loss: 0.4739 Train: 83.31% Val: 85.25%
+Saved best model!
+
+==================================================
+TRAINING PRETRAINED RESNET18
+==================================================
+Epoch [1/5] Loss: 0.6683 Train: 77.75% Val: 90.00%
+Saved best model!
+Epoch [2/5] Loss: 0.2118 Train: 93.81% Val: 93.75%
+Saved best model!
+Epoch [3/5] Loss: 0.1187 Train: 95.88% Val: 95.00%
+Saved best model!
+Epoch [4/5] Loss: 0.0861 Train: 97.19% Val: 95.00%
+Epoch [5/5] Loss: 0.0638 Train: 98.12% Val: 94.75%
+
+==================================================
+MODEL TRAINING COMPLETED
+Saved: resnet_outfit.pth
+==================================================
