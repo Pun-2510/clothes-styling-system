@@ -1,0 +1,44 @@
+networks:
+  app-network:
+    driver: bridge
+
+services:
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - type: bind
+        source: ./frontend
+        target: /app
+      - type: volume
+        source: node_modules
+        target: /app/node_modules
+    ports:
+      - 5173:5173
+    restart: unless-stopped
+    # depends_on:
+    #   - backend
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    volumes:
+      - type: bind
+        source: ./backend
+        target: /app/backend
+      - type: bind
+        source: ./src
+        target: /app/src
+    ports:
+      - 8000:8000
+    restart: unless-stopped
+    networks:
+      - app-network
+
+volumes:
+  node_modules:

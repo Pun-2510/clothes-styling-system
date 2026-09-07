@@ -697,6 +697,126 @@ class FashionRecommender:
 
 
     # =====================================================
+    # RUN ONE IMAGE RECOMMENDATION METHOD
+    # =====================================================
+
+    def recommend_by_image(
+        self,
+        image,
+        category_mode="no_category",
+        top_k=TOP_K,
+        request_id=None
+    ):
+
+        if request_id is None:
+
+            request_id = (
+                uuid.uuid4()
+                .hex[:8]
+            )
+
+        category_mode = (
+            str(category_mode)
+            .strip()
+            .lower()
+        )
+
+        valid_modes = {
+            "no_category",
+            "hard_category",
+            "soft_category",
+        }
+
+        if category_mode not in valid_modes:
+
+            raise ValueError(
+                "category_mode phải là một trong: "
+                "no_category, hard_category, soft_category."
+            )
+
+        total_start = (
+            time.perf_counter()
+        )
+
+        query_embedding = (
+            self.encode_image(image)
+        )
+
+        predicted_category = None
+        confidence = None
+
+        if category_mode == "no_category":
+
+            results, ranking_time = (
+                self.recommend_no_category(
+                    query_embedding,
+                    top_k
+                )
+            )
+
+        else:
+
+            (
+                predicted_category,
+                confidence,
+                _
+            ) = self.predict_category(
+                query_embedding,
+                request_id
+            )
+
+            if category_mode == "hard_category":
+
+                results, ranking_time = (
+                    self.recommend_hard_category(
+                        query_embedding,
+                        predicted_category,
+                        top_k
+                    )
+                )
+
+            else:
+
+                results, ranking_time = (
+                    self.recommend_soft_category(
+                        query_embedding,
+                        predicted_category,
+                        top_k
+                    )
+                )
+
+        total_time = (
+            time.perf_counter()
+            - total_start
+        )
+
+        confidence_log = (
+            f"{confidence:.4f}"
+            if confidence is not None
+            else "not_used"
+        )
+
+        log_info(
+            f"request={request_id} | "
+            f"IMAGE_RECOMMENDATION_COMPLETE | "
+            f"mode={category_mode} | "
+            f"category={predicted_category or 'not_used'} | "
+            f"confidence={confidence_log} | "
+            f"ranking={ranking_time:.4f}s | "
+            f"total={total_time:.4f}s"
+        )
+
+        return {
+            "category_mode": category_mode,
+            "predicted_category": predicted_category,
+            "category_confidence": confidence,
+            "results": results,
+            "ranking_time": ranking_time,
+            "total_time": total_time,
+        }
+
+
+    # =====================================================
     # RUN ALL METHODS
     # =====================================================
 

@@ -760,3 +760,100 @@ KeyError: 'no_metrics'
 2026-08-27 21:34:55 | INFO | Loaded categories=142
 2026-08-27 21:34:55 | INFO | Recommender initialized successfully
 2026-08-27 21:35:18 | INFO | TEXT_SEARCH | query='Red dress.' | top_k=5 | image_weight=0.50 | elapsed=0.2211s
+2026-09-01 01:45:08 | INFO | Initializing Fashion Recommender
+2026-09-01 01:45:08 | INFO | Device=cpu
+2026-09-01 01:45:08 | INFO | Loading CLIP model
+2026-09-01 01:45:17 | INFO | Loaded products=5,015
+2026-09-01 01:45:17 | INFO | Loaded categories=142
+2026-09-01 01:45:17 | INFO | Recommender initialized successfully
+2026-09-05 11:22:18 | INFO | Initializing Fashion Recommender
+2026-09-05 11:22:18 | INFO | Device=cpu
+2026-09-05 11:22:18 | INFO | Loading CLIP model
+2026-09-05 11:22:27 | INFO | Loaded products=5,015
+2026-09-05 11:22:27 | INFO | Loaded categories=142
+2026-09-05 11:22:27 | INFO | Recommender initialized successfully
+2026-09-05 11:23:52 | INFO | Initializing Fashion Recommender
+2026-09-05 11:23:52 | INFO | Device=cpu
+2026-09-05 11:23:52 | INFO | Loading CLIP model
+2026-09-05 11:26:41 | INFO | Initializing Fashion Recommender
+2026-09-05 11:26:41 | INFO | Device=cpu
+2026-09-05 11:26:41 | INFO | Loading CLIP model
+2026-09-05 11:26:49 | INFO | Loaded products=5,015
+2026-09-05 11:26:49 | INFO | Loaded categories=142
+2026-09-05 11:26:49 | INFO | Recommender initialized successfully
+2026-09-05 11:31:52 | INFO | Initializing Fashion Recommender
+2026-09-05 11:31:52 | INFO | Device=cpu
+2026-09-05 11:31:52 | INFO | Loading CLIP model
+2026-09-05 11:32:02 | INFO | Loaded products=5,015
+2026-09-05 11:32:02 | INFO | Loaded categories=142
+2026-09-05 11:32:02 | INFO | Recommender initialized successfully
+2026-09-05 11:33:24 | INFO | TEXT_SEARCH | query='a red floral dress' | top_k=5 | image_weight=0.50 | elapsed=0.5300s
+2026-09-05 11:50:15 | INFO | Initializing Fashion Recommender
+2026-09-05 11:50:15 | INFO | Device=cpu
+2026-09-05 11:50:15 | INFO | Loading CLIP model
+2026-09-05 11:50:24 | INFO | Loaded products=5,015
+2026-09-05 11:50:24 | INFO | Loaded categories=142
+2026-09-05 11:50:24 | INFO | Recommender initialized successfully
+2026-09-05 11:51:03 | INFO | TEXT_SEARCH | query='Red dress.' | top_k=5 | image_weight=0.50 | elapsed=0.4570s
+2026-09-05 12:02:14 | INFO | Initializing Fashion Recommender
+2026-09-05 12:02:14 | INFO | Device=cpu
+2026-09-05 12:02:14 | INFO | Loading CLIP model
+2026-09-05 12:02:23 | INFO | Loaded products=5,015
+2026-09-05 12:02:23 | INFO | Loaded categories=142
+2026-09-05 12:02:23 | INFO | Recommender initialized successfully
+2026-09-05 12:02:49 | INFO | TEXT_SEARCH | query='string' | top_k=5 | image_weight=0.50 | elapsed=0.2550s
+2026-09-05 12:03:04 | INFO | TEXT_SEARCH | query='white tshirt' | top_k=5 | image_weight=0.50 | elapsed=0.0674s
+2026-09-05 12:03:33 | INFO | request=173dc42c | CATEGORY | predicted=Tshirts | confidence=0.9814
+2026-09-05 12:03:33 | INFO | request=173dc42c | CATEGORY_CANDIDATE | rank=1 | category=Tshirts | score=25.955724
+2026-09-05 12:03:33 | INFO | request=173dc42c | CATEGORY_CANDIDATE | rank=2 | category=Innerwear Vests | score=0.492835
+2026-09-05 12:03:33 | INFO | request=173dc42c | COMPARISON_COMPLETE | category=Tshirts | confidence=0.9814 | no_category=0.0201s | hard_category=0.0161s | soft_category=0.0235s | total=0.7032s
+2026-09-05 12:11:20 | INFO | Initializing Fashion Recommender
+2026-09-05 12:11:20 | INFO | Device=cpu
+2026-09-05 12:11:20 | INFO | Loading CLIP model
+2026-09-05 12:11:28 | INFO | Loaded products=5,015
+2026-09-05 12:11:28 | INFO | Loaded categories=142
+2026-09-05 12:11:28 | INFO | Recommender initialized successfully
+2026-09-05 12:14:16 | INFO | Initializing Fashion Recommender
+2026-09-05 12:14:16 | INFO | Device=cpu
+2026-09-05 12:14:16 | INFO | Loading CLIP model
+2026-09-05 12:14:24 | INFO | Loaded products=5,015
+2026-09-05 12:14:24 | INFO | Loaded categories=142
+2026-09-05 12:14:24 | INFO | Recommender initialized successfully
+2026-09-05 12:16:42 | INFO | request=dad355fe | CATEGORY | predicted=Tshirts | confidence=0.3921
+2026-09-05 12:16:42 | INFO | request=dad355fe | CATEGORY_CANDIDATE | rank=1 | category=Tshirts | score=5.079532
+2026-09-05 12:16:42 | INFO | request=dad355fe | CATEGORY_CANDIDATE | rank=2 | category=Sports Shoes | score=2.657037
+2026-09-05 12:16:42 | INFO | request=dad355fe | CATEGORY_CANDIDATE | rank=3 | category=Caps | score=1.204932
+2026-09-05 12:16:42 | INFO | request=dad355fe | CATEGORY_CANDIDATE | rank=4 | category=Footballs | score=0.731413
+2026-09-05 12:16:42 | INFO | request=dad355fe | CATEGORY_CANDIDATE | rank=5 | category=Backpacks | score=0.712343
+2026-09-05 12:16:42 | INFO | request=dad355fe | IMAGE_RECOMMENDATION_COMPLETE | mode=soft_category | category=Tshirts | confidence=0.3921 | ranking=0.0227s | total=0.2821s
+2026-09-05 12:16:53 | INFO | request=6e8e82f5 | IMAGE_RECOMMENDATION_COMPLETE | mode=no_category | category=not_used | confidence=not_used | ranking=0.0184s | total=0.1283s
+2026-09-05 12:17:01 | INFO | request=dff05774 | CATEGORY | predicted=Tshirts | confidence=0.3921
+2026-09-05 12:17:01 | INFO | request=dff05774 | CATEGORY_CANDIDATE | rank=1 | category=Tshirts | score=5.079532
+2026-09-05 12:17:01 | INFO | request=dff05774 | CATEGORY_CANDIDATE | rank=2 | category=Sports Shoes | score=2.657037
+2026-09-05 12:17:01 | INFO | request=dff05774 | CATEGORY_CANDIDATE | rank=3 | category=Caps | score=1.204932
+2026-09-05 12:17:01 | INFO | request=dff05774 | CATEGORY_CANDIDATE | rank=4 | category=Footballs | score=0.731413
+2026-09-05 12:17:01 | INFO | request=dff05774 | CATEGORY_CANDIDATE | rank=5 | category=Backpacks | score=0.712343
+2026-09-05 12:17:01 | INFO | request=dff05774 | IMAGE_RECOMMENDATION_COMPLETE | mode=soft_category | category=Tshirts | confidence=0.3921 | ranking=0.0208s | total=0.1555s
+2026-09-07 22:37:41 | INFO | Initializing Fashion Recommender
+2026-09-07 22:37:41 | INFO | Device=cpu
+2026-09-07 22:37:41 | INFO | Loading CLIP model
+2026-09-07 22:37:44 | INFO | Loaded products=5,015
+2026-09-07 22:37:44 | INFO | Loaded categories=142
+2026-09-07 22:37:44 | INFO | Recommender initialized successfully
+2026-09-07 22:37:49 | INFO | TEXT_SEARCH | query='a black leather handbag' | top_k=3 | image_weight=0.50 | elapsed=0.4388s
+2026-09-07 22:37:49 | INFO | TEXT_SEARCH | query="I'm looking for a red dress." | top_k=3 | image_weight=0.50 | elapsed=0.1117s
+2026-09-07 22:37:51 | INFO | request=dcfc96b8 | IMAGE_RECOMMENDATION_COMPLETE | mode=no_category | category=not_used | confidence=not_used | ranking=0.0360s | total=0.8272s
+2026-09-07 22:37:51 | INFO | request=052f6732 | CATEGORY | predicted=Shorts | confidence=0.3851
+2026-09-07 22:37:51 | INFO | request=052f6732 | CATEGORY_CANDIDATE | rank=1 | category=Shorts | score=9.241493
+2026-09-07 22:37:51 | INFO | request=052f6732 | CATEGORY_CANDIDATE | rank=2 | category=Briefs | score=2.812824
+2026-09-07 22:37:51 | INFO | request=052f6732 | CATEGORY_CANDIDATE | rank=3 | category=Capris | score=2.643919
+2026-09-07 22:37:51 | INFO | request=052f6732 | CATEGORY_CANDIDATE | rank=4 | category=Skirts | score=1.430660
+2026-09-07 22:37:51 | INFO | request=052f6732 | CATEGORY_CANDIDATE | rank=5 | category=Trunk | score=1.354089
+2026-09-07 22:37:51 | INFO | request=052f6732 | IMAGE_RECOMMENDATION_COMPLETE | mode=hard_category | category=Shorts | confidence=0.3851 | ranking=0.0198s | total=0.1812s
+2026-09-07 22:37:51 | INFO | request=68d1f2fe | CATEGORY | predicted=Shorts | confidence=0.3851
+2026-09-07 22:37:51 | INFO | request=68d1f2fe | CATEGORY_CANDIDATE | rank=1 | category=Shorts | score=9.241493
+2026-09-07 22:37:51 | INFO | request=68d1f2fe | CATEGORY_CANDIDATE | rank=2 | category=Briefs | score=2.812824
+2026-09-07 22:37:51 | INFO | request=68d1f2fe | CATEGORY_CANDIDATE | rank=3 | category=Capris | score=2.643919
+2026-09-07 22:37:51 | INFO | request=68d1f2fe | CATEGORY_CANDIDATE | rank=4 | category=Skirts | score=1.430660
+2026-09-07 22:37:51 | INFO | request=68d1f2fe | CATEGORY_CANDIDATE | rank=5 | category=Trunk | score=1.354089
+2026-09-07 22:37:51 | INFO | request=68d1f2fe | IMAGE_RECOMMENDATION_COMPLETE | mode=soft_category | category=Shorts | confidence=0.3851 | ranking=0.0427s | total=0.2181s
