@@ -1,0 +1,326 @@
+(.venv) PS C:\DACNTT\combine_model> python test.py
+==========================================================================================
+AUTOMATIC COMBINE MODEL EVALUATION
+==========================================================================================
+
+Components:
+  ResNet18 -> Image Search
+  SBERT    -> Text Search
+  RRF      -> Multimodal Combine
+
+MAX_IMAGES = 2000
+TOP_K     = 10
+RRF_K     = 60
+
+Loading ResNet configuration...
+
+Loading fashion dataset...
+Loading fashion dataset...
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loaded 2000 products
+Dataset loaded: 2000 products
+
+Loading SBERT...
+============================================================
+LOADING PRODUCT DATASET
+============================================================
+Dataset: nreimers/fashion-dataset
+Products: 44424
+
+Removed duplicates: 13296
+Unique products: 31121
+
+Products used for embedding: 5000
+
+============================================================
+LOADING SBERT
+============================================================
+Model: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+Loading weights: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 199/199 [00:00<00:00, 6627.39it/s]
+SBERT loaded.
+
+============================================================
+BUILDING PRODUCT TEXT
+============================================================
+Texts: 5000
+
+============================================================
+LOADING EMBEDDINGS
+============================================================
+Embedding shape: (5000, 384)
+
+SBERT loaded successfully.
+
+
+==========================================================================================
+TESTING COMBINE MODEL: BASELINE
+==========================================================================================
+SBERT     : sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+ResNet18  : baseline
+Fusion    : Reciprocal Rank Fusion (RRF)
+
+Creating ResNet image embeddings...
+Creating image embeddings...
+Embedding shape: (2000, 512)
+Image embedding time: 9.5966s
+
+Testing queries...
+[baseline] Tested 50/2000
+[baseline] Tested 100/2000
+[baseline] Tested 150/2000
+[baseline] Tested 200/2000
+[baseline] Tested 250/2000
+[baseline] Tested 300/2000
+[baseline] Tested 350/2000
+[baseline] Tested 400/2000
+[baseline] Tested 450/2000
+[baseline] Tested 500/2000
+[baseline] Tested 550/2000
+[baseline] Tested 600/2000
+[baseline] Tested 650/2000
+[baseline] Tested 700/2000
+[baseline] Tested 750/2000
+[baseline] Tested 800/2000
+[baseline] Tested 850/2000
+[baseline] Tested 900/2000
+[baseline] Tested 950/2000
+[baseline] Tested 1000/2000
+[baseline] Tested 1050/2000
+[baseline] Tested 1100/2000
+[baseline] Tested 1150/2000
+[baseline] Tested 1200/2000
+[baseline] Tested 1250/2000
+[baseline] Tested 1300/2000
+[baseline] Tested 1350/2000
+[baseline] Tested 1400/2000
+[baseline] Tested 1450/2000
+[baseline] Tested 1500/2000
+[baseline] Tested 1550/2000
+[baseline] Tested 1600/2000
+[baseline] Tested 1650/2000
+[baseline] Tested 1700/2000
+[baseline] Tested 1750/2000
+[baseline] Tested 1800/2000
+[baseline] Tested 1850/2000
+[baseline] Tested 1900/2000
+[baseline] Tested 1950/2000
+[baseline] Tested 2000/2000
+
+
+------------------------------------------------------------------------------------------
+RESULT: COMBINE BASELINE
+------------------------------------------------------------------------------------------
+Test images             : 2000
+Classification Accuracy : 4.15%
+
+IMAGE SEARCH
+Top-1 Accuracy          : 4.85%
+Top-5 Accuracy          : 6.25%
+Mean Similarity         : 0.9999
+Average Query Time      : 0.0097s
+
+TEXT SEARCH
+Top-1 Accuracy          : 0.00%
+Top-5 Accuracy          : 0.00%
+Mean Similarity         : 0.0000
+Average Query Time      : 0.0220s
+
+MULTIMODAL SEARCH
+Top-1 Accuracy          : 3.20%
+Top-5 Accuracy          : 5.55%
+Mean Combine Score      : 0.017853
+Average Query Time      : 0.0317s
+
+
+==========================================================================================
+TESTING COMBINE MODEL: PRETRAINED
+==========================================================================================
+SBERT     : sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+ResNet18  : pretrained
+Fusion    : Reciprocal Rank Fusion (RRF)
+
+Creating ResNet image embeddings...
+Creating image embeddings...
+Embedding shape: (2000, 512)
+Image embedding time: 9.4035s
+
+Testing queries...
+[pretrained] Tested 50/2000
+[pretrained] Tested 100/2000
+[pretrained] Tested 150/2000
+[pretrained] Tested 200/2000
+[pretrained] Tested 250/2000
+[pretrained] Tested 300/2000
+[pretrained] Tested 350/2000
+[pretrained] Tested 400/2000
+[pretrained] Tested 450/2000
+[pretrained] Tested 500/2000
+[pretrained] Tested 550/2000
+[pretrained] Tested 600/2000
+[pretrained] Tested 650/2000
+[pretrained] Tested 700/2000
+[pretrained] Tested 750/2000
+[pretrained] Tested 800/2000
+[pretrained] Tested 850/2000
+[pretrained] Tested 900/2000
+[pretrained] Tested 950/2000
+[pretrained] Tested 1000/2000
+[pretrained] Tested 1050/2000
+[pretrained] Tested 1100/2000
+[pretrained] Tested 1150/2000
+[pretrained] Tested 1200/2000
+[pretrained] Tested 1250/2000
+[pretrained] Tested 1300/2000
+[pretrained] Tested 1350/2000
+[pretrained] Tested 1400/2000
+[pretrained] Tested 1450/2000
+[pretrained] Tested 1500/2000
+[pretrained] Tested 1550/2000
+[pretrained] Tested 1600/2000
+[pretrained] Tested 1650/2000
+[pretrained] Tested 1700/2000
+[pretrained] Tested 1750/2000
+[pretrained] Tested 1800/2000
+[pretrained] Tested 1850/2000
+[pretrained] Tested 1900/2000
+[pretrained] Tested 1950/2000
+[pretrained] Tested 2000/2000
+
+
+------------------------------------------------------------------------------------------
+RESULT: COMBINE PRETRAINED
+------------------------------------------------------------------------------------------
+Test images             : 2000
+Classification Accuracy : 4.15%
+
+IMAGE SEARCH
+Top-1 Accuracy          : 6.05%
+Top-5 Accuracy          : 8.55%
+Mean Similarity         : 0.9640
+Average Query Time      : 0.0098s
+
+TEXT SEARCH
+Top-1 Accuracy          : 0.00%
+Top-5 Accuracy          : 0.00%
+Mean Similarity         : 0.0000
+Average Query Time      : 0.0211s
+
+MULTIMODAL SEARCH
+Top-1 Accuracy          : 4.40%
+Top-5 Accuracy          : 7.65%
+Mean Combine Score      : 0.020727
+Average Query Time      : 0.0310s
+
+
+==========================================================================================
+TESTING COMBINE MODEL: TRAINED
+==========================================================================================
+SBERT     : sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+ResNet18  : trained
+Fusion    : Reciprocal Rank Fusion (RRF)
+C:\DACNTT\combine_model\image_search.py:113: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  checkpoint = torch.load(
+
+Creating ResNet image embeddings...
+Creating image embeddings...
+Embedding shape: (2000, 512)
+Image embedding time: 11.7213s
+
+Testing queries...
+[trained] Tested 50/2000
+[trained] Tested 100/2000
+[trained] Tested 150/2000
+[trained] Tested 200/2000
+[trained] Tested 250/2000
+[trained] Tested 300/2000
+[trained] Tested 350/2000
+[trained] Tested 400/2000
+[trained] Tested 450/2000
+[trained] Tested 500/2000
+[trained] Tested 550/2000
+[trained] Tested 600/2000
+[trained] Tested 650/2000
+[trained] Tested 700/2000
+[trained] Tested 750/2000
+[trained] Tested 800/2000
+[trained] Tested 850/2000
+[trained] Tested 900/2000
+[trained] Tested 950/2000
+[trained] Tested 1000/2000
+[trained] Tested 1050/2000
+[trained] Tested 1100/2000
+[trained] Tested 1150/2000
+[trained] Tested 1200/2000
+[trained] Tested 1250/2000
+[trained] Tested 1300/2000
+[trained] Tested 1350/2000
+[trained] Tested 1400/2000
+[trained] Tested 1450/2000
+[trained] Tested 1500/2000
+[trained] Tested 1550/2000
+[trained] Tested 1600/2000
+[trained] Tested 1650/2000
+[trained] Tested 1700/2000
+[trained] Tested 1750/2000
+[trained] Tested 1800/2000
+[trained] Tested 1850/2000
+[trained] Tested 1900/2000
+[trained] Tested 1950/2000
+[trained] Tested 2000/2000
+
+
+------------------------------------------------------------------------------------------
+RESULT: COMBINE TRAINED
+------------------------------------------------------------------------------------------
+Test images             : 2000
+Classification Accuracy : 94.55%
+
+IMAGE SEARCH
+Top-1 Accuracy          : 5.75%
+Top-5 Accuracy          : 8.45%
+Mean Similarity         : 0.9585
+Average Query Time      : 0.0099s
+
+TEXT SEARCH
+Top-1 Accuracy          : 0.00%
+Top-5 Accuracy          : 0.00%
+Mean Similarity         : 0.0000
+Average Query Time      : 0.0215s
+
+MULTIMODAL SEARCH
+Top-1 Accuracy          : 3.90%
+Top-5 Accuracy          : 7.70%
+Mean Combine Score      : 0.019872
+Average Query Time      : 0.0315s
+
+
+
+========================================================================================================================
+FINAL COMBINE MODEL COMPARISON
+========================================================================================================================
+Model          Mode           Images    Top-1       Top-5       Similarity/Score    Time        
+------------------------------------------------------------------------------------------------------------------------
+baseline       image          2000      4.85%     6.25%     0.999884            0.0097s
+baseline       text           2000      0.00%     0.00%     0.000000            0.0220s
+baseline       multimodal     2000      3.20%     5.55%     0.017853            0.0317s
+pretrained     image          2000      6.05%     8.55%     0.964042            0.0098s
+pretrained     text           2000      0.00%     0.00%     0.000000            0.0211s
+pretrained     multimodal     2000      4.40%     7.65%     0.020727            0.0310s
+trained        image          2000      5.75%     8.45%     0.958489            0.0099s
+trained        text           2000      0.00%     0.00%     0.000000            0.0215s
+trained        multimodal     2000      3.90%     7.70%     0.019872            0.0315s
+========================================================================================================================
+
+
+==========================================================================================
+SAVING RESULTS
+==========================================================================================
+
+Model comparison : C:\DACNTT\combine_model\results\combine_model_comparison.csv
+Category results : C:\DACNTT\combine_model\results\combine_category_comparison.csv
+Detailed results : C:\DACNTT\combine_model\results\combine_detailed_results.csv
+
+
+==========================================================================================
+COMBINE MODEL TEST COMPLETED
+==========================================================================================

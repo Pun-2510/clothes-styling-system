@@ -1,0 +1,6 @@
+torch
+torchvision
+datasets
+Pillow
+numpy
+python-dotenv
