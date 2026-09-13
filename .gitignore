@@ -49,7 +49,10 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # Generated ML artefacts
-# project/runs/
+project/runs/**
+!project/runs/**/
+!project/runs/**/comparison.csv
+!project/runs/**/comparison.json
 # project/embeddings_finetuned/
 *.safetensors
 wandb/
