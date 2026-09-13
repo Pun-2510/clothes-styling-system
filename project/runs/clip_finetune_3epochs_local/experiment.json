@@ -1,0 +1,15 @@
+{
+  "input_rows": 5015,
+  "duplicate_images_removed": 11,
+  "split_counts": {
+    "train": 4036,
+    "validation": 484,
+    "test": 484
+  },
+  "seed": 42,
+  "val_fraction": 0.1,
+  "test_fraction": 0.1,
+  "source_csv": "D:\\project\\data\\processed\\products.csv",
+  "source_csv_sha256": "bc7141628a0938a73e0d8ee13315442faa6da7277945245fa9479f17c6e756ab",
+  "dataset_sha256": "bcb98083a9a4d6b895b2757fa14ef3c8c10e932d67f355ecc6097ddd4dd079aa"
+}

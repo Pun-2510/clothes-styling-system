@@ -49,8 +49,9 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # Generated ML artefacts
-project/runs/
-project/embeddings_finetuned/
+# project/runs/
+# project/embeddings_finetuned/
+*.safetensors
 wandb/
 mlruns/
 lightning_logs/

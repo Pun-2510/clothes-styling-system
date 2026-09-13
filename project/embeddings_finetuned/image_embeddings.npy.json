@@ -1,0 +1,18 @@
+{
+  "model": {
+    "source": "D:\\project\\runs\\clip_finetune_3epochs_local\\best",
+    "files": {
+      "config.json": "d508d4867da553883f3655a1e1cb60bf769f35c767886888ee9a1f95ac367c32",
+      "model.safetensors": "841d036512317cf7cb8475e042b0e2fa78f89f79959f039cdcdcfd9a0cafeb38",
+      "processor_config.json": "4c80980e051e00d48e03c9ba0e1ca0284a1e8bfbd005c68e18d25b15866a9c7a",
+      "tokenizer.json": "d656a0f8bc9d30a93ea9f2858ebf4f076b1ff914b8e79290ed9687721e7ac74a",
+      "tokenizer_config.json": "90e18128ad2d6bcd21df4e5104757fe4b0de24124263d6dc34d74f7969df3d7a"
+    }
+  },
+  "products_sha256": "bc7141628a0938a73e0d8ee13315442faa6da7277945245fa9479f17c6e756ab",
+  "shape": [
+    5015,
+    512
+  ],
+  "embeddings_sha256": "c4bb161e8100229cff9d06647b5b9f8ef90344048b921196d7e977e0e9bcd876"
+}

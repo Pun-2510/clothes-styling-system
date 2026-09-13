@@ -1,0 +1,119 @@
+{
+  "base_model": "openai/clip-vit-base-patch32",
+  "base_model_identity": {
+    "source": "openai/clip-vit-base-patch32"
+  },
+  "dataset_sha256": "bcb98083a9a4d6b895b2757fa14ef3c8c10e932d67f355ecc6097ddd4dd079aa",
+  "trainable": "full",
+  "learning_rate": 1e-06,
+  "weight_decay": 0.01,
+  "batch_size": 16,
+  "epochs": 3,
+  "seed": 42,
+  "selection_metric": "mean validation text_to_image/image_to_text recall@1",
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.11582963742592624,
+      "validation": {
+        "text_to_image": {
+          "recall@1": 0.5599173553719008,
+          "recall@5": 0.8987603305785123,
+          "recall@10": 0.9731404958677686,
+          "evaluated_queries": 484,
+          "skipped_queries": 0,
+          "gallery_size": 484
+        },
+        "image_to_text": {
+          "recall@1": 0.5413223140495868,
+          "recall@5": 0.9028925619834711,
+          "recall@10": 0.96900826446281,
+          "evaluated_queries": 484,
+          "skipped_queries": 0,
+          "gallery_size": 484
+        },
+        "image_to_image_category": {
+          "recall@1": 0.07945752966433928,
+          "recall@5": 0.2912090884156593,
+          "recall@10": 0.4376488249525069,
+          "evaluated_queries": 439,
+          "skipped_queries": 45,
+          "gallery_size": 484
+        }
+      }
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.07745044767715319,
+      "validation": {
+        "text_to_image": {
+          "recall@1": 0.5785123966942148,
+          "recall@5": 0.9028925619834711,
+          "recall@10": 0.9752066115702479,
+          "evaluated_queries": 484,
+          "skipped_queries": 0,
+          "gallery_size": 484
+        },
+        "image_to_text": {
+          "recall@1": 0.5950413223140496,
+          "recall@5": 0.9235537190082644,
+          "recall@10": 0.9772727272727273,
+          "evaluated_queries": 484,
+          "skipped_queries": 0,
+          "gallery_size": 484
+        },
+        "image_to_image_category": {
+          "recall@1": 0.0856149930031957,
+          "recall@5": 0.2944682608062308,
+          "recall@10": 0.4477566190220569,
+          "evaluated_queries": 439,
+          "skipped_queries": 45,
+          "gallery_size": 484
+        }
+      }
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.05286539111202422,
+      "validation": {
+        "text_to_image": {
+          "recall@1": 0.6012396694214877,
+          "recall@5": 0.9090909090909091,
+          "recall@10": 0.9710743801652892,
+          "evaluated_queries": 484,
+          "skipped_queries": 0,
+          "gallery_size": 484
+        },
+        "image_to_text": {
+          "recall@1": 0.5929752066115702,
+          "recall@5": 0.9256198347107438,
+          "recall@10": 0.9752066115702479,
+          "evaluated_queries": 484,
+          "skipped_queries": 0,
+          "gallery_size": 484
+        },
+        "image_to_image_category": {
+          "recall@1": 0.08419775473785769,
+          "recall@5": 0.29058922246190066,
+          "recall@10": 0.44465209378888987,
+          "evaluated_queries": 439,
+          "skipped_queries": 45,
+          "gallery_size": 484
+        }
+      }
+    }
+  ],
+  "status": "complete",
+  "best_epoch": 3,
+  "best_validation_score": 0.5971074380165289,
+  "checkpoint_identity": {
+    "source": "D:\\project\\runs\\clip_finetune_3epochs_local\\best",
+    "files": {
+      "config.json": "d508d4867da553883f3655a1e1cb60bf769f35c767886888ee9a1f95ac367c32",
+      "model.safetensors": "841d036512317cf7cb8475e042b0e2fa78f89f79959f039cdcdcfd9a0cafeb38",
+      "processor_config.json": "4c80980e051e00d48e03c9ba0e1ca0284a1e8bfbd005c68e18d25b15866a9c7a",
+      "tokenizer.json": "d656a0f8bc9d30a93ea9f2858ebf4f076b1ff914b8e79290ed9687721e7ac74a",
+      "tokenizer_config.json": "90e18128ad2d6bcd21df4e5104757fe4b0de24124263d6dc34d74f7969df3d7a"
+    }
+  }
+}
