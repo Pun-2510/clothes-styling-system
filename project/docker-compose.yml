@@ -17,6 +17,10 @@ services:
         target: /app/node_modules
     ports:
       - 5173:5173
+    environment:
+      VITE_API_PROXY_TARGET: http://backend:8000
+    depends_on:
+      - backend
     restart: unless-stopped
     # depends_on:
     #   - backend
@@ -27,6 +31,9 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
+    environment:
+      CLIP_MODEL_PATH: /app/runs/clip_finetune_3epochs_local/best
+      CLIP_EMBEDDING_DIR: /app/embeddings_finetuned
     volumes:
       - type: bind
         source: ./backend
@@ -34,6 +41,10 @@ services:
       - type: bind
         source: ./src
         target: /app/src
+      - type: bind
+        source: ./data/data
+        target: /app/data/data
+        read_only: true
     ports:
       - 8000:8000
     restart: unless-stopped

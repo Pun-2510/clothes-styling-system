@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 
 # =========================================================
@@ -35,9 +36,15 @@ PROCESSED_CSV = (
 # EMBEDDINGS
 # =========================================================
 
+# EMBEDDING_DIR = (
+#     Path(os.environ.get("CLIP_EMBEDDING_DIR", str(BASE_DIR / "embeddings")))
+# )
+
 EMBEDDING_DIR = (
-    BASE_DIR /
-    "embeddings"
+    Path(os.environ.get(
+        "CLIP_EMBEDDING_DIR",
+        str(BASE_DIR / "embeddings_finetuned")
+    ))
 )
 
 EMBEDDINGS_FILE = (
@@ -79,8 +86,27 @@ RANDOM_SEED = 42
 # CLIP
 # =========================================================
 
+# CLIP_MODEL = (
+#     "openai/clip-vit-base-patch32"
+# )
+
+# # Serving and catalog encoding can use a local fine-tuned checkpoint.
+# ACTIVE_CLIP_MODEL = os.environ.get("CLIP_MODEL_PATH", CLIP_MODEL)
+
 CLIP_MODEL = (
     "openai/clip-vit-base-patch32"
+)
+
+FINETUNED_CLIP_MODEL = (
+    BASE_DIR
+    / "runs"
+    / "clip_finetune_3epochs_local"
+    / "best"
+)
+
+ACTIVE_CLIP_MODEL = os.environ.get(
+    "CLIP_MODEL_PATH",
+    str(FINETUNED_CLIP_MODEL)
 )
 
 # Vietnamese -> English translation before CLIP text encoding

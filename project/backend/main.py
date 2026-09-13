@@ -1,8 +1,10 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from backend.api import api_router
+from src.config import IMAGE_DIR
 from src.logger import log_exception
 from src.recommend import FashionRecommender
 from src.translator import VietnameseEnglishTranslator
@@ -44,6 +46,12 @@ app = FastAPI(
     title="Fashion Recommendation API",
     version="1.0.0",
     lifespan=lifespan,
+)
+
+app.mount(
+    "/catalog-images",
+    StaticFiles(directory=IMAGE_DIR, check_dir=False),
+    name="catalog-images",
 )
 
 app.include_router(api_router)

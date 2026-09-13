@@ -1,6 +1,67 @@
 import numpy as np
 
 
+def evaluate_retrieval(image_embeddings, text_embeddings, products, ks=(1, 5, 10), batch_size=128):
+    """Macro Recall@K on a held-out gallery shared by every query.
+
+    Cross-modal positives are rows with the same product ID. Image-to-image
+    positives share the ground-truth category, excluding the query product.
+    Queries without an eligible category positive are excluded and counted.
+    Category recall is a coarse proxy, not human relevance ground truth.
+    """
+    ks = sorted(set(ks))
+    if not ks or any(not isinstance(k, (int, np.integer)) or k <= 0 for k in ks):
+        raise ValueError("Recall cutoffs must be positive integers.")
+    if batch_size < 1:
+        raise ValueError("batch_size must be positive.")
+    images = np.asarray(image_embeddings, dtype=np.float32)
+    texts = np.asarray(text_embeddings, dtype=np.float32)
+    if (images.ndim != 2 or images.shape != texts.shape or len(images) != len(products)
+            or len(images) < 2 or images.shape[1] == 0):
+        raise ValueError("Expected aligned image/text matrices and at least two products.")
+    for matrix in (images, texts):
+        if not np.isfinite(matrix).all() or (np.linalg.norm(matrix, axis=1) == 0).any():
+            raise ValueError("Embeddings must be finite and nonzero.")
+    images = images / np.linalg.norm(images, axis=1, keepdims=True)
+    texts = texts / np.linalg.norm(texts, axis=1, keepdims=True)
+    ids = products.product_id.astype(str).to_numpy()
+    categories = products.category.fillna("").astype(str).to_numpy()
+    metrics = {}
+    for name, queries, gallery in (
+        ("text_to_image", texts, images),
+        ("image_to_text", images, texts),
+        ("image_to_image_category", images, images),
+    ):
+        totals = {k: 0.0 for k in ks}
+        evaluated = 0
+        for start in range(0, len(products), batch_size):
+            scores = queries[start:start + batch_size] @ gallery.T
+            for local, row_scores in enumerate(scores):
+                index = start + local
+                if name == "image_to_image_category":
+                    eligible = ids != ids[index]
+                    relevant = np.flatnonzero(eligible & (categories == categories[index]))
+                    if not categories[index].strip():
+                        relevant = np.array([], dtype=int)
+                else:
+                    eligible = np.ones(len(products), dtype=bool)
+                    relevant = np.flatnonzero(ids == ids[index])
+                if len(relevant) == 0:
+                    continue
+                candidates = np.flatnonzero(eligible)
+                ranking = candidates[np.argsort(-row_scores[candidates], kind="stable")[:max(ks)]]
+                for k in ks:
+                    totals[k] += recall_at_k(ranking, relevant, k)
+                evaluated += 1
+        metrics[name] = {
+            **{f"recall@{k}": totals[k] / evaluated if evaluated else None for k in ks},
+            "evaluated_queries": evaluated,
+            "skipped_queries": len(products) - evaluated,
+            "gallery_size": len(products),
+        }
+    return metrics
+
+
 # =========================================================
 # SYSTEM METRICS
 # =========================================================
@@ -128,6 +189,9 @@ def recall_at_k(
 
     Chỉ sử dụng khi đã có ground truth.
     """
+
+    if k <= 0:
+        return 0.0
 
     recommended = set(
         recommended_indices[:k]

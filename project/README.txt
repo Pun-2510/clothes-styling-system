@@ -1,6 +1,9 @@
 HƯỚNG DẪN CHẠY HỆ THỐNG GỢI Ý SẢN PHẨM THỜI TRANG — BACKEND
 ====================================================================
 
+FINE-TUNING VÀ RECALL: xem FINETUNING.md để huấn luyện CLIP trên dataset,
+so sánh Recall@1/5/10 pretrained với fine-tuned và dùng checkpoint trong app.
+
 1. ĐIỀU KIỆN TIÊN QUYẾT
 
 - Python 3.12 để đồng nhất với base image python:3.12-slim của Dockerfile.

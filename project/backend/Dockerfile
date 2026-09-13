@@ -12,6 +12,8 @@ COPY src ./src
 
 COPY data/processed/products.csv ./data/processed/products.csv
 
-COPY embeddings ./embeddings
+COPY embeddings_finetuned ./embeddings_finetuned
+
+COPY runs/clip_finetune_3epochs_local/best ./runs/clip_finetune_3epochs_local/best
 
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0"]

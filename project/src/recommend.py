@@ -29,6 +29,7 @@ sys.path.append(
 
 from src.config import (
     CLIP_MODEL,
+    ACTIVE_CLIP_MODEL,
     PROCESSED_CSV,
     EMBEDDINGS_FILE,
     TEXT_EMBEDDINGS_FILE,
@@ -36,6 +37,8 @@ from src.config import (
     CATEGORY_NEIGHBORS,
     CATEGORY_BONUS,
 )
+
+from src.clip_runtime import model_identity, validate_embedding_metadata
 
 from src.similarity import (
     cosine_similarity,
@@ -56,7 +59,16 @@ from src.logger import (
 
 class FashionRecommender:
 
-    def __init__(self):
+    def __init__(self, model_source=None, embedding_dir=None):
+
+        model_source = str(model_source or ACTIVE_CLIP_MODEL)
+        image_file = Path(embedding_dir) / "image_embeddings.npy" if embedding_dir is not None else EMBEDDINGS_FILE
+        text_file = Path(embedding_dir) / "text_embeddings.npy" if embedding_dir is not None else TEXT_EMBEDDINGS_FILE
+        identity = model_identity(model_source)
+        for path in (image_file, text_file):
+            if path.exists():
+                validate_embedding_metadata(path, identity, PROCESSED_CSV,
+                                            allow_legacy=model_source == CLIP_MODEL)
 
         log_info(
             "Initializing Fashion Recommender"
@@ -86,13 +98,13 @@ class FashionRecommender:
 
         self.processor = (
             AutoProcessor.from_pretrained(
-                CLIP_MODEL
+                model_source
             )
         )
 
         self.model = (
             CLIPModel.from_pretrained(
-                CLIP_MODEL
+                model_source
             )
             .to(self.device)
         )
@@ -112,13 +124,13 @@ class FashionRecommender:
         # -------------------------------------------------
 
         self.embeddings = np.load(
-            EMBEDDINGS_FILE
+            image_file
         )
 
         # Optional so image search still works before offline text encoding.
         self.text_embeddings = (
-            np.load(TEXT_EMBEDDINGS_FILE)
-            if TEXT_EMBEDDINGS_FILE.exists()
+            np.load(text_file)
+            if text_file.exists()
             else None
         )
 

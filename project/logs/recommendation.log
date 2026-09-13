@@ -857,3 +857,113 @@ KeyError: 'no_metrics'
 2026-09-07 22:37:51 | INFO | request=68d1f2fe | CATEGORY_CANDIDATE | rank=4 | category=Skirts | score=1.430660
 2026-09-07 22:37:51 | INFO | request=68d1f2fe | CATEGORY_CANDIDATE | rank=5 | category=Trunk | score=1.354089
 2026-09-07 22:37:51 | INFO | request=68d1f2fe | IMAGE_RECOMMENDATION_COMPLETE | mode=soft_category | category=Shorts | confidence=0.3851 | ranking=0.0427s | total=0.2181s
+2026-09-10 20:31:54 | INFO | Initializing Fashion Recommender
+2026-09-10 20:31:54 | INFO | Device=cpu
+2026-09-10 20:31:54 | INFO | Loading CLIP model
+2026-09-10 20:31:56 | INFO | Loaded products=5,015
+2026-09-10 20:31:56 | INFO | Loaded categories=142
+2026-09-10 20:31:56 | INFO | Recommender initialized successfully
+2026-09-10 20:32:13 | INFO | request=2974ce3a | IMAGE_SEARCH_STARTED | filename=10014.jpg | top_k=5
+2026-09-10 20:32:14 | INFO | request=2974ce3a | CATEGORY | predicted=Caps | confidence=0.4147
+2026-09-10 20:32:14 | INFO | request=2974ce3a | CATEGORY_CANDIDATE | rank=1 | category=Caps | score=7.352085
+2026-09-10 20:32:14 | INFO | request=2974ce3a | CATEGORY_CANDIDATE | rank=2 | category=Tshirts | score=6.088573
+2026-09-10 20:32:14 | INFO | request=2974ce3a | CATEGORY_CANDIDATE | rank=3 | category=Backpacks | score=2.002575
+2026-09-10 20:32:14 | INFO | request=2974ce3a | CATEGORY_CANDIDATE | rank=4 | category=Jackets | score=0.659743
+2026-09-10 20:32:14 | INFO | request=2974ce3a | CATEGORY_CANDIDATE | rank=5 | category=Shorts | score=0.391480
+2026-09-10 20:32:14 | INFO | request=2974ce3a | COMPARISON_COMPLETE | category=Caps | confidence=0.4147 | no_category=0.0484s | hard_category=0.0218s | soft_category=0.0632s | total=0.5211s
+2026-09-10 20:32:23 | INFO | request=a2d98149 | IMAGE_SEARCH_STARTED | filename=10014.jpg | top_k=5
+2026-09-10 20:32:24 | INFO | request=a2d98149 | CATEGORY | predicted=Caps | confidence=0.4147
+2026-09-10 20:32:24 | INFO | request=a2d98149 | CATEGORY_CANDIDATE | rank=1 | category=Caps | score=7.352085
+2026-09-10 20:32:24 | INFO | request=a2d98149 | CATEGORY_CANDIDATE | rank=2 | category=Tshirts | score=6.088573
+2026-09-10 20:32:24 | INFO | request=a2d98149 | CATEGORY_CANDIDATE | rank=3 | category=Backpacks | score=2.002575
+2026-09-10 20:32:24 | INFO | request=a2d98149 | CATEGORY_CANDIDATE | rank=4 | category=Jackets | score=0.659743
+2026-09-10 20:32:24 | INFO | request=a2d98149 | CATEGORY_CANDIDATE | rank=5 | category=Shorts | score=0.391480
+2026-09-10 20:32:24 | INFO | request=a2d98149 | COMPARISON_COMPLETE | category=Caps | confidence=0.4147 | no_category=0.0179s | hard_category=0.0041s | soft_category=0.0191s | total=0.2028s
+2026-09-10 20:32:29 | INFO | request=5f4433ca | IMAGE_SEARCH_STARTED | filename=10014.jpg | top_k=5
+2026-09-10 20:32:29 | INFO | request=5f4433ca | CATEGORY | predicted=Caps | confidence=0.4147
+2026-09-10 20:32:29 | INFO | request=5f4433ca | CATEGORY_CANDIDATE | rank=1 | category=Caps | score=7.352085
+2026-09-10 20:32:29 | INFO | request=5f4433ca | CATEGORY_CANDIDATE | rank=2 | category=Tshirts | score=6.088573
+2026-09-10 20:32:29 | INFO | request=5f4433ca | CATEGORY_CANDIDATE | rank=3 | category=Backpacks | score=2.002575
+2026-09-10 20:32:29 | INFO | request=5f4433ca | CATEGORY_CANDIDATE | rank=4 | category=Jackets | score=0.659743
+2026-09-10 20:32:29 | INFO | request=5f4433ca | CATEGORY_CANDIDATE | rank=5 | category=Shorts | score=0.391480
+2026-09-10 20:32:29 | INFO | request=5f4433ca | COMPARISON_COMPLETE | category=Caps | confidence=0.4147 | no_category=0.0182s | hard_category=0.0033s | soft_category=0.0198s | total=0.1964s
+2026-09-10 20:32:47 | INFO | request=da448ae3 | IMAGE_SEARCH_STARTED | filename=1525.jpg | top_k=5
+2026-09-10 20:32:47 | INFO | request=da448ae3 | CATEGORY | predicted=Backpacks | confidence=0.8827
+2026-09-10 20:32:47 | INFO | request=da448ae3 | CATEGORY_CANDIDATE | rank=1 | category=Backpacks | score=16.224691
+2026-09-10 20:32:47 | INFO | request=da448ae3 | CATEGORY_CANDIDATE | rank=2 | category=Messenger Bag | score=1.090400
+2026-09-10 20:32:47 | INFO | request=da448ae3 | CATEGORY_CANDIDATE | rank=3 | category=Free Gifts | score=0.390080
+2026-09-10 20:32:47 | INFO | request=da448ae3 | CATEGORY_CANDIDATE | rank=4 | category=Handbags | score=0.355754
+2026-09-10 20:32:47 | INFO | request=da448ae3 | CATEGORY_CANDIDATE | rank=5 | category=Laptop Bag | score=0.319786
+2026-09-10 20:32:47 | INFO | request=da448ae3 | COMPARISON_COMPLETE | category=Backpacks | confidence=0.8827 | no_category=0.0181s | hard_category=0.0032s | soft_category=0.0182s | total=0.1969s
+2026-09-10 20:33:07 | INFO | request=cc33eb1d | IMAGE_SEARCH_STARTED | filename=1581.jpg | top_k=5
+2026-09-10 20:33:08 | INFO | request=cc33eb1d | CATEGORY | predicted=Briefs | confidence=0.3136
+2026-09-10 20:33:08 | INFO | request=cc33eb1d | CATEGORY_CANDIDATE | rank=1 | category=Briefs | score=2.785299
+2026-09-10 20:33:08 | INFO | request=cc33eb1d | CATEGORY_CANDIDATE | rank=2 | category=Tshirts | score=1.056113
+2026-09-10 20:33:08 | INFO | request=cc33eb1d | CATEGORY_CANDIDATE | rank=3 | category=Bra | score=1.016898
+2026-09-10 20:33:08 | INFO | request=cc33eb1d | CATEGORY_CANDIDATE | rank=4 | category=Tops | score=0.906971
+2026-09-10 20:33:08 | INFO | request=cc33eb1d | CATEGORY_CANDIDATE | rank=5 | category=Swimwear | score=0.453547
+2026-09-10 20:33:08 | INFO | request=cc33eb1d | COMPARISON_COMPLETE | category=Briefs | confidence=0.3136 | no_category=0.0171s | hard_category=0.0041s | soft_category=0.0182s | total=0.1762s
+2026-09-10 20:33:33 | INFO | request=985b758f | IMAGE_SEARCH_STARTED | filename=10017.jpg | top_k=5
+2026-09-10 20:33:34 | INFO | request=985b758f | CATEGORY | predicted=Tshirts | confidence=0.3851
+2026-09-10 20:33:34 | INFO | request=985b758f | CATEGORY_CANDIDATE | rank=1 | category=Tshirts | score=6.552818
+2026-09-10 20:33:34 | INFO | request=985b758f | CATEGORY_CANDIDATE | rank=2 | category=Jackets | score=2.905541
+2026-09-10 20:33:34 | INFO | request=985b758f | CATEGORY_CANDIDATE | rank=3 | category=Sweatshirts | score=1.713802
+2026-09-10 20:33:34 | INFO | request=985b758f | CATEGORY_CANDIDATE | rank=4 | category=Backpacks | score=1.268052
+2026-09-10 20:33:34 | INFO | request=985b758f | CATEGORY_CANDIDATE | rank=5 | category=Track Pants | score=0.875020
+2026-09-10 20:33:34 | INFO | request=985b758f | COMPARISON_COMPLETE | category=Tshirts | confidence=0.3851 | no_category=0.0736s | hard_category=0.0160s | soft_category=0.0450s | total=1.3551s
+2026-09-10 20:33:55 | INFO | request=1cb46b3d | IMAGE_SEARCH_STARTED | filename=10053.jpg | top_k=5
+2026-09-10 20:33:55 | INFO | request=1cb46b3d | CATEGORY | predicted=Tops | confidence=0.4196
+2026-09-10 20:33:55 | INFO | request=1cb46b3d | CATEGORY_CANDIDATE | rank=1 | category=Tops | score=7.297883
+2026-09-10 20:33:55 | INFO | request=1cb46b3d | CATEGORY_CANDIDATE | rank=2 | category=Tshirts | score=3.917878
+2026-09-10 20:33:55 | INFO | request=1cb46b3d | CATEGORY_CANDIDATE | rank=3 | category=Dresses | score=3.187077
+2026-09-10 20:33:55 | INFO | request=1cb46b3d | CATEGORY_CANDIDATE | rank=4 | category=Capris | score=0.882238
+2026-09-10 20:33:55 | INFO | request=1cb46b3d | CATEGORY_CANDIDATE | rank=5 | category=Rompers | score=0.539834
+2026-09-10 20:33:55 | INFO | request=1cb46b3d | COMPARISON_COMPLETE | category=Tops | confidence=0.4196 | no_category=0.0464s | hard_category=0.0090s | soft_category=0.0479s | total=0.3793s
+2026-09-10 20:34:45 | INFO | request=e528e8aa | IMAGE_SEARCH_STARTED | filename=10098.jpg | top_k=5
+2026-09-10 20:34:45 | INFO | request=e528e8aa | CATEGORY | predicted=Watches | confidence=0.9748
+2026-09-10 20:34:45 | INFO | request=e528e8aa | CATEGORY_CANDIDATE | rank=1 | category=Watches | score=22.403583
+2026-09-10 20:34:45 | INFO | request=e528e8aa | CATEGORY_CANDIDATE | rank=2 | category=Free Gifts | score=0.579495
+2026-09-10 20:34:45 | INFO | request=e528e8aa | COMPARISON_COMPLETE | category=Watches | confidence=0.9748 | no_category=0.0299s | hard_category=0.0086s | soft_category=0.0308s | total=0.2481s
+2026-09-10 20:35:01 | INFO | request=1a14f7f4 | IMAGE_SEARCH_STARTED | filename=1626.jpg | top_k=5
+2026-09-10 20:35:01 | INFO | request=1a14f7f4 | CATEGORY | predicted=Tshirts | confidence=0.3101
+2026-09-10 20:35:01 | INFO | request=1a14f7f4 | CATEGORY_CANDIDATE | rank=1 | category=Tshirts | score=1.459496
+2026-09-10 20:35:01 | INFO | request=1a14f7f4 | CATEGORY_CANDIDATE | rank=2 | category=Sports Shoes | score=0.832681
+2026-09-10 20:35:01 | INFO | request=1a14f7f4 | CATEGORY_CANDIDATE | rank=3 | category=Caps | score=0.616439
+2026-09-10 20:35:01 | INFO | request=1a14f7f4 | CATEGORY_CANDIDATE | rank=4 | category=Backpacks | score=0.534135
+2026-09-10 20:35:01 | INFO | request=1a14f7f4 | CATEGORY_CANDIDATE | rank=5 | category=Footballs | score=0.238934
+2026-09-10 20:35:01 | INFO | request=1a14f7f4 | COMPARISON_COMPLETE | category=Tshirts | confidence=0.3101 | no_category=0.0232s | hard_category=0.0085s | soft_category=0.0237s | total=0.2149s
+2026-09-10 20:35:24 | INFO | request=59b41183 | IMAGE_SEARCH_STARTED | filename=1808.jpg | top_k=5
+2026-09-10 20:35:24 | INFO | request=59b41183 | CATEGORY | predicted=Perfume and Body Mist | confidence=0.5609
+2026-09-10 20:35:24 | INFO | request=59b41183 | CATEGORY_CANDIDATE | rank=1 | category=Perfume and Body Mist | score=7.959055
+2026-09-10 20:35:24 | INFO | request=59b41183 | CATEGORY_CANDIDATE | rank=2 | category=Lipstick | score=1.685483
+2026-09-10 20:35:24 | INFO | request=59b41183 | CATEGORY_CANDIDATE | rank=3 | category=Lip Gloss | score=1.682021
+2026-09-10 20:35:24 | INFO | request=59b41183 | CATEGORY_CANDIDATE | rank=4 | category=Deodorant | score=1.637154
+2026-09-10 20:35:24 | INFO | request=59b41183 | CATEGORY_CANDIDATE | rank=5 | category=Nail Polish | score=0.486488
+2026-09-10 20:35:24 | INFO | request=59b41183 | COMPARISON_COMPLETE | category=Perfume and Body Mist | confidence=0.5609 | no_category=0.0182s | hard_category=0.0035s | soft_category=0.0199s | total=0.1812s
+2026-09-10 20:35:50 | INFO | request=31f5ca12 | IMAGE_SEARCH_STARTED | filename=2104.jpg | top_k=5
+2026-09-10 20:35:50 | INFO | request=31f5ca12 | CATEGORY | predicted=Shirts | confidence=0.9581
+2026-09-10 20:35:50 | INFO | request=31f5ca12 | CATEGORY_CANDIDATE | rank=1 | category=Shirts | score=17.974999
+2026-09-10 20:35:50 | INFO | request=31f5ca12 | CATEGORY_CANDIDATE | rank=2 | category=Tshirts | score=0.786296
+2026-09-10 20:35:50 | INFO | request=31f5ca12 | COMPARISON_COMPLETE | category=Shirts | confidence=0.9581 | no_category=0.0216s | hard_category=0.0044s | soft_category=0.0239s | total=0.1877s
+2026-09-10 20:36:17 | INFO | request=3026a8a0 | IMAGE_SEARCH_STARTED | filename=1997.jpg | top_k=5
+2026-09-10 20:36:17 | INFO | request=3026a8a0 | CATEGORY | predicted=Shorts | confidence=0.5764
+2026-09-10 20:36:17 | INFO | request=3026a8a0 | CATEGORY_CANDIDATE | rank=1 | category=Shorts | score=13.264260
+2026-09-10 20:36:17 | INFO | request=3026a8a0 | CATEGORY_CANDIDATE | rank=2 | category=Trousers | score=3.253844
+2026-09-10 20:36:17 | INFO | request=3026a8a0 | CATEGORY_CANDIDATE | rank=3 | category=Boxers | score=2.505329
+2026-09-10 20:36:17 | INFO | request=3026a8a0 | CATEGORY_CANDIDATE | rank=4 | category=Lounge Shorts | score=1.443161
+2026-09-10 20:36:17 | INFO | request=3026a8a0 | CATEGORY_CANDIDATE | rank=5 | category=Trunk | score=1.221525
+2026-09-10 20:36:17 | INFO | request=3026a8a0 | COMPARISON_COMPLETE | category=Shorts | confidence=0.5764 | no_category=0.0180s | hard_category=0.0033s | soft_category=0.0188s | total=0.2003s
+2026-09-10 20:36:47 | INFO | request=f39874e1 | IMAGE_SEARCH_STARTED | filename=1638.jpg | top_k=5
+2026-09-10 20:36:47 | INFO | request=f39874e1 | CATEGORY | predicted=Sunglasses | confidence=0.9582
+2026-09-10 20:36:47 | INFO | request=f39874e1 | CATEGORY_CANDIDATE | rank=1 | category=Sunglasses | score=25.451017
+2026-09-10 20:36:47 | INFO | request=f39874e1 | CATEGORY_CANDIDATE | rank=2 | category=Ties and Cufflinks | score=0.563426
+2026-09-10 20:36:47 | INFO | request=f39874e1 | CATEGORY_CANDIDATE | rank=3 | category=Free Gifts | score=0.546990
+2026-09-10 20:36:47 | INFO | request=f39874e1 | COMPARISON_COMPLETE | category=Sunglasses | confidence=0.9582 | no_category=0.0249s | hard_category=0.0048s | soft_category=0.0301s | total=0.2570s
+2026-09-10 20:37:11 | INFO | request=907927d8 | IMAGE_SEARCH_STARTED | filename=45567.jpg | top_k=5
+2026-09-10 20:37:11 | INFO | request=907927d8 | CATEGORY | predicted=Deodorant | confidence=0.5787
+2026-09-10 20:37:11 | INFO | request=907927d8 | CATEGORY_CANDIDATE | rank=1 | category=Deodorant | score=9.520702
+2026-09-10 20:37:11 | INFO | request=907927d8 | CATEGORY_CANDIDATE | rank=2 | category=Perfume and Body Mist | score=2.491396
+2026-09-10 20:37:11 | INFO | request=907927d8 | CATEGORY_CANDIDATE | rank=3 | category=Kajal and Eyeliner | score=0.617907
+2026-09-10 20:37:11 | INFO | request=907927d8 | CATEGORY_CANDIDATE | rank=4 | category=Fragrance Gift Set | score=0.610349
+2026-09-10 20:37:11 | INFO | request=907927d8 | CATEGORY_CANDIDATE | rank=5 | category=Sunscreen | score=0.557318
+2026-09-10 20:37:12 | INFO | request=907927d8 | COMPARISON_COMPLETE | category=Deodorant | confidence=0.5787 | no_category=0.0174s | hard_category=0.0039s | soft_category=0.0203s | total=0.1830s

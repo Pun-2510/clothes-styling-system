@@ -5,6 +5,7 @@ pydantic==2.13.5
 
 torch==2.13.0
 transformers==5.15.0
+tqdm==4.70.0
 sentencepiece==0.2.2
 sacremoses==0.2.0
 
