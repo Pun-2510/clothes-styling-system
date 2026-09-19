@@ -4,16 +4,14 @@ WORKDIR /app
 
 COPY backend/requirements.txt ./requirements.txt
 
-RUN pip install --no-cache-dir -r requirements.txt
+# Compose currently serves on CPU. Install the CPU wheel explicitly so the
+# backend image does not pull CUDA and NVIDIA runtime packages from PyPI.
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --index-url https://download.pytorch.org/whl/cpu torch==2.13.0 && \
+    pip install -r requirements.txt
 
 COPY backend ./backend
 
 COPY src ./src
 
-COPY data/processed/products.csv ./data/processed/products.csv
-
-COPY embeddings_finetuned ./embeddings_finetuned
-
-COPY runs/clip_finetune_3epochs_local/best ./runs/clip_finetune_3epochs_local/best
-
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0"]
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

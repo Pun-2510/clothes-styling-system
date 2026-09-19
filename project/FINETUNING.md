@@ -133,9 +133,12 @@ FashionRecommender(
 ```
 
 Muốn quay lại pretrained: bỏ hai biến môi trường rồi khởi động lại ứng dụng
-(cần có catalog embedding pretrained ở `embeddings/`). Với Docker, cần mount
-checkpoint/embedding vào container và dùng đường dẫn bên trong container;
-biến PowerShell không tự được truyền vào Docker Compose.
+(cần có catalog embedding pretrained ở `embeddings/`). Docker Compose hiện bind
+mount read-only checkpoint `runs/clip_finetune_3epochs_local/best`, thư mục
+`embeddings_finetuned` và `data/processed`; sau khi tạo lại các artifact này chỉ
+cần `docker compose restart backend`. Nếu dùng run hoặc thư mục embedding khác,
+cập nhật đồng thời source mount, `CLIP_MODEL_PATH` và `CLIP_EMBEDDING_DIR` trong
+`docker-compose.yml`; biến PowerShell không tự được truyền vào Docker Compose.
 
 ## 4. Kiểm thử
 

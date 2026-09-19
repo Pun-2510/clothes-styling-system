@@ -967,3 +967,12 @@ KeyError: 'no_metrics'
 2026-09-10 20:37:11 | INFO | request=907927d8 | CATEGORY_CANDIDATE | rank=4 | category=Fragrance Gift Set | score=0.610349
 2026-09-10 20:37:11 | INFO | request=907927d8 | CATEGORY_CANDIDATE | rank=5 | category=Sunscreen | score=0.557318
 2026-09-10 20:37:12 | INFO | request=907927d8 | COMPARISON_COMPLETE | category=Deodorant | confidence=0.5787 | no_category=0.0174s | hard_category=0.0039s | soft_category=0.0203s | total=0.1830s
+2026-09-19 05:15:56 | INFO | Initializing Fashion Recommender
+2026-09-19 05:15:56 | INFO | Device=cpu
+2026-09-19 05:15:56 | INFO | Loading CLIP model
+2026-09-19 05:16:00 | INFO | Loaded products=5,015
+2026-09-19 05:16:00 | INFO | Loaded categories=142
+2026-09-19 05:16:00 | INFO | Recommender initialized successfully
+2026-09-19 05:18:51 | INFO | TEXT_SEARCH | query='Red dress without texture' | top_k=5 | image_weight=0.50 | elapsed=2.3794s
+2026-09-19 05:18:59 | INFO | TEXT_SEARCH | query='Red dress without texture' | top_k=5 | image_weight=0.20 | elapsed=0.1718s
+2026-09-19 05:19:08 | INFO | TEXT_SEARCH | query='Red dress without texture' | top_k=5 | image_weight=0.70 | elapsed=0.4778s

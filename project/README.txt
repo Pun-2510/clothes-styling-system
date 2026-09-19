@@ -44,6 +44,51 @@ Kiểm tra:
   Test-Path .\data\data.csv
   Test-Path .\data\data
 
+2A. TÙY CHỌN — CHẠY NHANH BẰNG MODEL CLIP ĐÃ FINE-TUNE
+
+Nếu chỉ cần chạy và kiểm tra hệ thống, không cần tự preprocess, fine-tune CLIP
+hoặc sinh lại embeddings. Tải gói artifact đã chuẩn bị sẵn từ Google Drive:
+
+  Link Google Drive: https://drive.google.com/file/d/1_xiQjMBlf5EMZVRflDwC2G5kbgEkwy00/view?usp=drive_link
+  Tên file: fashion-recommendation-artifacts-v1.zip
+  Dung lượng: khoảng 555 MiB
+
+Gói này chứa ba nhóm file đồng bộ với nhau:
+
+  data/processed/products.csv
+  embeddings_finetuned/
+    image_embeddings.npy
+    image_embeddings.npy.json
+    text_embeddings.npy
+    text_embeddings.npy.json
+  runs/clip_finetune_3epochs_local/
+    best/
+      config.json
+      model.safetensors
+      processor_config.json
+      tokenizer.json
+      tokenizer_config.json
+    experiment.json
+    training.json
+    comparison.csv
+    comparison.json
+
+Sau khi tải, đặt file ZIP trong thư mục gốc của project và giải nén, giữ nguyên
+cấu trúc thư mục
+
+Sau đó chạy thẳng:
+
+  docker compose up -d --build
+
+Các file .npy.json không được xóa vì backend dùng chúng để kiểm tra model,
+embeddings và products.csv có đúng cùng một phiên bản hay không. Không chạy lại
+src.prepare_dataset khi sử dụng gói này vì thay đổi products.csv sẽ làm checksum
+không còn khớp với embeddings. Model dịch Việt-Anh không nằm trong gói; Docker
+sẽ tải ở lần chạy đầu và lưu lại trong named volume huggingface_cache.
+
+Gói artifact không chứa ảnh catalog data/data/ do dung lượng lớn. Người dùng vẫn
+cần tải ảnh từ dataset ở mục 1 và đặt đúng cấu trúc hướng dẫn tại mục 2.
+
 3. CHUẨN BỊ MÔI TRƯỜNG PYTHON
 
 Chỉ tạo môi trường nếu chưa có .venv:
@@ -117,9 +162,10 @@ khi chạy Docker nếu cả hai cùng dùng cổng 8000.
 
 7. BUILD VÀ CHẠY DOCKER BACKEND
 
-Trước build phải có products.csv và thư mục embeddings từ các bước trên.
-Dockerfile COPY các dữ liệu này vào image, không tự xử lý dữ liệu hay
-tự sinh embeddings khi container khởi động.
+Trước khi chạy phải có products.csv, embeddings và checkpoint best từ các bước
+trên. Docker Compose bind mount các artifact này từ máy vào backend để tránh
+đóng gói trùng model lớn vào image. Container không tự xử lý dữ liệu hoặc tự sinh
+embeddings khi khởi động.
 
 Kiểm tra Docker Desktop/engine và cấu hình:
   docker version
@@ -137,26 +183,34 @@ API truy cập tại http://localhost:8000. Cấu hình hiện tại dùng Pytho
 WORKDIR /app, chạy uvicorn backend.main:app --host 0.0.0.0; cổng mặc định
 của Uvicorn là 8000, được Compose ánh xạ ra cổng 8000 trên máy.
 
-Lưu ý đúng với cấu hình cơ bản hiện có:
-- backend/ và src/ được bind mount. Dữ liệu processed/embeddings được COPY
-  vào image, nên sau khi thay dữ liệu phải build lại backend.
-- Chưa có volume model cache. Container tải model vào cache của nó; tạo
-  lại container có thể phải tải lại. Cache model ở Windows không tự động
-  được chia sẻ với container Linux.
-- Chưa mount logs ra máy. Log file có thể đọc trong container bằng:
-    docker compose exec backend sh -c "tail -n 50 /app/logs/recommendation.log"
-- Không COPY ảnh catalog gốc vào image. API trả image_reference, không
-  phục vụ URL ảnh. API ảnh mã hóa file được upload, tìm trên embeddings
-  có sẵn, nên không cần đọc ảnh catalog gốc cho bước xếp hạng này.
+Lưu ý đúng với cấu hình development hiện có:
+- backend/, src/, data/processed/, embeddings_finetuned/ và checkpoint best/
+  được bind mount. Ba thư mục dữ liệu/model được mount read-only; sau khi tạo
+  lại checkpoint và embeddings chỉ cần restart backend, không cần build lại image.
+- Backend chỉ có một image target; checkpoint và embeddings không bị đóng gói
+  lặp lại mà được Docker Compose mount từ máy khi container chạy.
+- Named volume huggingface_cache được mount tại /cache/huggingface qua HF_HOME.
+  Model dịch tải từ Hugging Face ở lần chạy đầu và được dùng lại khi container
+  được tạo lại. `docker compose down -v` sẽ xóa cache này.
+- Backend Dockerfile cài wheel PyTorch CPU từ index chính thức thay vì kéo theo
+  các runtime CUDA/NVIDIA không được dùng trong cấu hình Compose hiện tại.
+- logs/ được bind mount vào /app/logs nên recommendation.log tồn tại ngoài
+  vòng đời container và có thể đọc trực tiếp trên máy host.
+- data/data/ được bind mount read-only để API phục vụ ảnh catalog tại
+  /catalog-images. Ảnh gốc không được COPY vào backend image.
+- Frontend chỉ khởi động sau khi healthcheck /api/health/ready của backend thành
+  công. Lần chạy đầu có thể chờ lâu hơn do backend phải tải model dịch.
 - products.csv tạo ở Windows chứa image_path kiểu Windows. Đường dẫn đó
   không dùng được trong Linux nếu muốn chạy lại image encoder ở container.
-  Quy trình hướng dẫn ở đây sinh embeddings trên máy trước khi build.
+  Quy trình hướng dẫn ở đây sinh embeddings trên máy trước khi chạy backend.
 
 Dừng/khởi động lại riêng backend:
   docker compose stop backend
   docker compose start backend
 Sau khi sửa code, nếu không tự cập nhật tiến trình:
   docker compose restart backend
+Sau khi thay package-lock.json, cập nhật named volume node_modules bằng:
+  docker compose run --rm frontend npm ci
 
 8. KIỂM TRA VÀ GỌI API
 

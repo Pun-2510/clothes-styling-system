@@ -20,10 +20,9 @@ services:
     environment:
       VITE_API_PROXY_TARGET: http://backend:8000
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
-    # depends_on:
-    #   - backend
     networks:
       - app-network
 
@@ -34,6 +33,7 @@ services:
     environment:
       CLIP_MODEL_PATH: /app/runs/clip_finetune_3epochs_local/best
       CLIP_EMBEDDING_DIR: /app/embeddings_finetuned
+      HF_HOME: /cache/huggingface
     volumes:
       - type: bind
         source: ./backend
@@ -45,11 +45,42 @@ services:
         source: ./data/data
         target: /app/data/data
         read_only: true
+      - type: bind
+        source: ./data/processed
+        target: /app/data/processed
+        read_only: true
+      - type: bind
+        source: ./embeddings_finetuned
+        target: /app/embeddings_finetuned
+        read_only: true
+      - type: bind
+        source: ./runs/clip_finetune_3epochs_local/best
+        target: /app/runs/clip_finetune_3epochs_local/best
+        read_only: true
+      - type: bind
+        source: ./logs
+        target: /app/logs
+      - type: volume
+        source: huggingface_cache
+        target: /cache/huggingface
     ports:
       - 8000:8000
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://localhost:8000/api/health/ready', timeout=5)
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 120s
     restart: unless-stopped
     networks:
       - app-network
 
 volumes:
   node_modules:
+  huggingface_cache:
