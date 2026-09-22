@@ -1,0 +1,8 @@
+torch==2.13.0
+torchvision==0.28.0
+datasets==5.0.1
+Pillow==12.3.0
+numpy==2.4.6
+sentence-transformers==6.0.0
+transformers==5.15.1
+safetensors==0.8.0

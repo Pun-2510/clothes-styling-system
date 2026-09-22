@@ -1,0 +1,16 @@
+# Only ship the website and required inference artifacts.
+/*
+!/app.py
+!/requirements.txt
+!/README.md
+!/.gitignore
+!/.gitattributes
+!/models/
+/models/*
+!/models/resnet_outfit.pth
+!/models/bert_fashion_model/
+/models/bert_fashion_model/*
+!/models/bert_fashion_model/config.json
+!/models/bert_fashion_model/model.safetensors
+!/models/bert_fashion_model/tokenizer.json
+!/models/bert_fashion_model/tokenizer_config.json
