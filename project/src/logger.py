@@ -1,4 +1,5 @@
 import logging
+import os
 from pathlib import Path
 
 
@@ -17,7 +18,7 @@ LOG_DIR = BASE_DIR / "logs"
 
 LOG_FILE = (
     LOG_DIR /
-    "recommendation.log"
+    os.environ.get("RECOMMENDATION_LOG_NAME", "recommendation.log")
 )
 
 

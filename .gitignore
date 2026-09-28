@@ -53,12 +53,44 @@ project/runs/**
 !project/runs/**/
 !project/runs/**/comparison.csv
 !project/runs/**/comparison.json
-# project/embeddings_finetuned/
+
+# Local datasets and generated catalog/embedding files. Keep source code and
+# documentation in Git; download or regenerate these runtime artifacts locally.
+project/data/**
+!project/data/.gitkeep
+!project/data/README.md
+project/embeddings/**
+!project/embeddings/.gitkeep
+!project/embeddings/README.md
+project/embeddings_finetuned/**
+!project/embeddings_finetuned/.gitkeep
+!project/embeddings_finetuned/README.md
+project/comparisons/results/**
+!project/comparisons/results/.gitkeep
+project/datasets/**
+!project/datasets/.gitkeep
+!project/datasets/README.md
+project/outfit_recommendation/artifacts/**
+!project/outfit_recommendation/artifacts/.gitkeep
+
+# Model weights, vector arrays and exported archives
+*.npy
+*.npz
 *.safetensors
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.h5
+*.zip
+
+# Training/tool caches
 wandb/
 mlruns/
 lightning_logs/
 .cache/huggingface/
+.cache/torch/
+.huggingface/
 
 # Runtime logs and temporary files
 *.log

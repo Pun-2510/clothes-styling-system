@@ -132,13 +132,16 @@ FashionRecommender(
 )
 ```
 
-Muốn quay lại pretrained: bỏ hai biến môi trường rồi khởi động lại ứng dụng
-(cần có catalog embedding pretrained ở `embeddings/`). Docker Compose hiện bind
+Muốn chạy pretrained ngoài Docker: đặt CLIP_MODEL_PATH=openai/clip-vit-base-patch32
+và CLIP_EMBEDDING_DIR tới embeddings pretrained tương ứng rồi khởi động lại.
+API hiện chạy từ project/ bằng `python -m uvicorn web.backend.main:app`.
+Docker Compose hiện bind
 mount read-only checkpoint `runs/clip_finetune_3epochs_local/best`, thư mục
 `embeddings_finetuned` và `data/processed`; sau khi tạo lại các artifact này chỉ
-cần `docker compose restart backend`. Nếu dùng run hoặc thư mục embedding khác,
-cập nhật đồng thời source mount, `CLIP_MODEL_PATH` và `CLIP_EMBEDDING_DIR` trong
-`docker-compose.yml`; biến PowerShell không tự được truyền vào Docker Compose.
+cần `docker compose restart backend backend_2`. Nếu dùng run fine-tuned hoặc thư mục
+embedding khác, cập nhật FASHION_CHECKPOINT_DIR và FASHION_EMBEDDINGS_DIR trong .env
+rồi chạy `docker-compose up -d --build`. Mặc định web không lấy dữ liệu từ comparisons/.
+Backend/frontend/Nginx nằm trong web/; Compose và dữ liệu vẫn ở project/.
 
 ## 4. Kiểm thử
 

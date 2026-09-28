@@ -2,16 +2,19 @@ import numpy as np
 
 
 def evaluate_retrieval(image_embeddings, text_embeddings, products, ks=(1, 5, 10), batch_size=128):
-    """Macro Recall@K on a held-out gallery shared by every query.
+    """Macro Precision@K, Recall@K and F1@K on one held-out gallery.
 
     Cross-modal positives are rows with the same product ID. Image-to-image
     positives share the ground-truth category, excluding the query product.
     Queries without an eligible category positive are excluded and counted.
-    Category recall is a coarse proxy, not human relevance ground truth.
+    Category metrics are coarse proxies, not human relevance ground truth.
+
+    Precision, recall and their harmonic mean are calculated for each eligible
+    query first, then macro-averaged so every query has the same weight.
     """
     ks = sorted(set(ks))
     if not ks or any(not isinstance(k, (int, np.integer)) or k <= 0 for k in ks):
-        raise ValueError("Recall cutoffs must be positive integers.")
+        raise ValueError("Retrieval cutoffs must be positive integers.")
     if batch_size < 1:
         raise ValueError("batch_size must be positive.")
     images = np.asarray(image_embeddings, dtype=np.float32)
@@ -32,7 +35,10 @@ def evaluate_retrieval(image_embeddings, text_embeddings, products, ks=(1, 5, 10
         ("image_to_text", images, texts),
         ("image_to_image_category", images, images),
     ):
-        totals = {k: 0.0 for k in ks}
+        totals = {
+            metric: {k: 0.0 for k in ks}
+            for metric in ("precision", "recall", "f1")
+        }
         evaluated = 0
         for start in range(0, len(products), batch_size):
             scores = queries[start:start + batch_size] @ gallery.T
@@ -51,10 +57,18 @@ def evaluate_retrieval(image_embeddings, text_embeddings, products, ks=(1, 5, 10
                 candidates = np.flatnonzero(eligible)
                 ranking = candidates[np.argsort(-row_scores[candidates], kind="stable")[:max(ks)]]
                 for k in ks:
-                    totals[k] += recall_at_k(ranking, relevant, k)
+                    precision = precision_at_k(ranking, relevant, k)
+                    recall = recall_at_k(ranking, relevant, k)
+                    totals["precision"][k] += precision
+                    totals["recall"][k] += recall
+                    totals["f1"][k] += f1_score(precision, recall)
                 evaluated += 1
         metrics[name] = {
-            **{f"recall@{k}": totals[k] / evaluated if evaluated else None for k in ks},
+            **{
+                f"{metric}@{k}": totals[metric][k] / evaluated if evaluated else None
+                for metric in ("precision", "recall", "f1")
+                for k in ks
+            },
             "evaluated_queries": evaluated,
             "skipped_queries": len(products) - evaluated,
             "gallery_size": len(products),
@@ -193,6 +207,9 @@ def recall_at_k(
     if k <= 0:
         return 0.0
 
+    if k <= 0:
+        return 0.0
+
     recommended = set(
         recommended_indices[:k]
     )
@@ -273,4 +290,27 @@ def ndcg_at_k(
     return (
         dcg /
         idcg
+    )
+
+
+# =========================================================
+# F1@K
+# =========================================================
+
+def f1_score(
+    precision,
+    recall
+):
+    """Harmonic mean of precision and recall for one query."""
+
+    denominator = precision + recall
+
+    if denominator <= 0:
+        return 0.0
+
+    return (
+        2.0
+        * precision
+        * recall
+        / denominator
     )

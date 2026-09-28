@@ -9,6 +9,10 @@
   ],
   "best_epoch": 3,
   "selection_metric": "mean validation text_to_image/image_to_text recall@1",
+  "metric_aggregation": "macro average over eligible queries",
+  "precision_definition": "relevant retrieved / actual returned in top-k",
+  "recall_definition": "relevant retrieved / all relevant in gallery",
+  "f1_definition": "per-query harmonic mean of precision and recall",
   "category_relevance": "same ground-truth category, excluding the query product; proxy only",
   "pair_relevance": "same product_id",
   "models": {
@@ -16,7 +20,6 @@
       "source": "openai/clip-vit-base-patch32"
     },
     "finetuned": {
-      "source": "D:\\project\\runs\\clip_finetune_3epochs_local\\best",
       "files": {
         "config.json": "d508d4867da553883f3655a1e1cb60bf769f35c767886888ee9a1f95ac367c32",
         "model.safetensors": "841d036512317cf7cb8475e042b0e2fa78f89f79959f039cdcdcfd9a0cafeb38",
@@ -29,25 +32,43 @@
   "metrics": {
     "pretrained": {
       "text_to_image": {
+        "precision@1": 0.47520661157024796,
+        "precision@5": 0.1628099173553731,
+        "precision@10": 0.09132231404958752,
         "recall@1": 0.47520661157024796,
         "recall@5": 0.8140495867768595,
         "recall@10": 0.9132231404958677,
+        "f1@1": 0.47520661157024796,
+        "f1@5": 0.27134986225895186,
+        "f1@10": 0.1660405709992492,
         "evaluated_queries": 484,
         "skipped_queries": 0,
         "gallery_size": 484
       },
       "image_to_text": {
+        "precision@1": 0.49586776859504134,
+        "precision@5": 0.1628099173553731,
+        "precision@10": 0.09214876033057927,
         "recall@1": 0.49586776859504134,
         "recall@5": 0.8140495867768595,
         "recall@10": 0.9214876033057852,
+        "f1@1": 0.49586776859504134,
+        "f1@5": 0.27134986225895186,
+        "f1@10": 0.1675432006010524,
         "evaluated_queries": 484,
         "skipped_queries": 0,
         "gallery_size": 484
       },
       "image_to_image_category": {
+        "precision@1": 0.7175398633257403,
+        "precision@5": 0.6674259681093402,
+        "precision@10": 0.58246013667426,
         "recall@1": 0.06570708886712319,
         "recall@5": 0.2711636096787834,
         "recall@10": 0.41926350692093783,
+        "f1@1": 0.10860543741734975,
+        "f1@5": 0.31458117251669837,
+        "f1@10": 0.39467233053210243,
         "evaluated_queries": 439,
         "skipped_queries": 45,
         "gallery_size": 484
@@ -55,25 +76,43 @@
     },
     "finetuned": {
       "text_to_image": {
+        "precision@1": 0.6115702479338843,
+        "precision@5": 0.1847107438016544,
+        "precision@10": 0.09793388429752149,
         "recall@1": 0.6115702479338843,
         "recall@5": 0.9235537190082644,
         "recall@10": 0.9793388429752066,
+        "f1@1": 0.6115702479338843,
+        "f1@5": 0.3078512396694212,
+        "f1@10": 0.1780616078136748,
         "evaluated_queries": 484,
         "skipped_queries": 0,
         "gallery_size": 484
       },
       "image_to_text": {
+        "precision@1": 0.5971074380165289,
+        "precision@5": 0.18388429752066265,
+        "precision@10": 0.09772727272727356,
         "recall@1": 0.5971074380165289,
         "recall@5": 0.9194214876033058,
         "recall@10": 0.9772727272727273,
+        "f1@1": 0.5971074380165289,
+        "f1@5": 0.3064738292011016,
+        "f1@10": 0.177685950413224,
         "evaluated_queries": 484,
         "skipped_queries": 0,
         "gallery_size": 484
       },
       "image_to_image_category": {
+        "precision@1": 0.7539863325740319,
+        "precision@5": 0.7011389521640099,
+        "precision@10": 0.6271070615034172,
         "recall@1": 0.07078906856704927,
         "recall@5": 0.28563443287173396,
         "recall@10": 0.43844027442759625,
+        "f1@1": 0.11538853030522618,
+        "f1@5": 0.3281535316223844,
+        "f1@10": 0.4132276007422245,
         "evaluated_queries": 439,
         "skipped_queries": 45,
         "gallery_size": 484
@@ -81,6 +120,36 @@
     }
   },
   "comparison": [
+    {
+      "task": "text_to_image",
+      "metric": "precision@1",
+      "pretrained": 0.47520661157024796,
+      "finetuned": 0.6115702479338843,
+      "delta_percentage_points": 13.63636363636363,
+      "evaluated_queries": 484,
+      "skipped_queries": 0,
+      "gallery_size": 484
+    },
+    {
+      "task": "text_to_image",
+      "metric": "precision@5",
+      "pretrained": 0.1628099173553731,
+      "finetuned": 0.1847107438016544,
+      "delta_percentage_points": 2.1900826446281303,
+      "evaluated_queries": 484,
+      "skipped_queries": 0,
+      "gallery_size": 484
+    },
+    {
+      "task": "text_to_image",
+      "metric": "precision@10",
+      "pretrained": 0.09132231404958752,
+      "finetuned": 0.09793388429752149,
+      "delta_percentage_points": 0.6611570247933976,
+      "evaluated_queries": 484,
+      "skipped_queries": 0,
+      "gallery_size": 484
+    },
     {
       "task": "text_to_image",
       "metric": "recall@1",
@@ -107,6 +176,66 @@
       "pretrained": 0.9132231404958677,
       "finetuned": 0.9793388429752066,
       "delta_percentage_points": 6.6115702479338845,
+      "evaluated_queries": 484,
+      "skipped_queries": 0,
+      "gallery_size": 484
+    },
+    {
+      "task": "text_to_image",
+      "metric": "f1@1",
+      "pretrained": 0.47520661157024796,
+      "finetuned": 0.6115702479338843,
+      "delta_percentage_points": 13.63636363636363,
+      "evaluated_queries": 484,
+      "skipped_queries": 0,
+      "gallery_size": 484
+    },
+    {
+      "task": "text_to_image",
+      "metric": "f1@5",
+      "pretrained": 0.27134986225895186,
+      "finetuned": 0.3078512396694212,
+      "delta_percentage_points": 3.6501377410469327,
+      "evaluated_queries": 484,
+      "skipped_queries": 0,
+      "gallery_size": 484
+    },
+    {
+      "task": "text_to_image",
+      "metric": "f1@10",
+      "pretrained": 0.1660405709992492,
+      "finetuned": 0.1780616078136748,
+      "delta_percentage_points": 1.2021036814425594,
+      "evaluated_queries": 484,
+      "skipped_queries": 0,
+      "gallery_size": 484
+    },
+    {
+      "task": "image_to_text",
+      "metric": "precision@1",
+      "pretrained": 0.49586776859504134,
+      "finetuned": 0.5971074380165289,
+      "delta_percentage_points": 10.123966942148755,
+      "evaluated_queries": 484,
+      "skipped_queries": 0,
+      "gallery_size": 484
+    },
+    {
+      "task": "image_to_text",
+      "metric": "precision@5",
+      "pretrained": 0.1628099173553731,
+      "finetuned": 0.18388429752066265,
+      "delta_percentage_points": 2.107438016528956,
+      "evaluated_queries": 484,
+      "skipped_queries": 0,
+      "gallery_size": 484
+    },
+    {
+      "task": "image_to_text",
+      "metric": "precision@10",
+      "pretrained": 0.09214876033057927,
+      "finetuned": 0.09772727272727356,
+      "delta_percentage_points": 0.5578512396694296,
       "evaluated_queries": 484,
       "skipped_queries": 0,
       "gallery_size": 484
@@ -142,6 +271,66 @@
       "gallery_size": 484
     },
     {
+      "task": "image_to_text",
+      "metric": "f1@1",
+      "pretrained": 0.49586776859504134,
+      "finetuned": 0.5971074380165289,
+      "delta_percentage_points": 10.123966942148755,
+      "evaluated_queries": 484,
+      "skipped_queries": 0,
+      "gallery_size": 484
+    },
+    {
+      "task": "image_to_text",
+      "metric": "f1@5",
+      "pretrained": 0.27134986225895186,
+      "finetuned": 0.3064738292011016,
+      "delta_percentage_points": 3.512396694214975,
+      "evaluated_queries": 484,
+      "skipped_queries": 0,
+      "gallery_size": 484
+    },
+    {
+      "task": "image_to_text",
+      "metric": "f1@10",
+      "pretrained": 0.1675432006010524,
+      "finetuned": 0.177685950413224,
+      "delta_percentage_points": 1.0142749812171585,
+      "evaluated_queries": 484,
+      "skipped_queries": 0,
+      "gallery_size": 484
+    },
+    {
+      "task": "image_to_image_category",
+      "metric": "precision@1",
+      "pretrained": 0.7175398633257403,
+      "finetuned": 0.7539863325740319,
+      "delta_percentage_points": 3.6446469248291646,
+      "evaluated_queries": 439,
+      "skipped_queries": 45,
+      "gallery_size": 484
+    },
+    {
+      "task": "image_to_image_category",
+      "metric": "precision@5",
+      "pretrained": 0.6674259681093402,
+      "finetuned": 0.7011389521640099,
+      "delta_percentage_points": 3.3712984054669715,
+      "evaluated_queries": 439,
+      "skipped_queries": 45,
+      "gallery_size": 484
+    },
+    {
+      "task": "image_to_image_category",
+      "metric": "precision@10",
+      "pretrained": 0.58246013667426,
+      "finetuned": 0.6271070615034172,
+      "delta_percentage_points": 4.464692482915722,
+      "evaluated_queries": 439,
+      "skipped_queries": 45,
+      "gallery_size": 484
+    },
+    {
       "task": "image_to_image_category",
       "metric": "recall@1",
       "pretrained": 0.06570708886712319,
@@ -167,6 +356,36 @@
       "pretrained": 0.41926350692093783,
       "finetuned": 0.43844027442759625,
       "delta_percentage_points": 1.917676750665842,
+      "evaluated_queries": 439,
+      "skipped_queries": 45,
+      "gallery_size": 484
+    },
+    {
+      "task": "image_to_image_category",
+      "metric": "f1@1",
+      "pretrained": 0.10860543741734975,
+      "finetuned": 0.11538853030522618,
+      "delta_percentage_points": 0.678309288787643,
+      "evaluated_queries": 439,
+      "skipped_queries": 45,
+      "gallery_size": 484
+    },
+    {
+      "task": "image_to_image_category",
+      "metric": "f1@5",
+      "pretrained": 0.31458117251669837,
+      "finetuned": 0.3281535316223844,
+      "delta_percentage_points": 1.357235910568605,
+      "evaluated_queries": 439,
+      "skipped_queries": 45,
+      "gallery_size": 484
+    },
+    {
+      "task": "image_to_image_category",
+      "metric": "f1@10",
+      "pretrained": 0.39467233053210243,
+      "finetuned": 0.4132276007422245,
+      "delta_percentage_points": 1.8555270210122043,
       "evaluated_queries": 439,
       "skipped_queries": 45,
       "gallery_size": 484

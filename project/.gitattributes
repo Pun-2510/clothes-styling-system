@@ -1,0 +1,7 @@
+# Keep generated CSV artifacts byte-for-byte stable across operating systems.
+data/processed/*.csv -text
+runs/**/*.csv -text
+
+# Explicitly classify large generated artifacts as binary.
+*.npy binary
+*.safetensors binary

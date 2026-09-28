@@ -1,5 +1,7 @@
 .venv/
-frontend/
+.env
+.env.*
+web/frontend/
 tests/
 logs/
 __pycache__/
@@ -11,3 +13,5 @@ data/
 embeddings/
 embeddings_finetuned/
 runs/
+comparisons/results/
+archive.zip

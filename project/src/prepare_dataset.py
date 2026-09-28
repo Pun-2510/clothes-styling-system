@@ -1,8 +1,12 @@
 from pathlib import Path
+import argparse
+import json
 import sys
 import re
 
 import pandas as pd
+import numpy as np
+from PIL import Image, UnidentifiedImageError
 
 
 # =========================================================
@@ -18,10 +22,10 @@ sys.path.append(
     )
 )
 
+from src.clip_data import file_sha256
 from src.config import (
     IMAGE_DIR,
     CSV_FILE,
-    PROCESSED_DIR,
     PROCESSED_CSV,
     MAX_PRODUCTS,
     RANDOM_SEED,
@@ -136,7 +140,7 @@ def find_column(
 # =========================================================
 
 def find_image(
-    image_reference
+    image_reference, image_dir=IMAGE_DIR
 ):
     """
     Tìm ảnh trong data/data/
@@ -166,10 +170,10 @@ def find_image(
     ).name
 
     candidate = (
-        IMAGE_DIR / filename
+        image_dir / filename
     )
 
-    if candidate.exists():
+    if candidate.is_file():
 
         return candidate
 
@@ -185,14 +189,14 @@ def find_image(
         value
     ).stem
 
-    for extension in IMAGE_EXTENSIONS:
+    for extension in sorted(IMAGE_EXTENSIONS):
 
         candidate = (
-            IMAGE_DIR /
+            image_dir /
             f"{stem}{extension}"
         )
 
-        if candidate.exists():
+        if candidate.is_file():
 
             return candidate
 
@@ -208,7 +212,32 @@ def find_image(
 # MAIN
 # =========================================================
 
-def main():
+def sample_products(products, count, seed=RANDOM_SEED):
+    """Exact-size proportional sampling, preserving categories when possible."""
+    if count is None:
+        return products.reset_index(drop=True)
+    if count < 1 or count > len(products):
+        raise ValueError(f"Requested {count} products, but {len(products)} are available after filtering.")
+    groups = list(products.groupby("category", sort=True))
+    sizes = np.array([len(group) for _, group in groups])
+    base = np.ones(len(groups), dtype=int) if count >= len(groups) else np.zeros(len(groups), dtype=int)
+    capacity = sizes - base
+    remaining = count - int(base.sum())
+    quotas = capacity * (remaining / capacity.sum()) if capacity.sum() else np.zeros(len(groups))
+    allocation = base + np.floor(quotas).astype(int)
+    missing = count - int(allocation.sum())
+    order = np.argsort(-(quotas - np.floor(quotas)), kind="stable")
+    allocation[order[:missing]] += 1
+    selected = [group.sample(n=int(n), random_state=seed)
+                for (_, group), n in zip(groups, allocation) if n]
+    return pd.concat(selected).reset_index(drop=True)
+
+
+def prepare_catalog(csv_path=CSV_FILE, image_dir=IMAGE_DIR, output_path=PROCESSED_CSV,
+                    num_products=MAX_PRODUCTS, seed=RANDOM_SEED, categories=None):
+    csv_path, image_dir, output_path = Path(csv_path), Path(image_dir), Path(output_path)
+    if num_products is not None and num_products < 1:
+        raise ValueError("num_products must be positive, or None for all products.")
 
     print("=" * 60)
     print("PREPARE MINI FASHION DATASET")
@@ -219,19 +248,19 @@ def main():
     # CHECK FILES
     # =====================================================
 
-    if not CSV_FILE.exists():
+    if not csv_path.exists():
 
         raise FileNotFoundError(
             f"\nKhông tìm thấy CSV:\n"
-            f"{CSV_FILE}"
+            f"{csv_path}"
         )
 
 
-    if not IMAGE_DIR.exists():
+    if not image_dir.is_dir():
 
         raise FileNotFoundError(
             f"\nKhông tìm thấy thư mục ảnh:\n"
-            f"{IMAGE_DIR}"
+            f"{image_dir}"
         )
 
 
@@ -241,10 +270,10 @@ def main():
 
     print(
         f"\nĐang đọc:\n"
-        f"{CSV_FILE}"
+        f"{csv_path}"
     )
 
-    df = pd.read_csv(CSV_FILE, on_bad_lines="skip", engine="python")
+    df = pd.read_csv(csv_path, on_bad_lines="skip", engine="python")
 
     print(
         f"\nSố dòng ban đầu: "
@@ -436,11 +465,21 @@ def main():
         "\nĐang tìm ảnh..."
     )
 
+    output["category"] = output.category.str.strip().replace("", "Unknown")
+    output["product_name"] = output.product_name.str.strip()
+    blank_names = output.product_name.eq("")
+    output.loc[blank_names, "product_name"] = output.loc[blank_names, "image_reference"]
+    if categories:
+        missing_categories = set(categories) - set(output.category)
+        if missing_categories:
+            raise ValueError(f"Unknown categories: {sorted(missing_categories)}")
+        output = output.loc[output.category.isin(categories)].copy()
+
     output["image_path"] = (
         output[
             "image_reference"
         ]
-        .apply(find_image)
+        .apply(lambda value: find_image(value, image_dir))
     )
 
 
@@ -496,46 +535,25 @@ def main():
     # RANDOM SAMPLE
     # =====================================================
 
-    if (
-        MAX_PRODUCTS is not None
-        and len(output)
-        > MAX_PRODUCTS
-    ):
-
-        def sample_group(group):
-
-            # Lấy category từ group.name — luôn tồn tại
-            # bất kể pandas có giữ cột category trong group hay không
-            category = group.name
-
-            # Tỉ lệ của category này trong toàn bộ dataset
-            fraction = len(group) / len(output)
-
-            # Số lượng cần lấy, tối thiểu 1 để không bị mất hẳn category
-            n_samples = max(
-                1,
-                round(fraction * MAX_PRODUCTS)
-            )
-
-            n_samples = min(
-                n_samples,
-                len(group)
-            )
-
-            sampled = group.sample(
-                n=n_samples,
-                random_state=RANDOM_SEED
-            )
-
-            sampled["category"] = category
-
-            return sampled
-
-        output = (
-            output
-            .groupby("category", group_keys=False)
-            .apply(sample_group)
-        )
+    # Deduplicate contents before sampling so N stays exact in the training split.
+    hashes = []
+    for path in output.image_path:
+        try:
+            with Image.open(path) as image:
+                image.verify()
+            hashes.append(file_sha256(path))
+        except (OSError, ValueError, UnidentifiedImageError):
+            hashes.append(None)
+    output["image_sha256"] = hashes
+    invalid_images = int(output.image_sha256.isna().sum())
+    output = output.dropna(subset=["image_sha256"])
+    before_dedup = len(output)
+    output = output.drop_duplicates("image_sha256")
+    duplicates = before_dedup - len(output)
+    eligible = len(output)
+    if not eligible:
+        raise ValueError("No valid products remain after filtering.")
+    output = sample_products(output, num_products, seed)
 
 
     # =====================================================
@@ -551,7 +569,7 @@ def main():
     # CREATE OUTPUT DIRECTORY
     # =====================================================
 
-    PROCESSED_DIR.mkdir(
+    output_path.parent.mkdir(
         parents=True,
         exist_ok=True
     )
@@ -562,10 +580,20 @@ def main():
     # =====================================================
 
     output.to_csv(
-        PROCESSED_CSV,
+        output_path,
         index=False,
         encoding="utf-8-sig"
     )
+
+    summary = {"source_csv": str(csv_path.resolve()), "source_csv_sha256": file_sha256(csv_path),
+               "image_dir": str(image_dir.resolve()), "requested_products": num_products,
+               "selected_products": len(output), "eligible_products": eligible,
+               "invalid_images": invalid_images, "duplicate_images_removed": duplicates,
+               "seed": seed, "categories": categories,
+               "category_counts": output.category.value_counts().to_dict(),
+               "products_sha256": file_sha256(output_path)}
+    output_path.with_suffix(".preparation.json").write_text(
+        json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
     # =====================================================
@@ -591,7 +619,7 @@ def main():
 
     print(
         f"\nSaved:\n"
-        f"{PROCESSED_CSV}"
+        f"{output_path}"
     )
 
     print(
@@ -603,6 +631,24 @@ def main():
             index=False
         )
     )
+    return output
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Prepare an exact-sized fashion catalog.")
+    parser.add_argument("--csv", type=Path, default=CSV_FILE)
+    parser.add_argument("--image-dir", type=Path, default=IMAGE_DIR)
+    parser.add_argument("--output", type=Path, default=PROCESSED_CSV)
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument("--num-products", type=int, default=MAX_PRODUCTS)
+    selection.add_argument("--all", action="store_true", help="Select all eligible products")
+    parser.add_argument("--categories", nargs="+", help="Exact category names; quote names containing spaces")
+    parser.add_argument("--seed", type=int, default=RANDOM_SEED)
+    args = parser.parse_args()
+    if not args.all and args.num_products is not None and args.num_products < 1:
+        parser.error("num-products must be positive")
+    prepare_catalog(args.csv, args.image_dir, args.output,
+                    None if args.all else args.num_products, args.seed, args.categories)
 
 
 # =========================================================

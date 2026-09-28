@@ -1,13 +1,14 @@
 """Shared product prompts and reproducible, image-disjoint experiment splits."""
 
 import hashlib
+import json
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from PIL import Image
 
-from src.config import BASE_DIR
+from src.config import BASE_DIR, IMAGE_DIR
 
 
 def file_sha256(path):
@@ -16,6 +17,29 @@ def file_sha256(path):
         for block in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def table_content_sha256(table, excluded_columns=("image_path",)):
+    """Hash CSV semantics without machine-specific paths or line endings."""
+    excluded = set(excluded_columns)
+    columns = sorted(column for column in table.columns if column not in excluded)
+
+    def normalize(value):
+        if pd.isna(value):
+            return None
+        return str(value).replace("\r\n", "\n").replace("\r", "\n")
+
+    payload = {
+        "columns": columns,
+        "rows": [
+            [normalize(value) for value in row]
+            for row in table[columns].itertuples(index=False, name=None)
+        ],
+    }
+    encoded = json.dumps(
+        payload, ensure_ascii=False, separators=(",", ":")
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def build_product_text(row):
@@ -35,6 +59,22 @@ def build_product_text(row):
 def resolve_image_path(value):
     path = Path(str(value))
     return path if path.is_absolute() else BASE_DIR / path
+
+
+def resolve_experiment_image_path(row):
+    """Resolve a saved image path after an experiment is moved to another PC."""
+    original = resolve_image_path(row.get("image_path", ""))
+    if original.is_file():
+        return original.resolve()
+
+    reference = row.get("image_reference", "")
+    filename = Path(str(reference)).name if pd.notna(reference) else ""
+    if not filename:
+        filename = original.name
+    local = IMAGE_DIR / filename
+    if local.is_file():
+        return local.resolve()
+    return original
 
 
 def prepare_splits(csv_path, seed=42, val_fraction=0.1, test_fraction=0.1):
@@ -113,16 +153,27 @@ def prepare_splits(csv_path, seed=42, val_fraction=0.1, test_fraction=0.1):
 
 
 def load_experiment_data(run_dir, verify_images=True):
-    import json
-
     run_dir = Path(run_dir)
     metadata = json.loads((run_dir / "experiment.json").read_text(encoding="utf-8"))
     path = run_dir / "dataset.csv"
-    if file_sha256(path) != metadata["dataset_sha256"]:
-        raise ValueError("Experiment dataset changed; create a new experiment directory.")
     products = pd.read_csv(path, dtype={"product_id": str})
+    exact_match = file_sha256(path) == metadata["dataset_sha256"]
+    expected_content_hash = metadata.get("dataset_content_sha256")
+    content_match = (
+        expected_content_hash is not None
+        and table_content_sha256(products) == expected_content_hash
+    )
+    if not exact_match and not content_match:
+        raise ValueError("Experiment dataset changed; create a new experiment directory.")
+    products["image_path"] = products.apply(
+        lambda row: str(resolve_experiment_image_path(row)), axis=1
+    )
     if verify_images:
         for row in products.itertuples():
+            if not Path(row.image_path).is_file():
+                raise FileNotFoundError(
+                    f"Experiment image not found on this machine: {row.image_path}"
+                )
             if file_sha256(row.image_path) != row.image_sha256:
                 raise ValueError(f"Image changed since split preparation: {row.image_path}")
     return products, metadata

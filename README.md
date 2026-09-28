@@ -42,6 +42,40 @@ Set-Location .\project
 
 Tất cả lệnh tiếp theo phải được chạy trong thư mục `project/`.
 
+### Tùy chọn: pipeline theo số lượng sản phẩm
+
+Đây là luồng thí nghiệm độc lập, không phải bước bắt buộc để chạy website.
+Sau khi chuẩn bị dataset và Python environment, code và số liệu compare nằm tại
+`project/comparisons/`; hướng dẫn đầy đủ ở [comparisons/README.md](project/comparisons/README.md).
+
+Chọn đúng 4.000 sản phẩm, dùng checkpoint đã fine-tune, sinh embeddings cho cả
+pretrained CLIP và fine-tuned CLIP rồi so sánh Precision, Recall, F1:
+
+```powershell
+.\.venv\Scripts\python.exe -m comparisons.run_pipeline `
+  --num-products 4000 `
+  --reuse-run runs/clip_finetune_3epochs_local `
+  --output-dir comparisons/results/clip_4000
+```
+
+Run được dùng lại phải có checkpoint và metadata đầy đủ. Nếu cần huấn luyện mới,
+bỏ `--reuse-run runs/clip_finetune_3epochs_local`, thêm `--epochs 3` và chọn thư mục
+kết quả mới. Có thể thêm `--categories "Backpacks" "Handbags"` (tên phải khớp dữ
+liệu), `--seed 42` hoặc `--dry-run` để chỉ xem lệnh, chưa thực thi.
+
+4.000 là số sản phẩm trong catalog thí nghiệm. Compare chỉ dùng tập test chưa tham gia huấn luyện;
+khi dùng lại run, đó là phần giao của test cũ với catalog mới, không phải cả 4.000.
+Kết quả và log nằm trong `comparisons/results/clip_4000/`; không ghi đè run cũ.
+
+Nếu muốn xem thử catalog thí nghiệm trên web (tùy chọn, không phải mặc định):
+
+```powershell
+docker compose --env-file comparisons/results/clip_4000/website.env up -d --build
+```
+
+Vẫn chỉ một cấu hình Docker Compose. Không truyền `--env-file` thì đường dẫn mặc
+định ở các bước bên dưới vẫn được dùng như trước.
+
 ### 2. Chuẩn bị bộ dữ liệu
 
 Tải [Bộ dữ liệu ảnh và văn bản sản phẩm thời trang thu gọn](https://www.kaggle.com/datasets/nirmalsankalana/mini-product-image-and-text-dataset)
@@ -68,7 +102,7 @@ Cả hai lệnh phải trả về `True`.
 ### 3. Tạo môi trường Python
 
 ```powershell
-py -3.12 -m venv .venv
+py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
@@ -165,6 +199,25 @@ Tất cả lệnh phải trả về `True`.
 
 ### 9. Xây dựng và chạy trang web bằng Docker
 
+Chạy từ `project/`: `docker-compose up -d --build` (hoặc `docker compose up -d --build`).
+Compose tự đọc `.env` để chọn bộ artifact, không cần thêm `--env-file` mỗi lần.
+Mặc định `.env` trỏ tới `data/processed/`, `embeddings_finetuned/` và checkpoint
+đã fine-tune trong `runs/`, độc lập với `comparisons/`. File `.env` không lưu trên Git; khi clone sang máy khác,
+có thể sao chép `.env.example` thành `.env` rồi chỉnh đường dẫn tới artifact
+đã chuẩn bị. Đây chỉ là chọn dữ liệu chạy web, không tự huấn luyện/sinh embeddings.
+
+Compose hiện gồm frontend, Nginx và hai API instance (`backend`, `backend_2`).
+Nginx nhận cổng 8000, phân phối theo số kết nối đang hoạt động và thử instance
+còn lại khi gặp lỗi kết nối/502/503/504. Frontend vẫn ở cổng 5173.
+Mỗi backend nạp model/embeddings riêng vào RAM; không đảm bảo nhanh gấp đôi
+khi cùng dùng CPU một máy. Chưa thêm Redis/cache truy vấn.
+
+Code chạy web đã gom tại `project/web/` (backend, frontend, Nginx). Compose và
+`.env` vẫn ở `project/` để giữ nguyên lệnh chạy; các lệnh ML `python -m src...` không đổi.
+Xem [hướng dẫn web](project/web/README.md), [hướng dẫn project](project/README.md)
+và [Nginx, thử dự phòng](project/web/nginx/README.md).
+Lệnh `--env-file .../website.env` vẫn áp dụng cho cả hai backend.
+
 Khởi động Docker Desktop, sau đó kiểm tra bộ máy Docker và Docker Compose:
 
 ```powershell
@@ -189,7 +242,7 @@ Kiểm tra vùng chứa và theo dõi nhật ký máy chủ API:
 
 ```powershell
 docker compose ps
-docker compose logs -f backend
+docker compose logs -f nginx backend backend_2
 ```
 
 Các địa chỉ truy cập:

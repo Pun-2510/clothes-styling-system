@@ -7,12 +7,18 @@ import random
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import torch
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
-from src.clip_data import file_sha256, load_experiment_data, prepare_splits
+from src.clip_data import (
+    file_sha256,
+    load_experiment_data,
+    prepare_splits,
+    table_content_sha256,
+)
 from src.clip_runtime import encode_products, load_clip, model_identity
 from src.config import CLIP_MODEL, PROCESSED_CSV, RANDOM_SEED
 from src.evaluation import evaluate_retrieval
@@ -129,7 +135,14 @@ def main():
         raise FileExistsError("This run already contains training; choose a new --run-dir.")
     if metadata_path.exists():
         products, metadata = load_experiment_data(run_dir)
-        if (metadata["source_csv_sha256"] != file_sha256(args.csv)
+        source_matches = metadata["source_csv_sha256"] == file_sha256(args.csv)
+        if not source_matches and metadata.get("source_content_sha256"):
+            source_table = pd.read_csv(args.csv, dtype={"product_id": str})
+            source_matches = (
+                table_content_sha256(source_table)
+                == metadata["source_content_sha256"]
+            )
+        if (not source_matches
                 or metadata["seed"] != args.seed or metadata["val_fraction"] != args.val_fraction
                 or metadata["test_fraction"] != args.test_fraction):
             raise ValueError("Split settings or source CSV changed; use a new --run-dir.")
@@ -137,8 +150,14 @@ def main():
         products, metadata = prepare_splits(args.csv, args.seed, args.val_fraction, args.test_fraction)
         run_dir.mkdir(parents=True, exist_ok=True)
         products.to_csv(run_dir / "dataset.csv", index=False)
-        metadata.update(source_csv=str(args.csv.resolve()), source_csv_sha256=file_sha256(args.csv),
-                        dataset_sha256=file_sha256(run_dir / "dataset.csv"))
+        source_table = pd.read_csv(args.csv, dtype={"product_id": str})
+        metadata.update(
+            source_csv=str(args.csv.resolve()),
+            source_csv_sha256=file_sha256(args.csv),
+            source_content_sha256=table_content_sha256(source_table),
+            dataset_sha256=file_sha256(run_dir / "dataset.csv"),
+            dataset_content_sha256=table_content_sha256(products),
+        )
         metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     print(json.dumps(metadata, indent=2), flush=True)
     if args.prepare_only:
