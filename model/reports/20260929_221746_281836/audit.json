@@ -1,0 +1,147 @@
+{
+  "source": "C:\\DACNTT\\model\\comparison_results\\20260929_221746_281836",
+  "checks": [
+    [
+      "Trạng thái complete; errors rỗng",
+      true
+    ],
+    [
+      "Đủ bốn mô hình yêu cầu",
+      true
+    ],
+    [
+      "CSV nguồn khớp SHA-256 ghi trong lần chạy",
+      true
+    ],
+    [
+      "484 sản phẩm độc lập, chỉ thuộc test",
+      true
+    ],
+    [
+      "Catalog khớp nội dung và thứ tự tập test",
+      true
+    ],
+    [
+      "484 file ảnh tồn tại và khớp hash lưu trong catalog",
+      true
+    ],
+    [
+      "88 danh mục; 45 query không có sản phẩm cùng danh mục khác",
+      true
+    ],
+    [
+      "Đủ 21 dòng kết quả, không trùng khóa model/task/K",
+      true
+    ],
+    [
+      "Toàn bộ metric, tham số, số query và độ trễ trong CSV khớp JSON",
+      true
+    ],
+    [
+      "Quan hệ Precision@K × K = Recall@K đúng cho truy hồi một sản phẩm",
+      true
+    ],
+    [
+      "Dung lượng embedding và thông lượng nhất quán",
+      true
+    ]
+  ],
+  "categories": {
+    "Accessory Gift Set": 1,
+    "Backpacks": 8,
+    "Bangle": 1,
+    "Belts": 9,
+    "Boxers": 1,
+    "Bra": 5,
+    "Bracelet": 1,
+    "Briefs": 9,
+    "Camisoles": 1,
+    "Capris": 2,
+    "Caps": 3,
+    "Casual Shoes": 31,
+    "Churidar": 1,
+    "Clutches": 3,
+    "Compact": 1,
+    "Cufflinks": 1,
+    "Deodorant": 3,
+    "Dresses": 5,
+    "Duffel Bag": 1,
+    "Dupatta": 1,
+    "Earrings": 4,
+    "Eyeshadow": 1,
+    "Face Moisturisers": 1,
+    "Face Wash and Cleanser": 1,
+    "Flats": 5,
+    "Flip Flops": 10,
+    "Formal Shoes": 7,
+    "Foundation and Primer": 1,
+    "Fragrance Gift Set": 1,
+    "Free Gifts": 1,
+    "Handbags": 19,
+    "Heels": 14,
+    "Highlighter and Blush": 1,
+    "Innerwear Vests": 2,
+    "Jackets": 2,
+    "Jeans": 6,
+    "Jeggings": 1,
+    "Jewellery Set": 1,
+    "Kajal and Eyeliner": 1,
+    "Kurta Sets": 1,
+    "Kurtas": 20,
+    "Kurtis": 2,
+    "Laptop Bag": 1,
+    "Leggings": 2,
+    "Lip Gloss": 1,
+    "Lip Liner": 1,
+    "Lipstick": 3,
+    "Lounge Pants": 1,
+    "Lounge Shorts": 1,
+    "Messenger Bag": 1,
+    "Mobile Pouch": 1,
+    "Mufflers": 1,
+    "Nail Polish": 3,
+    "Necklace and Chains": 1,
+    "Night suits": 1,
+    "Nightdress": 2,
+    "Patiala": 1,
+    "Pendant": 1,
+    "Perfume and Body Mist": 6,
+    "Ring": 1,
+    "Salwar": 1,
+    "Sandals": 10,
+    "Sarees": 4,
+    "Scarves": 1,
+    "Shirts": 36,
+    "Shoe Accessories": 1,
+    "Shorts": 6,
+    "Skirts": 1,
+    "Socks": 8,
+    "Sports Sandals": 1,
+    "Sports Shoes": 22,
+    "Stockings": 1,
+    "Stoles": 1,
+    "Sunglasses": 11,
+    "Sunscreen": 1,
+    "Suspenders": 1,
+    "Sweaters": 3,
+    "Sweatshirts": 3,
+    "Ties": 3,
+    "Tops": 19,
+    "Track Pants": 3,
+    "Tracksuits": 1,
+    "Trousers": 6,
+    "Trunk": 1,
+    "Tshirts": 80,
+    "Tunics": 2,
+    "Wallets": 10,
+    "Watches": 28
+  },
+  "source_files_sha256": {
+    "report.json": "103fbb999d9a69bdb9f129f8a9c93c853348290d185d529ece83e7430c87437e",
+    "comparison.csv": "9aa29a2ee89ee0b3f0f0a96ff665d2b2ca08e33182fb1add1ca7ff21f43cf91d",
+    "evaluation_catalog.csv": "50e0259e4fb314352a80bd640817ce2ccc8aa2907e18de4b518ff3d0a8302900"
+  },
+  "old_experiment_hash_matches_current_csv": false,
+  "reference_matches_old_experiment_hash": false,
+  "parsed_dataset_matches_reference": true
+}
