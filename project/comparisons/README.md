@@ -161,7 +161,6 @@ cần chỉnh bốn đường dẫn trong file. Các artifact dung lượng lớ
 ```
 
 Lệnh này đánh giá toàn bộ test gốc, không tạo catalog web mới. Khi không cung cấp
-cache, lệnh tự mã hóa test bằng hai model. Lệnh cũ `python -m src.compare_clip`
-vẫn hoạt động để tương thích; code chính đã chuyển sang `comparisons/`.
+cache, lệnh tự mã hóa test bằng hai model.
 Các hàm tính metric dùng chung vẫn nằm trong `src/evaluation.py` vì fine-tuning
 cũng cần chúng để đánh giá validation.

@@ -154,7 +154,8 @@ class FashionRecommender:
         ):
             raise RuntimeError(
                 "Số dòng products.csv khác số text embedding. "
-                "Hãy chạy lại: python -m src.generate_text_embeddings"
+                "Hãy chạy lại: python -m src.generate_clip_embeddings "
+                "--modality text"
             )
 
         # -------------------------------------------------

@@ -64,7 +64,10 @@ Lần kiểm tra dữ liệu hiện tại: 5.015 dòng đầu vào, loại 11 �
 ## 2. So sánh pretrained và fine-tuned
 
 ```powershell
-.\.venv\Scripts\python.exe -m src.compare_clip --run-dir runs/clip_finetune --ks 1 5 10
+.\.venv\Scripts\python.exe -m comparisons.compare_clip `
+  --run-dir runs/clip_finetune `
+  --output-dir comparisons/results/clip_finetune_comparison `
+  --ks 1 5 10
 ```
 
 Lệnh nạp lần lượt model gốc dùng để khởi tạo huấn luyện và checkpoint `best/`,
@@ -72,7 +75,8 @@ tính lại embedding trên **cùng tập test, cùng query, cùng gallery, cùn
 Gallery chỉ gồm sản phẩm test. Không cộng category bonus hay lọc theo category
 dự đoán trong phép so sánh này; mục tiêu là đo thay đổi của embedding CLIP.
 
-Xuất bảng trên terminal và lưu `comparison.csv`, `comparison.json`:
+Xuất bảng trên terminal và lưu `comparison.csv`, `comparison.json` trong thư mục
+đã truyền bằng `--output-dir`. Kết quả đánh giá không được ghi vào `runs/`:
 
 | task | Ý nghĩa positive |
 | --- | --- |
@@ -108,8 +112,8 @@ Tạo lại **cả image và text embedding** cho toàn bộ catalog bằng cùn
 .\.venv\Scripts\python.exe -m src.generate_clip_embeddings --model runs/clip_finetune/best --output-dir embeddings/finetuned
 ```
 
-Hai lệnh cũ `src.generate_image_embeddings` và `src.generate_text_embeddings`
-vẫn dùng được, nay cũng nhận `--model`, `--output-dir`, `--csv`, `--batch-size`.
+Nếu chỉ cần một loại embedding, dùng thêm `--modality image` hoặc
+`--modality text`; mặc định lệnh tạo cả hai loại.
 Mỗi `.npy` mới có file `.npy.json` ghi nhận model và thứ tự catalog để phát hiện
 việc trộn embedding/model hoặc đổi CSV. Ảnh hỏng làm lệnh dừng, không ghi zero vector.
 Embedding pretrained cũ chưa có metadata vẫn được hỗ trợ khi dùng model mặc định.

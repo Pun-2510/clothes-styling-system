@@ -57,7 +57,12 @@ def main():
     parser.add_argument("--ks", nargs="+", type=int, default=[1, 5, 10])
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
-    parser.add_argument("--output-dir", type=Path, help="Report destination; defaults to run-dir")
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        required=True,
+        help="Report destination under comparisons/results/.",
+    )
     parser.add_argument("--catalog-csv", type=Path, help="Catalog used for cached embeddings")
     parser.add_argument("--cache-root", type=Path, help="Contains pretrained/ and finetuned/ embeddings")
     args = parser.parse_args()
@@ -128,7 +133,7 @@ def main():
                              "skipped_queries": baseline["skipped_queries"],
                              "gallery_size": baseline["gallery_size"]})
     report["comparison"] = rows
-    output_dir = args.output_dir or args.run_dir
+    output_dir = args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "comparison.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     frame = pd.DataFrame(rows)

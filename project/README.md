@@ -30,8 +30,8 @@ Tùy chọn xem thử artifact thí nghiệm trên web (không phải luồng m�
   docker compose --env-file comparisons/results/clip_4000/website.env up -d --build
 Bỏ --reuse-run để tạo split mới và fine-tune lại (mặc định 3 epochs).
 Mỗi cấu hình dùng một --output-dir mới; pipeline không ghi đè dữ liệu web cũ.
-Lệnh compare chính: python -m comparisons.compare_clip (--run-dir ...).
-Lệnh cũ python -m src.compare_clip vẫn được giữ tương thích.
+Lệnh compare chính yêu cầu cả `--run-dir` và một `--output-dir` thuộc
+`comparisons/results/`; kết quả đánh giá không được ghi vào `runs/`.
 
 FINE-TUNING VÀ RECALL: xem FINETUNING.md để huấn luyện CLIP trên dataset,
 so sánh Recall@1/5/10 pretrained với fine-tuned và dùng checkpoint trong app.
@@ -102,8 +102,6 @@ Gói này chứa ba nhóm file đồng bộ với nhau:
       tokenizer_config.json
     experiment.json
     training.json
-    comparison.csv
-    comparison.json
 
 Sau khi tải, đặt file ZIP trong thư mục gốc của project và giải nén, giữ nguyên
 cấu trúc thư mục

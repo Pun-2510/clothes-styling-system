@@ -17,7 +17,7 @@ from src.clip_data import prepare_splits, load_experiment_data
 from src.clip_runtime import (model_identity, validate_embedding_metadata, write_embedding_metadata)
 from src.evaluation import evaluate_retrieval, recall_at_k
 from src.finetune_clip import configure_trainable, contrastive_loss, main as train_main
-from src.compare_clip import main as compare_main
+from comparisons.compare_clip import main as compare_main
 from src.generate_clip_embeddings import main as embeddings_main
 
 
@@ -150,11 +150,14 @@ class PipelineTests(unittest.TestCase):
             train_main()
         trained = CLIPModel.from_pretrained(run / "best", local_files_only=True)
         self.assertFalse(torch.equal(original, trained.visual_projection.weight))
-        with patch("sys.argv", ["compare", "--run-dir", str(run), "--device", "cpu"]):
+        comparison_output = self.root / "comparison"
+        with patch("sys.argv", ["compare", "--run-dir", str(run),
+                                "--output-dir", str(comparison_output),
+                                "--device", "cpu"]):
             compare_main()
-        report = json.loads((run / "comparison.json").read_text())
+        report = json.loads((comparison_output / "comparison.json").read_text())
         self.assertEqual(set(report["metrics"]), {"pretrained", "finetuned"})
-        self.assertEqual(len(report["comparison"]), 9)
+        self.assertEqual(len(report["comparison"]), 27)
         output = self.root / "embeddings"
         with patch("sys.argv", ["encode", "--model", str(run / "best"), "--csv", str(self.csv),
                                 "--output-dir", str(output), "--device", "cpu"]):

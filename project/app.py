@@ -180,7 +180,8 @@ def render_text_search(recommender):
         image_weight = 1.0
         st.warning(
             "Chưa có text_embeddings.npy. Demo vẫn tìm text → image; chạy "
-            "`python -m src.generate_text_embeddings` để bật điểm text → text."
+            "`python -m src.generate_clip_embeddings --modality text` để bật "
+            "điểm text → text."
         )
 
     if st.button("Mã hóa văn bản và tìm kiếm", type="primary", key="run_text"):
