@@ -29,21 +29,42 @@ def evaluate_retrieval(image_embeddings, text_embeddings, products, ks=(1, 5, 10
     texts = texts / np.linalg.norm(texts, axis=1, keepdims=True)
     ids = products.product_id.astype(str).to_numpy()
     categories = products.category.fillna("").astype(str).to_numpy()
+    def empty_totals():
+        return {
+            metric: {k: 0.0 for k in ks}
+            for metric in ("precision", "recall", "f1")
+        }
+
+    def averaged(totals, evaluated):
+        return {
+            f"{metric}@{k}": (
+                totals[metric][k] / evaluated if evaluated else None
+            )
+            for metric in ("precision", "recall", "f1")
+            for k in ks
+        }
+
     metrics = {}
     for name, queries, gallery in (
         ("text_to_image", texts, images),
         ("image_to_text", images, texts),
         ("image_to_image_category", images, images),
     ):
-        totals = {
-            metric: {k: 0.0 for k in ks}
-            for metric in ("precision", "recall", "f1")
-        }
+        totals = empty_totals()
         evaluated = 0
+        per_category_totals = {}
+        per_category_evaluated = {}
+        per_category_queries = {}
         for start in range(0, len(products), batch_size):
             scores = queries[start:start + batch_size] @ gallery.T
             for local, row_scores in enumerate(scores):
                 index = start + local
+                category = categories[index].strip() or "Unknown"
+                if category not in per_category_totals:
+                    per_category_totals[category] = empty_totals()
+                    per_category_evaluated[category] = 0
+                    per_category_queries[category] = 0
+                per_category_queries[category] += 1
                 if name == "image_to_image_category":
                     eligible = ids != ids[index]
                     relevant = np.flatnonzero(eligible & (categories == categories[index]))
@@ -59,19 +80,48 @@ def evaluate_retrieval(image_embeddings, text_embeddings, products, ks=(1, 5, 10
                 for k in ks:
                     precision = precision_at_k(ranking, relevant, k)
                     recall = recall_at_k(ranking, relevant, k)
-                    totals["precision"][k] += precision
-                    totals["recall"][k] += recall
-                    totals["f1"][k] += f1_score(precision, recall)
+                    f1 = f1_score(precision, recall)
+                    for accumulator in (totals, per_category_totals[category]):
+                        accumulator["precision"][k] += precision
+                        accumulator["recall"][k] += recall
+                        accumulator["f1"][k] += f1
                 evaluated += 1
+                per_category_evaluated[category] += 1
+
+        per_category = {}
+        for category in sorted(per_category_queries):
+            category_evaluated = per_category_evaluated[category]
+            query_count = per_category_queries[category]
+            per_category[category] = {
+                **averaged(per_category_totals[category], category_evaluated),
+                "query_count": query_count,
+                "evaluated_queries": category_evaluated,
+                "skipped_queries": query_count - category_evaluated,
+            }
+
+        category_macro = {}
+        for metric in ("precision", "recall", "f1"):
+            for k in ks:
+                key = f"{metric}@{k}"
+                values = [
+                    row[key]
+                    for row in per_category.values()
+                    if row[key] is not None
+                ]
+                category_macro[key] = float(np.mean(values)) if values else None
+        category_macro.update(
+            evaluated_categories=sum(
+                row["evaluated_queries"] > 0 for row in per_category.values()
+            ),
+            total_categories=len(per_category),
+        )
         metrics[name] = {
-            **{
-                f"{metric}@{k}": totals[metric][k] / evaluated if evaluated else None
-                for metric in ("precision", "recall", "f1")
-                for k in ks
-            },
+            **averaged(totals, evaluated),
             "evaluated_queries": evaluated,
             "skipped_queries": len(products) - evaluated,
             "gallery_size": len(products),
+            "category_macro": category_macro,
+            "per_category": per_category,
         }
     return metrics
 

@@ -23,11 +23,13 @@ sys.path.append(
 )
 
 from src.clip_data import file_sha256
+from src.audit_dataset import write_category_audit
 from src.config import (
     IMAGE_DIR,
     CSV_FILE,
     PROCESSED_CSV,
     MAX_PRODUCTS,
+    MIN_PRODUCTS_PER_CATEGORY,
     RANDOM_SEED,
 )
 
@@ -212,32 +214,76 @@ def find_image(
 # MAIN
 # =========================================================
 
-def sample_products(products, count, seed=RANDOM_SEED):
-    """Exact-size proportional sampling, preserving categories when possible."""
+def sample_products(products, count, seed=RANDOM_SEED, min_per_category=1):
+    """Exact-size sampling with a category floor before proportional fill.
+
+    The floor is reached for every category when the requested size permits.
+    If the budget is smaller, rows are distributed as evenly as possible. A
+    category with fewer source rows than the floor contributes all its rows.
+    """
     if count is None:
         return products.reset_index(drop=True)
     if count < 1 or count > len(products):
         raise ValueError(f"Requested {count} products, but {len(products)} are available after filtering.")
+    if min_per_category < 1:
+        raise ValueError("min_per_category must be at least 1.")
     groups = list(products.groupby("category", sort=True))
     sizes = np.array([len(group) for _, group in groups])
-    base = np.ones(len(groups), dtype=int) if count >= len(groups) else np.zeros(len(groups), dtype=int)
-    capacity = sizes - base
-    remaining = count - int(base.sum())
-    quotas = capacity * (remaining / capacity.sum()) if capacity.sum() else np.zeros(len(groups))
-    allocation = base + np.floor(quotas).astype(int)
-    missing = count - int(allocation.sum())
-    order = np.argsort(-(quotas - np.floor(quotas)), kind="stable")
-    allocation[order[:missing]] += 1
-    selected = [group.sample(n=int(n), random_state=seed)
-                for (_, group), n in zip(groups, allocation) if n]
+    allocation = np.zeros(len(groups), dtype=int)
+    remaining = int(count)
+    rng = np.random.default_rng(seed)
+
+    # Raise all eligible categories one level at a time up to the target. This
+    # avoids hard-coding priority categories and remains exact for small runs.
+    for level in range(1, int(min_per_category) + 1):
+        candidates = np.flatnonzero(sizes >= level)
+        if not len(candidates) or remaining == 0:
+            break
+        if remaining >= len(candidates):
+            allocation[candidates] += 1
+            remaining -= len(candidates)
+        else:
+            chosen = rng.permutation(candidates)[:remaining]
+            allocation[chosen] += 1
+            remaining = 0
+            break
+
+    # Preserve the original distribution only after the shared floor has been
+    # allocated. Largest remainders make the final size exact.
+    if remaining:
+        capacity = sizes - allocation
+        quotas = (
+            capacity * (remaining / capacity.sum())
+            if capacity.sum()
+            else np.zeros(len(groups))
+        )
+        extra = np.floor(quotas).astype(int)
+        allocation += extra
+        missing = remaining - int(extra.sum())
+        order = np.argsort(-(quotas - extra), kind="stable")
+        for index in order:
+            if missing == 0:
+                break
+            if allocation[index] < sizes[index]:
+                allocation[index] += 1
+                missing -= 1
+
+    selected = []
+    group_seeds = rng.integers(0, np.iinfo(np.int32).max, size=len(groups))
+    for (_, group), amount, group_seed in zip(groups, allocation, group_seeds):
+        if amount:
+            selected.append(group.sample(n=int(amount), random_state=int(group_seed)))
     return pd.concat(selected).reset_index(drop=True)
 
 
 def prepare_catalog(csv_path=CSV_FILE, image_dir=IMAGE_DIR, output_path=PROCESSED_CSV,
-                    num_products=MAX_PRODUCTS, seed=RANDOM_SEED, categories=None):
+                    num_products=MAX_PRODUCTS, seed=RANDOM_SEED, categories=None,
+                    min_per_category=MIN_PRODUCTS_PER_CATEGORY):
     csv_path, image_dir, output_path = Path(csv_path), Path(image_dir), Path(output_path)
     if num_products is not None and num_products < 1:
         raise ValueError("num_products must be positive, or None for all products.")
+    if min_per_category < 1:
+        raise ValueError("min_per_category must be positive.")
 
     print("=" * 60)
     print("PREPARE MINI FASHION DATASET")
@@ -553,7 +599,13 @@ def prepare_catalog(csv_path=CSV_FILE, image_dir=IMAGE_DIR, output_path=PROCESSE
     eligible = len(output)
     if not eligible:
         raise ValueError("No valid products remain after filtering.")
-    output = sample_products(output, num_products, seed)
+    eligible_products = output.copy()
+    output = sample_products(
+        output,
+        num_products,
+        seed,
+        min_per_category=min_per_category,
+    )
 
 
     # =====================================================
@@ -585,12 +637,23 @@ def prepare_catalog(csv_path=CSV_FILE, image_dir=IMAGE_DIR, output_path=PROCESSE
         encoding="utf-8-sig"
     )
 
+    audit_path = output_path.with_suffix(".category_audit.csv")
+    category_audit, audit_metadata = write_category_audit(
+        eligible_products,
+        output,
+        audit_path,
+        minimum=min_per_category,
+    )
+
     summary = {"source_csv": str(csv_path.resolve()), "source_csv_sha256": file_sha256(csv_path),
                "image_dir": str(image_dir.resolve()), "requested_products": num_products,
                "selected_products": len(output), "eligible_products": eligible,
                "invalid_images": invalid_images, "duplicate_images_removed": duplicates,
                "seed": seed, "categories": categories,
+               "min_per_category": min_per_category,
                "category_counts": output.category.value_counts().to_dict(),
+               "category_audit_csv": str(audit_path.resolve()),
+               "category_audit": audit_metadata,
                "products_sha256": file_sha256(output_path)}
     output_path.with_suffix(".preparation.json").write_text(
         json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -623,6 +686,11 @@ def prepare_catalog(csv_path=CSV_FILE, image_dir=IMAGE_DIR, output_path=PROCESSE
     )
 
     print(
+        f"Category audit: {audit_path} "
+        f"({int(category_audit.status.ne('ok').sum())} categories flagged)"
+    )
+
+    print(
         "\n5 sản phẩm đầu:"
     )
 
@@ -643,12 +711,21 @@ def main():
     selection.add_argument("--num-products", type=int, default=MAX_PRODUCTS)
     selection.add_argument("--all", action="store_true", help="Select all eligible products")
     parser.add_argument("--categories", nargs="+", help="Exact category names; quote names containing spaces")
+    parser.add_argument(
+        "--min-per-category",
+        type=int,
+        default=MIN_PRODUCTS_PER_CATEGORY,
+        help="Target minimum per category when the requested catalog size permits",
+    )
     parser.add_argument("--seed", type=int, default=RANDOM_SEED)
     args = parser.parse_args()
     if not args.all and args.num_products is not None and args.num_products < 1:
         parser.error("num-products must be positive")
+    if args.min_per_category < 1:
+        parser.error("min-per-category must be positive")
     prepare_catalog(args.csv, args.image_dir, args.output,
-                    None if args.all else args.num_products, args.seed, args.categories)
+                    None if args.all else args.num_products, args.seed, args.categories,
+                    args.min_per_category)
 
 
 # =========================================================

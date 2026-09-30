@@ -23,14 +23,24 @@ class ComposeLoadBalancingTests(unittest.TestCase):
 
     def test_only_gateway_publishes_api_and_frontend_uses_gateway(self):
         services = self.configuration()
-        self.assertEqual(set(services), {"frontend", "nginx", "backend", "backend_2"})
+        self.assertEqual(
+            set(services), {"frontend", "api-gateway", "backend", "backend_2"}
+        )
         self.assertFalse(services["backend"].get("ports"))
         self.assertFalse(services["backend_2"].get("ports"))
-        self.assertEqual(str(services["nginx"]["ports"][0]["published"]), "8000")
-        self.assertEqual(services["nginx"]["ports"][0]["target"], 80)
-        self.assertEqual(services["frontend"]["environment"]["VITE_API_PROXY_TARGET"], "http://nginx:80")
+        self.assertEqual(
+            str(services["api-gateway"]["ports"][0]["published"]), "8000"
+        )
+        self.assertEqual(services["api-gateway"]["ports"][0]["target"], 80)
+        self.assertEqual(
+            services["frontend"]["environment"]["VITE_API_PROXY_TARGET"],
+            "http://api-gateway:80",
+        )
         for name in ("backend", "backend_2"):
-            self.assertEqual(services["nginx"]["depends_on"][name]["condition"], "service_started")
+            self.assertEqual(
+                services["api-gateway"]["depends_on"][name]["condition"],
+                "service_started",
+            )
 
     def test_instances_share_artifacts_and_have_separate_logs(self):
         services = self.configuration()
@@ -52,12 +62,17 @@ class ComposeLoadBalancingTests(unittest.TestCase):
             ("backend", "/app/web/backend", "web/backend"),
             ("backend_2", "/app/web/backend", "web/backend"),
             ("frontend", "/app", "web/frontend"),
-            ("nginx", "/etc/nginx/conf.d/default.conf", "web/nginx/default.conf"),
+            (
+                "api-gateway",
+                "/etc/nginx/conf.d",
+                "web/api-gateway",
+            ),
         ):
             mount = next(m for m in services[name]["volumes"] if m["target"] == target)
             self.assertEqual(Path(mount["source"]), ROOT / relative)
             self.assertTrue(Path(mount["source"]).exists())
         dockerfile = (ROOT / "web/backend/Dockerfile").read_text(encoding="utf-8")
+        self.assertTrue((ROOT / "web/api-gateway/nginx.conf").is_file())
         self.assertIn('"web.backend.main:app"', dockerfile)
         for line in dockerfile.splitlines():
             if line.startswith("COPY "):
@@ -78,10 +93,12 @@ class ComposeLoadBalancingTests(unittest.TestCase):
                 self.assertTrue(mounts[target]["read_only"])
 
 
-class NginxConfigurationContractTests(unittest.TestCase):
+class ApiGatewayConfigurationContractTests(unittest.TestCase):
     def test_dns_balancing_and_bounded_retry_contract(self):
-        config = (ROOT / "web" / "nginx" / "default.conf").read_text(encoding="utf-8")
-        for directive in ("resolver 127.0.0.11", "zone fashion_api 64k;", "least_conn;",
+        config = (ROOT / "web" / "api-gateway" / "nginx.conf").read_text(
+            encoding="utf-8"
+        )
+        for directive in ("resolver 127.0.0.11", "zone fashion_backends 64k;", "least_conn;",
                           "server backend:8000 resolve", "server backend_2:8000 resolve",
                           "proxy_next_upstream_tries 2;", "client_max_body_size 6m;",
                           "proxy_request_buffering on;"):

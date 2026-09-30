@@ -133,13 +133,50 @@ def main():
                              "skipped_queries": baseline["skipped_queries"],
                              "gallery_size": baseline["gallery_size"]})
     report["comparison"] = rows
+    category_rows = []
+    for task, baseline in report["metrics"]["pretrained"].items():
+        tuned = report["metrics"]["finetuned"][task]
+        baseline_categories = baseline.get("per_category", {})
+        tuned_categories = tuned.get("per_category", {})
+        for category in sorted(set(baseline_categories) | set(tuned_categories)):
+            before_row = baseline_categories.get(category, {})
+            after_row = tuned_categories.get(category, {})
+            for metric_name in ("precision", "recall", "f1"):
+                for k in report["ks"]:
+                    metric = f"{metric_name}@{k}"
+                    before = before_row.get(metric)
+                    after = after_row.get(metric)
+                    category_rows.append(
+                        {
+                            "task": task,
+                            "category": category,
+                            "metric": metric,
+                            "pretrained": before,
+                            "finetuned": after,
+                            "delta_percentage_points": (
+                                None
+                                if before is None or after is None
+                                else 100 * (after - before)
+                            ),
+                            "query_count": before_row.get("query_count", 0),
+                            "evaluated_queries": before_row.get("evaluated_queries", 0),
+                            "skipped_queries": before_row.get("skipped_queries", 0),
+                        }
+                    )
+    report["category_comparison"] = category_rows
     output_dir = args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "comparison.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     frame = pd.DataFrame(rows)
     frame.to_csv(output_dir / "comparison.csv", index=False)
+    pd.DataFrame(category_rows).to_csv(
+        output_dir / "comparison_by_category.csv", index=False
+    )
     print(frame.to_string(index=False, float_format=lambda value: f"{value:.4f}"))
-    print(f"Saved comparison.json and comparison.csv in {output_dir}")
+    print(
+        "Saved comparison.json, comparison.csv and "
+        f"comparison_by_category.csv in {output_dir}"
+    )
 
 
 if __name__ == "__main__":

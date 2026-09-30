@@ -74,10 +74,16 @@ export default function ImageSearchForm({ loading, onSearchStart, onSearchSucces
       </div>
 
       <div className="mode-picker">
-        <span className="control-label">Cách lọc danh mục</span>
+        <span className="control-label">Cách sử dụng danh mục</span>
         <div className="mode-options">
           {CATEGORY_MODES.map((mode) => (
-            <button type="button" key={mode.value} className={categoryMode === mode.value ? 'active' : ''} onClick={() => setCategoryMode(mode.value)}>
+            <button
+              type="button"
+              key={mode.value}
+              className={categoryMode === mode.value ? 'active' : ''}
+              aria-pressed={categoryMode === mode.value}
+              onClick={() => setCategoryMode(mode.value)}
+            >
               <span>{mode.label}</span>
               <small>{mode.hint}</small>
             </button>

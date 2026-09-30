@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import torch
 from PIL import Image
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
 from tqdm import tqdm
 
 from src.clip_data import (
@@ -20,7 +20,15 @@ from src.clip_data import (
     table_content_sha256,
 )
 from src.clip_runtime import encode_products, load_clip, model_identity
-from src.config import CLIP_MODEL, PROCESSED_CSV, RANDOM_SEED
+from src.audit_dataset import write_category_audit
+from src.config import (
+    CATEGORY_BALANCE_POWER,
+    CATEGORY_MAX_SAMPLE_WEIGHT,
+    CLIP_MODEL,
+    MIN_PRODUCTS_PER_CATEGORY,
+    PROCESSED_CSV,
+    RANDOM_SEED,
+)
 from src.evaluation import evaluate_retrieval
 
 
@@ -99,6 +107,41 @@ def train_epoch(model, loader, optimizer, parameters, device):
     return total_loss / count
 
 
+def build_category_sampler(products, power, max_weight, seed):
+    """Create a capped inverse-frequency sampler and serializable metadata."""
+    if not 0.0 <= power <= 1.0:
+        raise ValueError("category balance power must be between 0 and 1")
+    if max_weight < 1.0:
+        raise ValueError("max category sample weight must be at least 1")
+    counts = products.category.astype(str).value_counts()
+    metadata = {
+        "enabled": power > 0,
+        "power": float(power),
+        "max_weight": float(max_weight),
+        "category_counts": {str(key): int(value) for key, value in counts.items()},
+    }
+    if power == 0:
+        return None, metadata
+    largest = float(counts.max())
+    category_weights = {
+        category: min((largest / float(count)) ** power, max_weight)
+        for category, count in counts.items()
+    }
+    weights = products.category.astype(str).map(category_weights).to_numpy(
+        dtype=np.float64, copy=True
+    )
+    sampler = WeightedRandomSampler(
+        torch.as_tensor(weights, dtype=torch.double),
+        num_samples=len(products),
+        replacement=True,
+        generator=torch.Generator().manual_seed(seed),
+    )
+    metadata["category_weights"] = {
+        str(key): float(value) for key, value in category_weights.items()
+    }
+    return sampler, metadata
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--csv", type=Path, default=PROCESSED_CSV)
@@ -112,6 +155,18 @@ def parse_args():
     parser.add_argument("--seed", type=int, default=RANDOM_SEED)
     parser.add_argument("--val-fraction", type=float, default=0.1)
     parser.add_argument("--test-fraction", type=float, default=0.1)
+    parser.add_argument(
+        "--category-balance-power",
+        type=float,
+        default=CATEGORY_BALANCE_POWER,
+        help="0 disables balancing; 0.5 uses capped square-root inverse frequency",
+    )
+    parser.add_argument(
+        "--max-category-sample-weight",
+        type=float,
+        default=CATEGORY_MAX_SAMPLE_WEIGHT,
+        help="Maximum oversampling weight for a category",
+    )
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--prepare-only", action="store_true", help="Validate images and save fixed splits without loading CLIP")
     return parser.parse_args()
@@ -122,6 +177,11 @@ def main():
     if (args.epochs < 1 or args.batch_size < 2 or not math.isfinite(args.learning_rate)
             or args.learning_rate <= 0 or not math.isfinite(args.weight_decay) or args.weight_decay < 0):
         raise ValueError("Need epochs >= 1, batch size >= 2, positive LR and nonnegative decay.")
+    if (not math.isfinite(args.category_balance_power)
+            or not 0 <= args.category_balance_power <= 1
+            or not math.isfinite(args.max_category_sample_weight)
+            or args.max_category_sample_weight < 1):
+        raise ValueError("Invalid category balancing settings.")
     random.seed(args.seed)
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
@@ -159,6 +219,13 @@ def main():
             dataset_content_sha256=table_content_sha256(products),
         )
         metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+    source_table = pd.read_csv(args.csv, dtype={"product_id": str})
+    write_category_audit(
+        source_table,
+        products,
+        run_dir / "dataset.category_audit.csv",
+        minimum=MIN_PRODUCTS_PER_CATEGORY,
+    )
     print(json.dumps(metadata, indent=2), flush=True)
     if args.prepare_only:
         return
@@ -169,7 +236,14 @@ def main():
     print(f"Device: {device}; trainable parameters: {sum(p.numel() for p in parameters):,}", flush=True)
     train = products.loc[products.split == "train"]
     validation = products.loc[products.split == "validation"]
-    loader = DataLoader(ProductPairs(train), batch_size=args.batch_size, shuffle=True,
+    sampler, sampler_metadata = build_category_sampler(
+        train,
+        args.category_balance_power,
+        args.max_category_sample_weight,
+        args.seed,
+    )
+    loader = DataLoader(ProductPairs(train), batch_size=args.batch_size,
+                        shuffle=sampler is None, sampler=sampler,
                         generator=torch.Generator().manual_seed(args.seed), num_workers=0,
                         collate_fn=PairCollator(processor, model.config.text_config.max_position_embeddings))
     optimizer = torch.optim.AdamW(parameters, lr=args.learning_rate, weight_decay=args.weight_decay)
@@ -178,6 +252,7 @@ def main():
                 "dataset_sha256": metadata["dataset_sha256"], "trainable": args.trainable,
                 "learning_rate": args.learning_rate, "weight_decay": args.weight_decay,
                 "batch_size": args.batch_size, "epochs": args.epochs, "seed": args.seed,
+                "category_sampling": sampler_metadata,
                 "selection_metric": "mean validation text_to_image/image_to_text recall@1",
                 "history": [], "status": "running"}
     training_path = run_dir / "training.json"

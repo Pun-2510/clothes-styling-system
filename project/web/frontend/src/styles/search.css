@@ -176,7 +176,7 @@
 .preview-meta button { display: grid; padding: 3px; border: 0; color: #fff; background: transparent; cursor: pointer; }
 
 .mode-picker { padding: 24px 0; }
-.mode-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 9px; }
+.mode-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 9px; }
 .mode-options button {
   padding: 13px;
   display: flex;

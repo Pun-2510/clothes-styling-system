@@ -1,9 +1,9 @@
-# Nginx và hai backend
+# API Gateway (Nginx) và hai backend
 
 ```text
-Browser → frontend :5173 → nginx :80 → backend:8000
+Browser → frontend :5173 → api-gateway :80 → backend:8000
                                    → backend_2:8000
-API trực tiếp localhost:8000 ────→ nginx :80
+API trực tiếp localhost:8000 ────→ api-gateway :80
 ```
 
 Hai backend cùng hoạt động (active-active). Nginx dùng `least_conn`: ưu tiên
@@ -15,7 +15,8 @@ vẫn được chuyển tiếp nguyên vẹn. Frontend dùng Vite như trước.
 
 Chạy nhanh từ `project/`: `docker-compose up -d --build`.
 Compose tự đọc `.env`; mặc định dùng data/processed và embeddings_finetuned,
-không phụ thuộc kết quả comparisons. File Nginx nằm tại web/nginx/default.conf.
+không phụ thuộc kết quả comparisons. Cấu hình gateway nằm tại
+`web/api-gateway/nginx.conf`.
 Không cần `--env-file` trừ khi muốn ghi đè lựa chọn đó cho một lần chạy.
 `.env` là cấu hình riêng từng máy, không lưu Git; xem `.env.example` khi cài mới.
 
@@ -24,9 +25,9 @@ Từ `project/`, khi Docker Desktop đang chạy và đã có model/catalog:
 ```powershell
 docker compose config --quiet
 docker compose up -d --build
-docker compose exec nginx nginx -t
+docker compose exec api-gateway nginx -t
 docker compose ps
-docker compose logs -f nginx backend backend_2
+docker compose logs -f api-gateway backend backend_2
 ```
 
 Chỉ khi muốn xem thử catalog thí nghiệm 4.000 sản phẩm (tùy chọn), thay lệnh `up` bằng:

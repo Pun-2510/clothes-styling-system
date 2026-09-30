@@ -8,7 +8,8 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 
-from src.config import BASE_DIR, IMAGE_DIR
+from src.audit_dataset import audit_categories, audit_summary
+from src.config import BASE_DIR, IMAGE_DIR, MIN_PRODUCTS_PER_CATEGORY
 
 
 def file_sha256(path):
@@ -147,9 +148,19 @@ def prepare_splits(csv_path, seed=42, val_fraction=0.1, test_fraction=0.1):
         counts.get(split, 0) < 2 for split in ("validation", "test")
     ):
         raise ValueError("Need at least two rows in each split; dataset is too small.")
+    category_audit = audit_categories(
+        products,
+        products,
+        minimum=MIN_PRODUCTS_PER_CATEGORY,
+    )
     return products, {"input_rows": before, "duplicate_images_removed": before - len(products),
                       "split_counts": counts, "seed": seed,
-                      "val_fraction": val_fraction, "test_fraction": test_fraction}
+                      "val_fraction": val_fraction, "test_fraction": test_fraction,
+                      "category_audit": audit_summary(category_audit),
+                      "category_split_counts": category_audit[
+                          ["category", "selected_count", "train_count",
+                           "validation_count", "test_count", "status", "warnings"]
+                      ].to_dict(orient="records")}
 
 
 def load_experiment_data(run_dir, verify_images=True):

@@ -18,9 +18,9 @@ services:
     ports:
       - 5173:5173
     environment:
-      VITE_API_PROXY_TARGET: http://nginx:80
+      VITE_API_PROXY_TARGET: http://api-gateway:80
     depends_on:
-      nginx:
+      api-gateway:
         condition: service_healthy
     restart: unless-stopped
     networks:
@@ -33,7 +33,9 @@ services:
       dockerfile: web/backend/Dockerfile
     environment: &backend-environment
       CLIP_MODEL_PATH: /app/runs/clip_finetune_3epochs_local/best
-      CLIP_EMBEDDING_DIR: /app/embeddings_finetuned
+      CLIP_EMBEDDING_DIR: /app/embeddings
+      CATEGORY_CONFIDENCE_THRESHOLD: ${CATEGORY_CONFIDENCE_THRESHOLD:-0.60}
+      CATEGORY_TOP_PER_CLASS: ${CATEGORY_TOP_PER_CLASS:-3}
       HF_HOME: /cache/huggingface
       RECOMMENDATION_LOG_NAME: recommendation-backend.log
     volumes:
@@ -52,8 +54,8 @@ services:
         target: /app/data/processed
         read_only: true
       - type: bind
-        source: ${FASHION_EMBEDDINGS_DIR:-./embeddings_finetuned}
-        target: /app/embeddings_finetuned
+        source: ${FASHION_EMBEDDINGS_DIR:-./embeddings}
+        target: /app/embeddings
         read_only: true
       - type: bind
         source: ${FASHION_CHECKPOINT_DIR:-./runs/clip_finetune_3epochs_local/best}
@@ -89,15 +91,15 @@ services:
       <<: *backend-environment
       RECOMMENDATION_LOG_NAME: recommendation-backend_2.log
 
-  nginx:
+  api-gateway:
     # Dynamic upstream DNS requires Nginx >= 1.27.3.
     image: nginx:stable-alpine
     ports:
       - "8000:80"
     volumes:
       - type: bind
-        source: ./web/nginx/default.conf
-        target: /etc/nginx/conf.d/default.conf
+        source: ./web/api-gateway
+        target: /etc/nginx/conf.d
         read_only: true
     depends_on:
       # One model failing to initialize must not block the entire gateway.

@@ -5,9 +5,16 @@ export const TEXT_EXAMPLES = [
 ]
 
 export const CATEGORY_MODES = [
-  { value: 'no_category', label: 'Tự do', hint: 'Ưu tiên độ tương đồng hình ảnh' },
-  { value: 'soft_category', label: 'Cân bằng', hint: 'Ưu tiên nhẹ sản phẩm cùng loại' },
-  { value: 'hard_category', label: 'Chính xác', hint: 'Chỉ lấy sản phẩm cùng loại' },
+  {
+    value: 'soft_category',
+    label: 'Thông minh',
+    hint: 'Đủ tin cậy thì ưu tiên cùng loại; nếu không sẽ tự tìm kiếm tự do',
+  },
+  {
+    value: 'no_category',
+    label: 'Không dùng danh mục',
+    hint: 'Chỉ xếp hạng theo độ tương đồng với ảnh đã tải lên',
+  },
 ]
 
 export const RESULT_COUNTS = [3, 5, 6, 8, 10]

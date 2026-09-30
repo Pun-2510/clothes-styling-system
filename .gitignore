@@ -50,9 +50,6 @@ lerna-debug.log*
 
 # Generated ML artefacts
 project/runs/**
-!project/runs/**/
-!project/runs/**/comparison.csv
-!project/runs/**/comparison.json
 
 # Local datasets and generated catalog/embedding files. Keep source code and
 # documentation in Git; download or regenerate these runtime artifacts locally.

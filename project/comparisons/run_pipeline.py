@@ -8,7 +8,15 @@ from pathlib import Path
 import subprocess
 import sys
 
-from src.config import BASE_DIR, CSV_FILE, IMAGE_DIR, CLIP_MODEL
+from src.config import (
+    BASE_DIR,
+    CATEGORY_BALANCE_POWER,
+    CATEGORY_MAX_SAMPLE_WEIGHT,
+    CLIP_MODEL,
+    CSV_FILE,
+    IMAGE_DIR,
+    MIN_PRODUCTS_PER_CATEGORY,
+)
 
 
 def parse_args(argv=None):
@@ -19,6 +27,7 @@ def parse_args(argv=None):
     parser.add_argument("--csv", type=Path, default=CSV_FILE)
     parser.add_argument("--image-dir", type=Path, default=IMAGE_DIR)
     parser.add_argument("--categories", nargs="+")
+    parser.add_argument("--min-per-category", type=int, default=MIN_PRODUCTS_PER_CATEGORY)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--reuse-run", type=Path,
                         help="Reuse a completed CLIP run and its original held-out test split; no training")
@@ -28,17 +37,29 @@ def parse_args(argv=None):
     parser.add_argument("--learning-rate", type=float, default=1e-6)
     parser.add_argument("--weight-decay", type=float, default=0.01)
     parser.add_argument("--trainable", choices=["full", "projections"], default="full")
+    parser.add_argument("--category-balance-power", type=float, default=CATEGORY_BALANCE_POWER)
+    parser.add_argument(
+        "--max-category-sample-weight",
+        type=float,
+        default=CATEGORY_MAX_SAMPLE_WEIGHT,
+    )
     parser.add_argument("--val-fraction", type=float, default=0.1)
     parser.add_argument("--test-fraction", type=float, default=0.1)
     parser.add_argument("--ks", nargs="+", type=int, default=[1, 5, 10])
     parser.add_argument("--device", choices=["cpu", "cuda"])
     parser.add_argument("--dry-run", action="store_true", help="Print commands without writing files or loading models")
     args = parser.parse_args(argv)
-    if args.num_products < 2 or args.batch_size < 2 or args.epochs < 1 or any(k < 1 for k in args.ks):
+    if (args.num_products < 2 or args.batch_size < 2 or args.epochs < 1
+            or args.min_per_category < 1 or any(k < 1 for k in args.ks)):
         parser.error("Need num-products >= 2, batch-size >= 2, epochs >= 1 and positive ks")
     if (not math.isfinite(args.learning_rate) or args.learning_rate <= 0
             or not math.isfinite(args.weight_decay) or args.weight_decay < 0):
         parser.error("Need finite positive learning-rate and nonnegative weight-decay")
+    if (not math.isfinite(args.category_balance_power)
+            or not 0 <= args.category_balance_power <= 1
+            or not math.isfinite(args.max_category_sample_weight)
+            or args.max_category_sample_weight < 1):
+        parser.error("Invalid category balancing settings")
     if not (0 < args.val_fraction < 1 and 0 < args.test_fraction < 1
             and args.val_fraction + args.test_fraction < 1):
         parser.error("Validation/test fractions must be positive and sum to < 1")
@@ -67,16 +88,19 @@ def build_commands(args):
         return [sys.executable, "-m", module, *map(str, options)]
 
     prepare = command("src.prepare_dataset", "--csv", args.csv, "--image-dir", args.image_dir,
-                      "--num-products", args.num_products, "--seed", args.seed, "--output", catalog)
+                      "--num-products", args.num_products, "--seed", args.seed,
+                      "--min-per-category", args.min_per_category, "--output", catalog)
     if args.categories:
         prepare += ["--categories", *args.categories]
     stages = [("prepare", prepare)]
     if not args.reuse_run:
         stages.append(("train", command("src.finetune_clip", "--csv", catalog, "--run-dir", run,
                       "--model", base_model, "--epochs", args.epochs, "--batch-size", args.batch_size,
-                      "--learning-rate", args.learning_rate, "--weight-decay", args.weight_decay,
-                      "--trainable", args.trainable, "--seed", args.seed,
-                      "--val-fraction", args.val_fraction, "--test-fraction", args.test_fraction, *device)))
+                       "--learning-rate", args.learning_rate, "--weight-decay", args.weight_decay,
+                       "--trainable", args.trainable, "--seed", args.seed,
+                       "--category-balance-power", args.category_balance_power,
+                       "--max-category-sample-weight", args.max_category_sample_weight,
+                       "--val-fraction", args.val_fraction, "--test-fraction", args.test_fraction, *device)))
     for label, model in (("pretrained", base_model), ("finetuned", run / "best")):
         stages.append((f"encode_{label}", command("src.generate_clip_embeddings", "--csv", catalog,
                       "--model", model, "--output-dir", root / "embeddings" / label,

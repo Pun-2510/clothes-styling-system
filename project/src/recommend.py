@@ -34,7 +34,8 @@ from src.config import (
     EMBEDDINGS_FILE,
     TEXT_EMBEDDINGS_FILE,
     TOP_K,
-    CATEGORY_NEIGHBORS,
+    CATEGORY_TOP_PER_CLASS,
+    CATEGORY_CONFIDENCE_THRESHOLD,
     CATEGORY_BONUS,
 )
 
@@ -171,6 +172,13 @@ class FashionRecommender:
             .unique()
             .tolist()
         )
+
+        self.category_indices = {
+            str(category): np.asarray(indices, dtype=np.int64)
+            for category, indices in self.products.groupby(
+                self.products["category"].astype(str), sort=True
+            ).groups.items()
+        }
 
         log_info(
             f"Loaded products="
@@ -357,64 +365,32 @@ class FashionRecommender:
             self.embeddings
         )
 
-        # -------------------------------------------------
-        # Get nearest visual neighbors
-        # -------------------------------------------------
-
-        neighbor_k = min(
-            CATEGORY_NEIGHBORS,
-            len(scores)
-        )
-
-        neighbor_indices = (
-            top_k_indices(
-                scores,
-                k=neighbor_k
-            )
-        )
-
-        neighbors = (
-            self.products
-            .iloc[neighbor_indices]
-            .copy()
-        )
-
-        neighbors["similarity"] = (
-            scores[neighbor_indices]
-        )
-
-        # -------------------------------------------------
-        # Category weighted voting
-        # -------------------------------------------------
-
+        # Every category contributes at most the same number of its strongest
+        # similarities. Large categories therefore cannot win only by count.
         category_scores = {}
 
-        for _, row in neighbors.iterrows():
+        for category, indices in self.category_indices.items():
 
-            category = str(
-                row["category"]
+            category_similarities = (
+                np.maximum(scores[indices], 0.0)
+                ** 4
             )
 
-            similarity = float(
-                row["similarity"]
+            sample_size = min(
+                CATEGORY_TOP_PER_CLASS,
+                len(category_similarities)
             )
 
-            # Similarity càng cao
-            # càng có trọng số lớn
-            weight = max(
-                similarity,
-                0.0
-            ) ** 4
+            if sample_size == 0:
+                continue
 
-            category_scores[
-                category
-            ] = (
-                category_scores.get(
-                    category,
-                    0.0
-                )
-                +
-                weight
+            strongest = np.partition(
+                category_similarities,
+                len(category_similarities) - sample_size
+            )[-sample_size:]
+
+            category_scores[category] = float(
+                strongest.mean()
             )
 
         if not category_scores:
@@ -437,18 +413,24 @@ class FashionRecommender:
             ranked_categories[0][0]
         )
 
-        total_score = sum(
-            category_scores.values()
+        top_score = float(
+            ranked_categories[0][1]
         )
 
+        second_score = (
+            float(ranked_categories[1][1])
+            if len(ranked_categories) > 1
+            else 0.0
+        )
+
+        # Relative top-two confidence. This remains a heuristic score rather
+        # than a calibrated classification probability.
         confidence = (
-            category_scores[
-                predicted_category
-            ]
+            top_score
             /
-            total_score
-            if total_score > 0
-            else 0
+            (top_score + second_score)
+            if top_score + second_score > 0
+            else 0.0
         )
 
         # -------------------------------------------------
@@ -728,11 +710,13 @@ class FashionRecommender:
                 .hex[:8]
             )
 
-        category_mode = (
+        requested_category_mode = (
             str(category_mode)
             .strip()
             .lower()
         )
+
+        category_mode = requested_category_mode
 
         valid_modes = {
             "no_category",
@@ -790,13 +774,37 @@ class FashionRecommender:
 
             else:
 
-                results, ranking_time = (
-                    self.recommend_soft_category(
-                        query_embedding,
-                        predicted_category,
-                        top_k
+                if confidence < CATEGORY_CONFIDENCE_THRESHOLD:
+
+                    log_info(
+                        f"request={request_id} | "
+                        "CATEGORY_FALLBACK | "
+                        f"predicted={predicted_category} | "
+                        f"confidence={confidence:.4f} | "
+                        f"threshold={CATEGORY_CONFIDENCE_THRESHOLD:.4f} | "
+                        "applied=no_category"
                     )
-                )
+
+                    results, ranking_time = (
+                        self.recommend_no_category(
+                            query_embedding,
+                            top_k
+                        )
+                    )
+
+                    category_mode = "no_category"
+                    predicted_category = None
+                    confidence = None
+
+                else:
+
+                    results, ranking_time = (
+                        self.recommend_soft_category(
+                            query_embedding,
+                            predicted_category,
+                            top_k
+                        )
+                    )
 
         total_time = (
             time.perf_counter()
@@ -812,6 +820,7 @@ class FashionRecommender:
         log_info(
             f"request={request_id} | "
             f"IMAGE_RECOMMENDATION_COMPLETE | "
+            f"requested_mode={requested_category_mode} | "
             f"mode={category_mode} | "
             f"category={predicted_category or 'not_used'} | "
             f"confidence={confidence_log} | "
