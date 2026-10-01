@@ -175,22 +175,6 @@
 .preview-meta small { margin-top: 2px; color: #cbd2ce; }
 .preview-meta button { display: grid; padding: 3px; border: 0; color: #fff; background: transparent; cursor: pointer; }
 
-.mode-picker { padding: 24px 0; }
-.mode-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 9px; }
-.mode-options button {
-  padding: 13px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  text-align: left;
-  background: var(--surface);
-  cursor: pointer;
-}
-.mode-options button span { font-size: 13px; font-weight: 700; }
-.mode-options button small { color: var(--muted); font-size: 10px; line-height: 1.4; }
-.mode-options button.active { color: var(--primary); border-color: #a9c6b8; background: var(--primary-soft); }
 .image-actions { display: grid; grid-template-columns: 150px 1fr; align-items: end; gap: 18px; }
 
 .error-banner {
@@ -211,7 +195,6 @@
   .field-heading { align-items: start; flex-direction: column; gap: 5px; }
   .form-controls { grid-template-columns: 1fr 1fr; gap: 20px 12px; }
   .range-control { grid-column: 1 / -1; }
-  .mode-options { grid-template-columns: 1fr; }
   .image-actions { grid-template-columns: 1fr; }
 }
 

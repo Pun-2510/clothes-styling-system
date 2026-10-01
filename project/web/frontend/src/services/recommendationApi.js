@@ -1,4 +1,5 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
+const AUTOMATIC_CATEGORY_MODE = 'soft_category'
 
 function getErrorMessage(error) {
   if (error instanceof TypeError) {
@@ -43,11 +44,11 @@ export async function searchByText({ query, language, topK, imageWeight }) {
   }
 }
 
-export async function searchByImage({ file, topK, categoryMode }) {
+export async function searchByImage({ file, topK }) {
   const payload = new FormData()
   payload.append('file', file)
   payload.append('top_k', String(topK))
-  payload.append('category_mode', categoryMode)
+  payload.append('category_mode', AUTOMATIC_CATEGORY_MODE)
 
   try {
     const response = await fetch(`${API_BASE}/api/recommendations/image`, {

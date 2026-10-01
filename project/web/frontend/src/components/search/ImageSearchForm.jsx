@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Icon from '../common/Icon'
-import { ACCEPTED_IMAGE_TYPES, CATEGORY_MODES, MAX_IMAGE_SIZE, RESULT_COUNTS } from '../../data/searchOptions'
+import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_SIZE, RESULT_COUNTS } from '../../data/searchOptions'
 import { searchByImage } from '../../services/recommendationApi'
 
 export default function ImageSearchForm({ loading, onSearchStart, onSearchSuccess, onSearchError, onClearResult }) {
   const [file, setFile] = useState(null)
   const [topK, setTopK] = useState(5)
-  const [categoryMode, setCategoryMode] = useState('soft_category')
   const [dragging, setDragging] = useState(false)
   const inputRef = useRef(null)
   const preview = useMemo(() => file ? URL.createObjectURL(file) : '', [file])
@@ -35,7 +34,7 @@ export default function ImageSearchForm({ loading, onSearchStart, onSearchSucces
 
     onSearchStart()
     try {
-      const result = await searchByImage({ file, topK, categoryMode })
+      const result = await searchByImage({ file, topK })
       onSearchSuccess(result)
     } catch (error) {
       onSearchError(error.message)
@@ -71,24 +70,6 @@ export default function ImageSearchForm({ loading, onSearchStart, onSearchSucces
             <span>JPG, PNG, WebP · tối đa 5 MB</span>
           </button>
         )}
-      </div>
-
-      <div className="mode-picker">
-        <span className="control-label">Cách sử dụng danh mục</span>
-        <div className="mode-options">
-          {CATEGORY_MODES.map((mode) => (
-            <button
-              type="button"
-              key={mode.value}
-              className={categoryMode === mode.value ? 'active' : ''}
-              aria-pressed={categoryMode === mode.value}
-              onClick={() => setCategoryMode(mode.value)}
-            >
-              <span>{mode.label}</span>
-              <small>{mode.hint}</small>
-            </button>
-          ))}
-        </div>
       </div>
 
       <div className="image-actions">

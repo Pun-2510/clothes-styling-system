@@ -17,8 +17,11 @@ export default function ResultsSection({ data, mode }) {
           {mode === 'text' && data.query_used !== data.query && data.query_used && (
             <span>Truy vấn: “{data.query_used}”</span>
           )}
-          {mode === 'image' && data.predicted_category && (
-            <span>{data.predicted_category} · {Math.round((data.category_confidence || 0) * 100)}% tin cậy</span>
+          {mode === 'image' && data.category_mode === 'soft_category' && data.predicted_category && (
+            <span>Ưu tiên {data.predicted_category} · {Math.round((data.category_confidence || 0) * 100)}% tin cậy</span>
+          )}
+          {mode === 'image' && data.category_mode === 'no_category' && (
+            <span>Tự động tìm kiếm không giới hạn danh mục</span>
           )}
           <span>{Number(elapsed || 0).toFixed(2)} giây</span>
         </div>

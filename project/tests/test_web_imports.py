@@ -1,10 +1,13 @@
 """Exercise relocated FastAPI package with fake models; no downloads/training."""
 
+from io import BytesIO
 from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from fastapi.testclient import TestClient
+from PIL import Image
+import pandas as pd
 from web.backend.main import app
 
 
@@ -30,6 +33,49 @@ class WebPackageTests(unittest.TestCase):
             self.assertEqual(response.status_code, 415)
             model.assert_called_once()
             translator.assert_called_once()
+
+    def test_image_route_reports_mode_applied_after_automatic_fallback(self):
+        results = pd.DataFrame({
+            "product_id": ["1"],
+            "product_name": ["Product"],
+            "category": ["Shirts"],
+            "image_reference": ["1.jpg"],
+            "visual_similarity": [0.8],
+            "similarity": [0.8],
+        })
+        recommend_by_image = Mock(return_value={
+            "category_mode": "no_category",
+            "predicted_category": None,
+            "category_confidence": None,
+            "ranking_time": 0.01,
+            "total_time": 0.02,
+            "results": results,
+        })
+        recommender = SimpleNamespace(
+            device="cpu",
+            products=[1],
+            embeddings=object(),
+            has_text_embeddings=True,
+            recommend_by_image=recommend_by_image,
+        )
+        image_buffer = BytesIO()
+        Image.new("RGB", (2, 2), "white").save(image_buffer, format="PNG")
+
+        with patch("web.backend.main.FashionRecommender", return_value=recommender), \
+                patch("web.backend.main.VietnameseEnglishTranslator", return_value=object()), \
+                TestClient(app) as client:
+            response = client.post(
+                "/api/recommendations/image",
+                data={"top_k": "5", "category_mode": "soft_category"},
+                files={"file": ("query.png", image_buffer.getvalue(), "image/png")},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["category_mode"], "no_category")
+        self.assertEqual(
+            recommend_by_image.call_args.kwargs["category_mode"],
+            "soft_category",
+        )
 
 
 if __name__ == "__main__":

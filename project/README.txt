@@ -62,7 +62,7 @@ Cả hai lệnh phải trả về `True`.
 ## 3. TẠO MÔI TRƯỜNG PYTHON
 
 ```powershell
-py -m venv .venv
+py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
@@ -198,7 +198,7 @@ runs/clip_finetune_3epochs/
 Nếu GPU thiếu bộ nhớ, giảm `--batch-size` xuống `8`, `4` hoặc `2`. Khi không có
 CUDA, chương trình tự sử dụng CPU nhưng thời gian huấn luyện sẽ lâu hơn.
 
-## 7. SO SÁNH PRETRAINED VÀ FINE-TUNED CLIP (Optional)
+## 7. SO SÁNH PRETRAINED VÀ FINE-TUNED CLIP
 
 Đây là bước đánh giá tùy chọn, không phải dữ liệu đầu vào của website:
 
@@ -325,9 +325,10 @@ Backend hỗ trợ:
 - `no_category`: chỉ dùng độ tương đồng CLIP.
 - `hard_category`: giới hạn ứng viên theo category, chủ yếu dành cho thử nghiệm.
 
-Frontend nên dùng `soft_category` làm chế độ thông minh mặc định và cho phép
-chọn `no_category`. `hard_category` có thể giữ trong API nhưng không cần hiển thị
-trên giao diện chính.
+Frontend không hiển thị nút chọn category mode và luôn gửi `soft_category`.
+Backend tự áp dụng category khi đủ confidence hoặc fallback sang `no_category`.
+Hai mode `no_category` và `hard_category` vẫn được giữ trong API để kiểm thử và
+thực hiện thí nghiệm, không dành cho thao tác thông thường trên giao diện.
 
 ## 12. KIỂM THỬ
 
@@ -354,4 +355,3 @@ Set-Location ../..
 - Không tìm thấy Docker daemon: mở Docker Desktop và chờ Linux engine sẵn sàng.
 - Cổng 8000 hoặc 5173 đang được sử dụng: dừng tiến trình/container cũ trước khi
   khởi động lại.
-

@@ -223,7 +223,9 @@ def recommend_by_image(
 
         return ImageRecommendationResponse(
             request_id=request_id,
-            category_mode=category_mode,
+            category_mode=CategoryMode(
+                recommendation["category_mode"]
+            ),
             predicted_category=recommendation[
                 "predicted_category"
             ],
