@@ -94,6 +94,7 @@ lightning_logs/
 
 # Runtime logs and temporary files
 *.log
+!docs/reports/evidence/**/*.log
 *.tmp
 *.temp
 *.bak
