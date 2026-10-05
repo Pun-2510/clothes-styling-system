@@ -64,6 +64,9 @@ project/embeddings_finetuned/**
 !project/embeddings_finetuned/README.md
 project/comparisons/results/**
 !project/comparisons/results/.gitkeep
+experiments/model_comparison/results/**
+!experiments/model_comparison/results/.gitkeep
+experiments/model_comparison/cache/**
 project/datasets/**
 !project/datasets/.gitkeep
 !project/datasets/README.md

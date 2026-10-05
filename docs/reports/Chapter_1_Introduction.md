@@ -1,21 +1,45 @@
 # CHAPTER 1. INTRODUCTION
 
 ## 1.1. Reason for Choosing the Topic
-e
+
+Online shopping gives customers access to large product catalogs, but the same
+scale also makes product discovery difficult. A customer may encounter an item
+in daily life, on social media, or in another online store and want to find a
+similar alternative with a more suitable price, design, or availability. The
+reference may be an image of a dress or backpack, but it may also be an object
+such as a water bottle or basketball that appears in a fashion and lifestyle
+catalog. In other situations, the customer has no reference image and can only
+describe the desired item in words.
+
+Conventional keyword search depends heavily on the words stored in the catalog.
+It may fail when a customer does not know the exact product name, when different
+words describe the same visual concept, or when appearance is more important
+than the category label. Image search addresses part of this problem, while
+text search provides a convenient alternative when an image is unavailable. A
+multimodal representation that relates images and language can therefore support
+both forms of product discovery through one retrieval framework.
+
+Fashion recommendation is a suitable domain for studying this problem because
+products contain both visual characteristics and textual attributes. The topic
+also provides a practical setting in which pretrained models, domain-specific
+fine-tuning, retrieval evaluation, and web deployment can be examined together.
+For these reasons, the project develops a multimodal fashion product retrieval
+system and evaluates whether adapting CLIP to the selected fashion data improves
+its performance.
 
 ## 1.2. Target Implementation
 
-The overall objective is to develop a web-based fashion product recommendation system that retrieves relevant catalog items from an uploaded image or a textual description. Product images and descriptions are represented using CLIP, and candidate products are ranked using embedding similarity. The experimental objectives include comparing BERT and ResNet50 with CLIP on compatible tasks, and evaluating the effect of fine-tuning CLIP on fashion data.
+The overall objective is to develop a web-based fashion product recommendation system that retrieves relevant catalog items from an uploaded image or a textual description. Product images and descriptions are represented using CLIP, and candidate products are ranked using embedding similarity. The experimental objectives include comparing Sentence-BERT (SBERT) and ResNet18 with CLIP on compatible tasks, and evaluating the effect of fine-tuning CLIP on fashion data.
 
 The specific objectives are as follows:
 
 1. Prepare a structured product catalog containing identifiers, image references, product names, descriptions, and categories, with checks for missing images and duplicate records.
-2. Define a text baseline using BERT and an image baseline using ResNet50, with their exact configurations and evaluation tasks specified in Chapter 5, and establish pretrained CLIP as the shared image–text representation model.
+2. Define a text baseline using SBERT and an image baseline using ResNet18, with their exact configurations and evaluation tasks specified in Chapter 5, and establish pretrained CLIP as the shared image–text representation model.
 3. Fine-tune CLIP on fashion image–text pairs using contrastive learning, with separate training, validation, and test subsets.
-4. Support image-based retrieval with three category strategies: unrestricted ranking, hard category filtering, and a soft category preference.
+4. Support image-based retrieval with an automatic category policy: use a soft category preference when the prediction is sufficiently confident and otherwise fall back to unrestricted similarity ranking.
 5. Support text-based retrieval using similarity to catalog image embeddings and, when available, catalog text embeddings. Vietnamese queries are supported through a translation step before encoding.
 6. Compare the baseline approaches with CLIP under matched evaluation conditions where applicable, and compare pretrained and fine-tuned CLIP using Precision@K, Recall@K, and F1@K for K values of 1, 5, and 10. Report classification results separately from retrieval results.
-7. Provide a React web interface and a FastAPI backend, supported by Docker Compose deployment and instructions for preparing or loading the required artifacts.
+7. Provide a React web interface, an API gateway, and two FastAPI backend instances, supported by Docker Compose deployment and instructions for preparing or loading the required artifacts.
 
 The experiments address two questions: how CLIP compares with separate text and image approaches on compatible product search tasks, and whether fine-tuning improves CLIP retrieval on the selected fashion dataset. Chapter 5 will organize the numerical results by task and model configuration. The web application demonstrates how the selected model can be used for product search.
 
@@ -23,27 +47,27 @@ The experiments address two questions: how CLIP compares with separate text and 
 
 ### 1.3.1. Objects of the Study
 
-The objects of the study are fashion product images, associated descriptions, category labels, and the representations used to retrieve products. The models considered are BERT for text processing, ResNet50 for visual feature extraction, pretrained CLIP, and fine-tuned CLIP. The main application model is `openai/clip-vit-base-patch32`, with its original weights and a checkpoint fine-tuned on the project's fashion data.
+The objects of the study are fashion product images, associated descriptions, category labels, and the representations used to retrieve products. The models considered are SBERT for text processing, ResNet18 for visual feature extraction, pretrained CLIP, and fine-tuned CLIP. The main application model is `openai/clip-vit-base-patch32`, with its original weights and a checkpoint fine-tuned on the project's fashion data.
 
 The project uses the Mini Fashion Product Images and Text Dataset available on Kaggle (nirmalsankalana, n.d.). The selected data are processed into a catalog containing product identifiers, image references, names, descriptions, and categories. Separate training, validation, and test subsets are prepared for the model experiment. Dataset statistics and the detailed preparation procedure are presented in the experimental chapter.
 
 ### 1.3.2. Scope of the Study
 
-The system performs content-based recommendation: results depend on the current query and the information stored for each product. Image and text queries are supported separately. Image search includes options for unrestricted ranking, filtering by a predicted category, and giving that category a ranking preference. Text search can combine similarity to catalog image embeddings and catalog text embeddings. Vietnamese text input is supported through translation into English before encoding.
+The main system performs content-based recommendation: results depend on the current query and the information stored for each product. Image and text queries are supported separately. For image search, the frontend uses one automatic policy. The backend predicts a category from visual neighbors and applies a small category preference only when confidence reaches the configured threshold; otherwise, it uses unrestricted visual similarity. Text search can combine similarity to catalog image embeddings and catalog text embeddings. Vietnamese text input is supported through translation into English before encoding.
 
-The planned comparisons are organized by input and task. For image retrieval, ResNet50 features can be compared with image embeddings from pretrained and fine-tuned CLIP. For text retrieval, a BERT-based representation can be compared with the CLIP text encoder using the same queries and product descriptions. The BERT checkpoint and method used to turn its outputs into sentence vectors must be specified. Any experiment using Sentence-BERT (SBERT) or another sentence embedding model must identify the actual model rather than label it simply as BERT. Direct image–text retrieval is evaluated separately for the two CLIP variants, because independently trained BERT and ResNet50 representations do not automatically share an aligned embedding space.
+The planned comparisons are organized by input and task. For image retrieval, ResNet18 features can be compared with image embeddings from pretrained and fine-tuned CLIP. For text retrieval, an SBERT representation can be compared with the CLIP text encoder using the same queries and product descriptions. The experiment identifies the exact SBERT checkpoint and does not label it simply as BERT. Direct image–text retrieval is evaluated separately for the two CLIP variants, because independently trained SBERT and ResNet18 representations do not automatically share an aligned embedding space.
 
-The scope is limited to retrieving existing products. User purchase histories, ratings, and long-term preference profiles are not included. The project also excludes size recommendation, virtual try-on, complete outfit generation, and queries that combine a reference image with a textual modification.
+The scope is limited to retrieving existing catalog products. User purchase histories, ratings, and long-term preference profiles are not included. The project also excludes size recommendation, virtual try-on, product generation, and queries that combine a reference image with a textual modification.
 
-The existing CLIP comparison covers text-to-image retrieval, image-to-text retrieval, and category-based image-to-image retrieval. Matching product identifiers define relevance for the first two tasks. For the third task, relevant results share the query's category, with the query product excluded. Category agreement is used as a limited measure of relevance and does not establish whether products are suitable to wear together. The BERT and ResNet50 comparisons extend this evaluation plan; numerical results will be reported only for configurations actually evaluated.
+The existing CLIP comparison covers text-to-image retrieval, image-to-text retrieval, and category-based image-to-image retrieval. Matching product identifiers define relevance for the first two tasks. For the third task, relevant results share the query's category, with the query product excluded. Category agreement is used as a limited measure of relevance and does not fully represent detailed visual similarity or individual user preference. The SBERT and ResNet18 comparisons extend this evaluation plan; numerical results will be reported only for configurations actually evaluated.
 
 ## 1.4. Research Method
 
-The study combines a focused review of BERT, ResNet50, CLIP, and CLIP adaptation to fashion data with system development and model evaluation. The methodology includes data preparation, baseline configuration, model fine-tuning, product retrieval, and web deployment.
+The study combines a focused review of BERT, SBERT, ResNet18, CLIP, and CLIP adaptation to fashion data with system development and model evaluation. The methodology includes data preparation, baseline configuration, model fine-tuning, product retrieval, and web deployment.
 
 First, the product metadata and images are checked and organized. Product names, categories, and descriptions are combined into the text associated with each image. Exact duplicate images are removed before the experiment. Products with the same identifier or identical constructed text are kept together when splitting the data, reducing overlap between the training, validation, and test subsets. The split assignments are saved for reuse.
 
-Second, baseline comparisons are defined for the relevant modalities. ResNet50-based image retrieval uses visual features to rank candidate images. BERT-based text retrieval requires a specified sentence representation and uses text similarity to rank product descriptions. Within each comparison, the methods must use the same test queries, candidate products, relevance labels, and K values. Text queries must not reproduce the exact target descriptions in a way that makes retrieval a trivial self-match. Earlier category classification experiments are reported separately using classification metrics; their scores are not compared directly with retrieval metrics.
+Second, baseline comparisons are defined for the relevant modalities. ResNet18-based image retrieval uses visual features to rank candidate images. SBERT-based text retrieval uses sentence embeddings to rank product descriptions. A late-fusion baseline combines the two independent rankings using Reciprocal Rank Fusion. Within each comparison, the methods use the same test queries, candidate products, relevance labels, and K values, and the query product itself is excluded. Category labels are not inserted into SBERT input text because they are used as relevance labels. Earlier category classification experiments are reported separately using classification metrics; their scores are not compared directly with retrieval metrics.
 
 Third, pretrained CLIP provides the starting point for fine-tuning. The model is trained on image–text pairs from the training subset using contrastive learning, which encourages matching images and descriptions to have similar representations. The selected training settings and implementation details are presented in the later chapters.
 
@@ -55,7 +79,7 @@ Finally, image and text embeddings for the catalog are generated using the selec
 
 ## 1.5. Practical Significance
 
-The project provides a working prototype for finding fashion products through an image or a description. Users can inspect ranked product results and, for image queries, choose how strongly the search depends on category. This offers a practical interface for exploring the catalog without requiring users to know an exact product name.
+The project provides a working prototype for finding fashion products through an image or a description. Users can inspect ranked product results without selecting a technical category mode: the backend automatically decides whether category information is reliable enough to influence ranking. This offers a practical interface for exploring the catalog without requiring users to know an exact product name or understand the internal retrieval policy.
 
 From an engineering perspective, the project connects data preparation, model training, embedding generation, backend processing, and frontend interaction. Computing catalog embeddings in advance avoids repeatedly encoding every product for each request. Saved experimental records and deployment instructions make the workflow easier to inspect and reproduce.
 
