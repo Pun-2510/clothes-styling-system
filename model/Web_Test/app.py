@@ -1,8 +1,9 @@
-"""Product recommendation website. Run: python app.py --warmup combined."""
+"""ResNet image-search test website. Run: python app.py --warmup image."""
 
 # 1. Thu vien va cau hinh
 import argparse
 import hashlib
+import importlib.util
 import tempfile
 from collections import OrderedDict
 import base64
@@ -18,17 +19,21 @@ from pathlib import Path
 
 SBERT_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 RESNET_CLASSES = ["Tshirts", "Shirts", "Jeans", "Trousers", "Dresses", "Jackets"]
+_BACKGROUND_SESSION = None
+_PERSON_CLOTHING_MODULE = None
 
 
 # 2. Kien truc ResNet18: giu ten model.* de doc checkpoint da huan luyen
-def create_resnet(num_classes):
+def create_resnet(num_classes, pretrained=False):
     import torch.nn as nn
-    from torchvision.models import resnet18
+    from torchvision.models import ResNet18_Weights, resnet18
 
     class FashionResNet(nn.Module):
         def __init__(self):
             super().__init__()
-            self.model = resnet18(weights=None)
+            self.model = resnet18(
+                weights=ResNet18_Weights.DEFAULT if pretrained else None
+            )
             self.model.fc = nn.Linear(self.model.fc.in_features, num_classes)
 
         def forward(self, x):
@@ -90,12 +95,28 @@ def reciprocal_rank_fusion(rankings, weights, limit):
     return sorted(scores.items(), key=lambda pair: (-pair[1], pair[0]))[:limit]
 
 
+def garment_views(image):
+    """Global and local views used to preserve garment pattern/logo detail."""
+    image = image.convert("RGB")
+    width, height = image.size
+    return [
+        image,
+        image.crop((0, 0, width, int(height * 0.62))),
+        image.crop((0, int(height * 0.38), width, height)),
+        image.crop((int(width * 0.15), int(height * 0.15),
+                    int(width * 0.85), int(height * 0.85))),
+    ]
+
+
 class RecommendationEngine:
     def __init__(self):
         self.lock = threading.RLock()
         self.products = []
         self.dataset = None
         self.text_model = self.image_model = self.bert_model = None
+        self.gender_head = None
+        self.gender_classes = []
+        self.color_embeddings = None
         self.status = "Sẵn sàng. Model sẽ tải khi bạn tìm lần đầu."
         self.device = None
         self.cache_dir = Path(os.getenv("WEB_CACHE_DIR", str(ROOT / ".cache")))
@@ -103,14 +124,94 @@ class RecommendationEngine:
         self.cache_hits = {}
         self.query_cache = OrderedDict()
         self.bert_cache = OrderedDict()
+        self.resnet_benchmark = None
         self.batch_size = max(1, min(int(os.getenv("WEB_BATCH_SIZE", "32")), 256))
+
+    @staticmethod
+    def remove_background(image):
+        """Remove upload background before ResNet classification/retrieval."""
+        global _BACKGROUND_SESSION
+        if os.getenv("WEB_REMOVE_BACKGROUND", "0") == "0":
+            return image.convert("RGB"), False
+        try:
+            from rembg import new_session, remove
+        except ImportError as error:
+            raise RuntimeError(
+                "Thiếu rembg. Hãy cài lại model/Web_Test/requirements.txt."
+            ) from error
+        if _BACKGROUND_SESSION is None:
+            model_name = os.getenv("WEB_BACKGROUND_MODEL", "u2netp")
+            _BACKGROUND_SESSION = new_session(model_name)
+        foreground = remove(
+            image.convert("RGBA"),
+            session=_BACKGROUND_SESSION,
+        )
+        if not hasattr(foreground, "convert"):
+            from PIL import Image
+            foreground = Image.open(io.BytesIO(foreground)).convert("RGBA")
+        else:
+            foreground = foreground.convert("RGBA")
+        from PIL import Image
+        canvas = Image.new("RGBA", foreground.size, (255, 255, 255, 255))
+        return Image.alpha_composite(canvas, foreground).convert("RGB"), True
+
+    @staticmethod
+    def prepare_uploaded_image(image):
+        """Normalize orientation/transparency and reject unusably small images."""
+        from PIL import Image, ImageOps
+        source = ImageOps.exif_transpose(image)
+        if source.width < 32 or source.height < 32:
+            raise ValueError("Ảnh quá nhỏ; mỗi chiều phải từ 32 pixel trở lên.")
+        if source.mode in {"RGBA", "LA"} or "transparency" in source.info:
+            rgba = source.convert("RGBA")
+            canvas = Image.new("RGBA", rgba.size, (255, 255, 255, 255))
+            source = Image.alpha_composite(canvas, rgba)
+        return source.convert("RGB")
+
+    @staticmethod
+    def detect_clothing_region(image):
+        """Crop a detected person's clothing using pretrained pose keypoints."""
+        global _PERSON_CLOTHING_MODULE
+        if os.getenv("WEB_DETECT_PERSON", "0") == "0":
+            return image.convert("RGB"), {
+                "person_detected": False,
+                "person_confidence": 0.0,
+                "crop_box": None,
+            }
+        if _PERSON_CLOTHING_MODULE is None:
+            path = ROOT.parent / "combine_model" / "person_clothing.py"
+            spec = importlib.util.spec_from_file_location("person_clothing", path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            _PERSON_CLOTHING_MODULE = module
+        return _PERSON_CLOTHING_MODULE.extract_clothing_region(image)
+
+    @staticmethod
+    def color_descriptor(image):
+        """Normalized 20D HSV histogram used only for colour similarity."""
+        import numpy as np
+        from PIL import Image
+        rgb = image.convert("RGB").resize((96, 96), Image.Resampling.BILINEAR)
+        hsv = np.asarray(rgb.convert("HSV"), dtype=np.float32) / 255.0
+        parts = []
+        for channel, bins in enumerate((12, 4, 4)):
+            histogram, _ = np.histogram(
+                hsv[:, :, channel], bins=bins, range=(0.0, 1.0)
+            )
+            histogram = histogram.astype(np.float32)
+            parts.append(histogram / max(float(histogram.sum()), 1.0))
+        mean_rgb = np.asarray(rgb, dtype=np.float32).reshape(-1, 3).mean(axis=0) / 255.0
+        mean_rgb /= max(float(np.linalg.norm(mean_rgb)), 1e-12)
+        descriptor = np.concatenate([*parts, 3.0 * mean_rgb])
+        descriptor /= max(float(np.linalg.norm(descriptor)), 1e-12)
+        return descriptor
 
     def catalog(self):
         if self.products:
             return
         from datasets import load_dataset, Image as DatasetImage
         self.status = "Đang tải danh mục sản phẩm..."
-        size = max(1, min(int(os.getenv("WEB_MAX_PRODUCTS", "2000")), 10000))
+        size = max(1, min(int(os.getenv("WEB_MAX_PRODUCTS", "3000")), 3000))
         dataset = load_dataset("ashraq/fashion-product-images-small", split="train")
         dataset = dataset.cast_column("image", DatasetImage(decode=False))
         # Read only metadata. Image bytes stay in the Arrow dataset until needed.
@@ -218,6 +319,7 @@ class RecommendationEngine:
     def load_image(self):
         if self.image_model is not None:
             return
+        import numpy as np
         import torch
         import torchvision
         from torchvision import transforms
@@ -240,16 +342,217 @@ class RecommendationEngine:
             with torch.inference_mode():
                 for offset in range(0, len(self.products), self.batch_size):
                     self.status = f"Đang mã hóa ảnh: {offset}/{len(self.products)}..."
-                    batch = torch.stack([transform(self.product_image(i))
-                                         for i in range(offset, min(offset + self.batch_size, len(self.products)))])
+                    product_images = [self.product_image(i) for i in range(
+                        offset, min(offset + self.batch_size, len(self.products))
+                    )]
+                    pattern_enabled = os.getenv("WEB_PATTERN_SEARCH", "0") == "1"
+                    batch = torch.stack([
+                        transform(view) for image in product_images
+                        for view in (garment_views(image) if pattern_enabled else [image])
+                    ])
                     feature = backbone(batch.to(self.device)).flatten(1)
+                    feature = torch.nn.functional.normalize(feature, dim=1)
+                    if pattern_enabled:
+                        feature = feature.reshape(len(product_images), 4, -1)
+                        feature = 0.55 * feature[:, 0] + 0.45 * feature[:, 1:].mean(dim=1)
                     features.append(torch.nn.functional.normalize(feature, dim=1).cpu())
             return torch.cat(features).numpy()
-        identity = [file_digest(path), classes, str(transform), torchvision.__version__, torch.__version__]
+        identity = [file_digest(path), classes, str(transform), torchvision.__version__,
+                    torch.__version__, "pattern=" + os.getenv("WEB_PATTERN_SEARCH", "0")]
         embeddings = self.cached_embeddings("image", identity, 512, build)
         self.image_embeddings = embeddings
+        def build_colors():
+            self.status = "Đang mã hóa màu sắc sản phẩm..."
+            return np.stack([
+                self.color_descriptor(self.product_image(index))
+                for index in range(len(self.products))
+            ]).astype(np.float32)
+        color_identity = [self.catalog_key, "hsv-12-4-4-rgbmean-v2"]
+        self.color_embeddings = self.cached_embeddings(
+            "color", color_identity, 23, build_colors
+        )
         self.transform, self.backbone, self.classes = transform, backbone, classes
         self.image_model = model
+        gender_path = ROOT / "models" / "resnet_gender.pth"
+        if gender_path.is_file():
+            module_path = ROOT.parent / "ResNet_Model" / "gender.py"
+            spec = importlib.util.spec_from_file_location("resnet_gender", module_path)
+            gender_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(gender_module)
+            gender_checkpoint = torch.load(
+                gender_path, map_location=self.device, weights_only=True
+            )
+            self.gender_head = gender_module.GenderHead(
+                num_classes=len(gender_checkpoint["classes"])
+            ).to(self.device)
+            self.gender_head.load_state_dict(gender_checkpoint["model_state_dict"])
+            self.gender_head.eval()
+            self.gender_classes = list(gender_checkpoint["classes"])
+
+    def benchmark_resnet_models(self, force=False):
+        """Return the leakage-free ResNet audit when available."""
+
+        with self.lock:
+            audit_path = ROOT.parent / "ResNet_Model" / "resnet_audit.json"
+            if audit_path.is_file():
+                audit = json.loads(audit_path.read_text(encoding="utf-8"))
+                classification = audit["classification"]
+                cosine = audit["cosine"]
+                self.resnet_benchmark = {
+                    "rows": [{
+                        "model": "fashion fine-tuned · unseen audit",
+                        "samples": audit["evaluation_set"]["samples"],
+                        "classification_accuracy": classification["accuracy"],
+                        "retrieval_top1": cosine["retrieval_top1"],
+                        "retrieval_top5": cosine["retrieval_top5"],
+                        "average_confidence": classification["average_confidence"],
+                        "milliseconds_per_image": None,
+                        "status": "ok",
+                    }],
+                    "classes": audit["classes"],
+                    "checkpoint": str(ROOT / "models" / "resnet_outfit.pth"),
+                    "scope": audit["evaluation_set"]["policy"],
+                    "includes_upload_pipeline": False,
+                    "per_class": classification["per_class"],
+                }
+                return self.resnet_benchmark
+            import numpy as np
+            import torch
+            from torchvision import transforms
+            if self.resnet_benchmark is not None and not force:
+                return self.resnet_benchmark
+            self.catalog()
+            self.setup_device()
+            checkpoint_path = Path(os.getenv(
+                "WEB_RESNET_MODEL", str(ROOT / "models/resnet_outfit.pth")
+            ))
+            checkpoint = torch.load(
+                checkpoint_path, map_location="cpu", weights_only=True
+            )
+            classes = list(checkpoint.get("classes", RESNET_CLASSES))
+            eligible = [
+                index for index, product in enumerate(self.products)
+                if product.get("articleType") in classes
+            ]
+            if len(eligible) < 6:
+                raise ValueError("Không đủ ảnh thuộc các class ResNet để benchmark.")
+            requested = max(6, int(os.getenv("WEB_RESNET_BENCHMARK_SAMPLES", "120")))
+            sample_count = min(requested, len(eligible))
+            positions = np.linspace(0, len(eligible) - 1, sample_count, dtype=int)
+            indices = [eligible[position] for position in positions]
+            images = [self.product_image(index) for index in indices]
+            labels = [self.products[index].get("articleType", "") for index in indices]
+            custom_root = Path(os.getenv(
+                "WEB_RESNET_CUSTOM_DATA",
+                str(ROOT.parent / "ResNet_Model" / "custom_data"),
+            ))
+            custom_limit = max(1, int(os.getenv(
+                "WEB_RESNET_BENCHMARK_CUSTOM_PER_CLASS", "20"
+            )))
+            from PIL import Image
+            for category in classes:
+                directory = custom_root / category
+                paths = sorted(
+                    path for path in directory.glob("**/*")
+                    if path.is_file() and path.suffix.lower() in {
+                        ".jpg", ".jpeg", ".png", ".webp"
+                    }
+                )[:custom_limit] if directory.is_dir() else []
+                for path in paths:
+                    with Image.open(path) as source:
+                        images.append(source.convert("RGB"))
+                    labels.append(category)
+            sample_count = len(labels)
+            transform = transforms.Compose([
+                transforms.Resize((256, 256)), transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    [0.485, 0.456, 0.406],
+                    [0.229, 0.224, 0.225],
+                ),
+            ])
+            tensors = torch.stack([transform(image) for image in images])
+            rows = []
+            variants = (
+                ("baseline (untrained head)", False, None),
+                ("ImageNet pretrained (feature only)", True, None),
+                ("fashion fine-tuned", False,
+                 checkpoint.get("model_state_dict", checkpoint)),
+            )
+            for name, pretrained, state in variants:
+                self.status = f"Đang benchmark ResNet18 {name}..."
+                started = time.perf_counter()
+                try:
+                    torch.manual_seed(42)
+                    model = create_resnet(len(classes), pretrained=pretrained)
+                    if state is not None:
+                        model.load_state_dict(state)
+                    model = model.to(self.device).eval()
+                    backbone = torch.nn.Sequential(*list(model.model.children())[:-1])
+                    feature_parts, probability_parts = [], []
+                    with torch.inference_mode():
+                        for offset in range(0, len(tensors), self.batch_size):
+                            batch = tensors[offset:offset + self.batch_size].to(self.device)
+                            features = backbone(batch).flatten(1)
+                            feature_parts.append(
+                                torch.nn.functional.normalize(features, dim=1).cpu()
+                            )
+                            probability_parts.append(
+                                model.model.fc(features).softmax(-1).cpu()
+                            )
+                    features = torch.cat(feature_parts).numpy()
+                    probabilities = torch.cat(probability_parts).numpy()
+                    predictions = [classes[index] for index in probabilities.argmax(1)]
+                    similarities = features @ features.T
+                    np.fill_diagonal(similarities, -np.inf)
+                    ranked = np.argsort(-similarities, axis=1, kind="stable")
+                    top1 = np.mean([
+                        labels[ranking[0]] == labels[row]
+                        for row, ranking in enumerate(ranked)
+                    ])
+                    top5 = np.mean([
+                        labels[row] in {labels[index] for index in ranking[:5]}
+                        for row, ranking in enumerate(ranked)
+                    ])
+                    rows.append({
+                        "model": name,
+                        "samples": sample_count,
+                        # Baseline/ImageNet heads are newly initialized for
+                        # these six classes. Reporting their random-head
+                        # accuracy as pretrained accuracy is misleading.
+                        "classification_accuracy": (
+                            float(np.mean(
+                                np.asarray(predictions) == np.asarray(labels)
+                            )) if state is not None else None
+                        ),
+                        "retrieval_top1": float(top1),
+                        "retrieval_top5": float(top5),
+                        "average_confidence": (
+                            float(probabilities.max(1).mean())
+                            if state is not None else None
+                        ),
+                        "milliseconds_per_image": float(
+                            (time.perf_counter() - started) * 1000 / sample_count
+                        ),
+                        "status": "ok",
+                    })
+                except Exception as error:
+                    logging.exception("ResNet benchmark failed: %s", name)
+                    rows.append({
+                        "model": name,
+                        "samples": sample_count,
+                        "status": "error",
+                        "error": str(error),
+                    })
+            self.resnet_benchmark = {
+                "rows": rows,
+                "classes": classes,
+                "checkpoint": str(checkpoint_path),
+                "scope": "catalog_images_only",
+                "includes_upload_pipeline": False,
+            }
+            self.status = "Benchmark ResNet hoàn tất. ResNet Web Test sẵn sàng."
+            return self.resnet_benchmark
 
     @staticmethod
     def remember(cache, key, value):
@@ -290,8 +593,8 @@ class RecommendationEngine:
 
     def search(self, query="", image=None, mode="text", top_k=12, category="",
                text_weight=0.5, use_bert=False):
-        if mode not in ("text", "image", "combined"):
-            raise ValueError("Chế độ tìm kiếm không hợp lệ.")
+        if mode != "image":
+            raise ValueError("SBERT và Combine đang tạm tắt; chỉ dùng ResNet image search.")
         query = query.strip()
         if mode in ("text", "combined") and not query:
             raise ValueError("Vui lòng nhập mô tả sản phẩm.")
@@ -304,7 +607,7 @@ class RecommendationEngine:
             self.catalog()
             candidates = np.asarray([i for i, p in enumerate(self.products)
                                      if not category or p.get("articleType") == category], dtype=np.int64)
-            text_scores = image_scores = None
+            text_scores = image_scores = color_scores = None
             metadata = {}
             if len(candidates):
                 if mode in ("text", "combined"):
@@ -314,16 +617,93 @@ class RecommendationEngine:
                         metadata["bert"] = self.classify_text(query)
                 if mode in ("image", "combined"):
                     import torch
+                    from PIL import ImageOps
                     self.load_image()
-                    tensor = self.transform(image.convert("RGB")).unsqueeze(0).to(self.device)
+                    image = self.prepare_uploaded_image(image)
+                    person_image, person_detection = self.detect_clothing_region(image)
+                    processed_image, background_removed = self.remove_background(person_image)
+                    # Dual path protects product-only images from rembg errors:
+                    # retain the original signal and add a smaller foreground signal.
+                    base_views = [person_image]
+                    if background_removed:
+                        base_views.append(processed_image)
+                    views = base_views + [ImageOps.mirror(view) for view in base_views]
+                    tensor = torch.stack([
+                        self.transform(view) for view in views
+                    ]).to(self.device)
                     with torch.inference_mode():
                         # FC needs raw features, not normalized retrieval features.
-                        features = self.backbone(tensor).flatten(1)
-                        probabilities = self.image_model.model.fc(features).softmax(-1)[0]
+                        view_features = self.backbone(tensor).flatten(1)
+                        classification_logits = self.image_model.model.fc(
+                            view_features
+                        ).mean(dim=0, keepdim=True)
+                        probabilities = classification_logits.softmax(-1)[0]
+                        normalized = torch.nn.functional.normalize(view_features, dim=1)
+                        features = normalized[:1]
+                        if background_removed:
+                            features = 0.75 * normalized[:1] + 0.25 * normalized[1:2]
                         vector = torch.nn.functional.normalize(features, dim=1)
-                    metadata["resnet"] = {"category": self.classes[int(probabilities.argmax())],
-                                          "confidence": float(probabilities.max())}
+                        gender_probabilities = None
+                        if self.gender_head is not None:
+                            # Gender head was trained on the original single-view
+                            # embedding; keep inference in the same distribution.
+                            gender_vector = normalized[0].unsqueeze(0)
+                            gender_probabilities = self.gender_head(
+                                gender_vector
+                            ).softmax(-1)[0]
+                    metadata["resnet"] = {
+                        "category": self.classes[int(probabilities.argmax())],
+                        "confidence": float(probabilities.max()),
+                        "background_removed": background_removed,
+                        "person_detection": person_detection,
+                        "tta": "original+foreground+horizontal_flips" if background_removed
+                               else "original+horizontal_flip",
+                        "foreground_embedding_weight": 0.25 if background_removed else 0.0,
+                        "input_size": [image.width, image.height],
+                    }
+                    if gender_probabilities is not None:
+                        gender_index = int(gender_probabilities.argmax())
+                        gender_confidence = float(gender_probabilities[gender_index])
+                        predicted_gender = self.gender_classes[gender_index]
+                        metadata["resnet"]["gender"] = predicted_gender
+                        metadata["resnet"]["gender_confidence"] = gender_confidence
+                        metadata["resnet"]["gender_probabilities"] = {
+                            name: float(gender_probabilities[index])
+                            for index, name in enumerate(self.gender_classes)
+                        }
                     image_scores = self.image_embeddings @ vector.cpu().numpy()[0]
+                    color_query = self.color_descriptor(processed_image)
+                    color_scores = self.color_embeddings @ color_query
+                    color_weight = float(os.getenv("WEB_COLOR_WEIGHT", "0.10"))
+                    color_weight = max(0.0, min(color_weight, 0.75))
+                    image_scores = (
+                        (1.0 - color_weight) * image_scores
+                        + color_weight * color_scores
+                    )
+                    metadata["resnet"]["color_weight"] = color_weight
+                    if gender_probabilities is not None and gender_confidence >= 0.80:
+                        gender_weight = float(os.getenv("WEB_GENDER_WEIGHT", "0.05"))
+                        gender_scores = np.asarray([
+                            gender_confidence if (
+                                ("Men" if p.get("gender", "") in {"Men", "Boys"}
+                                 else "Women" if p.get("gender", "") in {"Women", "Girls"}
+                                 else "Unisex") in {predicted_gender, "Unisex"}
+                            ) else 0.0
+                            for p in self.products
+                        ], dtype=np.float32)
+                        image_scores = image_scores + gender_weight * gender_scores
+                        metadata["resnet"]["gender_weight"] = gender_weight
+                    # Classification is a soft prior; cosine similarity stays
+                    # dominant and no product category is excluded.
+                    category_weight = float(os.getenv("WEB_CATEGORY_WEIGHT", "0.15"))
+                    class_probabilities = {
+                        name: float(probabilities[index])
+                        for index, name in enumerate(self.classes)
+                    }
+                    image_scores = image_scores + category_weight * np.asarray([
+                        class_probabilities.get(p.get("articleType", ""), 0.0)
+                        for p in self.products
+                    ], dtype=np.float32)
             if not len(candidates):
                 selected = []
             elif mode == "combined":
@@ -344,7 +724,8 @@ class RecommendationEngine:
                     "gender": p.get("gender", ""), "image": f"/api/products/{index}/image",
                     "score": score,
                     "text_score": float(text_scores[index]) if text_scores is not None else None,
-                    "image_score": float(image_scores[index]) if image_scores is not None else None})
+                    "image_score": float(image_scores[index]) if image_scores is not None else None,
+                    "color_score": float(color_scores[index]) if color_scores is not None else None})
             self.status = f"Đã sẵn sàng · {len(self.products)} sản phẩm · {self.device or 'chưa tải model'}"
             return {"results": results, "metadata": metadata, "mode": mode,
                     "catalog_size": len(self.products), "categories": self.categories,
@@ -363,7 +744,7 @@ PAGE = r"""<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Combine Model - Tìm sản phẩm</title>
+<title>ResNet Web Test - Tìm sản phẩm</title>
 <style>
 * { box-sizing: border-box; }
 body { max-width: 1100px; margin: 24px auto; padding: 0 16px; font: 14px Arial, sans-serif; color: #222; }
@@ -388,22 +769,40 @@ button:disabled { cursor: wait; }
 .card img { width: 100%; height: 180px; object-fit: contain; }
 .card h3 { font-size: 14px; }
 .score { margin: 10px 0; }
+.benchmark-wrap { overflow-x: auto; margin: 12px 0 24px; }
+.benchmark { width: 100%; border-collapse: collapse; }
+.benchmark th, .benchmark td { border: 1px solid #ccc; padding: 8px; text-align: right; }
+.benchmark th:first-child, .benchmark td:first-child { text-align: left; }
+.benchmark th { background: #f3f3f3; }
 [hidden] { display: none !important; }
 </style>
 </head>
 <body>
-<h1>Combine Model - Tìm sản phẩm</h1>
+<h1>ResNet Web Test - Tìm sản phẩm</h1>
+<section aria-labelledby="benchmark-title">
+<h2 id="benchmark-title">Kiểm thử ResNet18 trên ảnh catalog</h2>
+<p>Baseline, pretrained và trained được kiểm thử trước trên cùng tập ảnh. Combine dùng checkpoint trained.</p>
+<button id="rerun-benchmark" type="button">Chạy lại benchmark</button>
+<p id="benchmark-status" role="status">Đang chuẩn bị bảng thông số...</p>
+<div class="benchmark-wrap">
+<table class="benchmark">
+<thead><tr><th>Model</th><th>Số ảnh</th><th>Classification Accuracy</th><th>Retrieval Top-1</th><th>Retrieval Top-5</th><th>Confidence</th><th>ms/ảnh</th></tr></thead>
+<tbody id="benchmark-body"></tbody>
+</table>
+</div>
+</section>
+<hr>
 <form id="search-form">
 <div class="tabs" role="group" aria-label="Chế độ tìm kiếm">
-<button type="button" data-mode="text" class="active" aria-pressed="true">Mô tả (SBERT)</button>
-<button type="button" data-mode="image" aria-pressed="false">Ảnh (ResNet18)</button>
-<button type="button" data-mode="combined" aria-pressed="false">Kết hợp (RRF)</button>
+<button type="button" data-mode="text" hidden disabled aria-pressed="false">Mô tả (SBERT) · Tạm tắt</button>
+<button type="button" data-mode="image" class="active" aria-pressed="true">Ảnh (ResNet18)</button>
+<button type="button" data-mode="combined" hidden disabled aria-pressed="false">Kết hợp (RRF) · Tạm tắt</button>
 </div>
-<div id="text-field">
+<div id="text-field" hidden>
 <label for="query">Mô tả sản phẩm</label>
 <textarea id="query" rows="3" maxlength="1000" placeholder="Ví dụ: áo sơ mi xanh dành cho nam"></textarea>
 </div>
-<div id="image-field" hidden>
+<div id="image-field">
 <label for="upload">Ảnh sản phẩm (JPG, PNG, WEBP; tối đa 8 MB)</label>
 <input id="upload" type="file" accept="image/jpeg,image/png,image/webp">
 <img id="preview" alt="Ảnh đã chọn" hidden>
@@ -418,7 +817,7 @@ button:disabled { cursor: wait; }
 <input id="weight" type="range" min="0" max="100" value="50">
 <small>Phần còn lại là trọng số ảnh.</small>
 </div>
-<label id="bert-field"><input id="use-bert" type="checkbox"> Phân loại thêm bằng BERT</label>
+<label id="bert-field" hidden><input id="use-bert" type="checkbox"> Phân loại thêm bằng BERT</label>
 <button id="submit" type="submit">Tìm sản phẩm</button>
 <p>Lần tìm đầu cần tải model và xử lý dữ liệu.</p>
 <p id="status" role="status" aria-live="polite"></p>
@@ -433,7 +832,7 @@ button:disabled { cursor: wait; }
 <div id="grid" aria-live="polite"></div>
 <script>
 const $ = id => document.getElementById(id);
-let mode = "text", imageData = null, busy = false, imageVersion = 0;
+let mode = "image", imageData = null, busy = false, imageVersion = 0;
 const showError = message => { $("error").textContent = message; $("error").hidden = !message; };
 document.querySelectorAll("[data-mode]").forEach(button => button.onclick = () => {
   if (busy) return;
@@ -472,6 +871,42 @@ function element(tag, text, className) {
   if (className) node.className = className;
   return node;
 }
+async function loadBenchmark(force = false) {
+  const button = $("rerun-benchmark");
+  button.disabled = true;
+  $("benchmark-status").textContent = "Đang kiểm thử từng ResNet...";
+  try {
+    const response = await fetch("/api/resnet-benchmark" + (force ? "?force=1" : ""));
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Không chạy được benchmark ResNet.");
+    $("benchmark-body").replaceChildren();
+    data.rows.forEach(row => {
+      const tr = document.createElement("tr");
+      if (row.status !== "ok") {
+        tr.append(element("td", row.model), element("td", row.samples), element("td", row.error || "Lỗi"));
+        const errorCell = tr.lastChild; errorCell.colSpan = 5;
+      } else {
+        const values = [row.model, row.samples,
+          row.classification_accuracy == null ? "N/A · chưa fine-tune" :
+            (row.classification_accuracy * 100).toFixed(2) + "%",
+          (row.retrieval_top1 * 100).toFixed(2) + "%",
+          (row.retrieval_top5 * 100).toFixed(2) + "%",
+          row.average_confidence == null ? "N/A" :
+            (row.average_confidence * 100).toFixed(2) + "%",
+          row.milliseconds_per_image == null ? "N/A" :
+            row.milliseconds_per_image.toFixed(2)];
+        values.forEach(value => tr.append(element("td", value)));
+      }
+      $("benchmark-body").append(tr);
+    });
+    $("benchmark-status").textContent = "Đã kiểm thử " + data.rows.length + " biến thể · " + data.classes.join(", ");
+  } catch (error) {
+    $("benchmark-status").textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+}
+$("rerun-benchmark").onclick = () => loadBenchmark(true);
 function render(data) {
   $("grid").replaceChildren(); $("metadata").replaceChildren();
   $("empty").hidden = data.results.length > 0;
@@ -483,7 +918,10 @@ function render(data) {
   $("result-count").textContent = data.results.length + " sản phẩm";
   $("result-info").textContent = method + " · " + data.catalog_size + " sản phẩm trong danh mục · " + data.elapsed + " giây";
   for (const [name, prediction] of Object.entries(data.metadata)) {
-    $("metadata").append(element("p", name.toUpperCase() + " nhận diện: " + prediction.category + " · Độ tin cậy " + (prediction.confidence * 100).toFixed(1) + "%"));
+    const background = prediction.background_removed ? " · Đã xóa nền" : "";
+    const gender = prediction.gender ? " · " + prediction.gender + " " +
+      (prediction.gender_confidence * 100).toFixed(1) + "%" : "";
+    $("metadata").append(element("p", name.toUpperCase() + " nhận diện: " + prediction.category + " · Độ tin cậy " + (prediction.confidence * 100).toFixed(1) + "%" + gender + background));
   }
   data.results.forEach((item, index) => {
     const card = element("article", "", "card");
@@ -527,6 +965,8 @@ $("search-form").onsubmit = async event => {
   }
 };
 
+loadBenchmark();
+
 </script>
 </body>
 </html>
@@ -553,6 +993,13 @@ class Handler(BaseHTTPRequestHandler):
         path = self.path.split("?")[0]
         if path == "/api/status":
             return self.send(200, {"message": ENGINE.status, "catalog_size": len(ENGINE.products)})
+        if path == "/api/resnet-benchmark":
+            try:
+                force = "force=1" in self.path.partition("?")[2]
+                return self.send(200, ENGINE.benchmark_resnet_models(force=force))
+            except Exception as error:
+                logging.exception("ResNet benchmark failed")
+                return self.send(503, {"error": str(error)})
         if path.startswith("/api/products/") and path.endswith("/image"):
             try:
                 index = int(path.split("/")[3])
@@ -584,7 +1031,7 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError("Dữ liệu yêu cầu không hợp lệ.")
             query = data.get("query", "")
             category = data.get("category", "")
-            mode = data.get("mode", "text")
+            mode = data.get("mode", "image")
             if not all(isinstance(v, str) for v in (query, category, mode)) or len(query) > 1000:
                 raise ValueError("Mô tả tối đa 1.000 ký tự.")
             image = None
@@ -622,12 +1069,21 @@ class Handler(BaseHTTPRequestHandler):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=8000)
-    parser.add_argument("--warmup", choices=("text", "image", "combined"))
+    parser.add_argument("--warmup", choices=("image",))
     parser.add_argument("--prepare-only", action="store_true",
                         help="Build/validate both indexes, then exit.")
+    parser.add_argument("--benchmark-resnet", action="store_true",
+                        help="Benchmark baseline, pretrained and trained ResNet, then exit.")
     args = parser.parse_args()
+    if args.benchmark_resnet:
+        print(json.dumps(
+            ENGINE.benchmark_resnet_models(force=True),
+            ensure_ascii=False,
+            indent=2,
+        ))
+        return
     if args.prepare_only:
-        ENGINE.warmup(args.warmup or "combined")
+        ENGINE.warmup(args.warmup or "image")
         print("Index ready:", ENGINE.cache_hits, flush=True)
         return
     server = ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
@@ -639,7 +1095,7 @@ def main():
                 logging.exception("Warmup failed")
                 ENGINE.status = "Chưa tải được model hoặc dữ liệu. Kiểm tra terminal và thử lại."
         threading.Thread(target=prepare, daemon=True).start()
-    print(f"Combine Model: http://127.0.0.1:{args.port}", flush=True)
+    print(f"ResNet Web Test: http://127.0.0.1:{args.port}", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

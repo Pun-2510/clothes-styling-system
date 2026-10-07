@@ -7,3 +7,4 @@ pandas
 matplotlib
 seaborn
 Pillow
+rembg[cpu]>=2.0.61

@@ -79,6 +79,8 @@ project/outfit_recommendation/artifacts/**
 *.safetensors
 *.pt
 *.pth
+!model/Web_Test/models/resnet_outfit.pth
+!model/Web_Test/models/resnet_gender.pth
 *.ckpt
 *.onnx
 *.h5
@@ -95,6 +97,8 @@ lightning_logs/
 # Runtime logs and temporary files
 *.log
 !docs/reports/evidence/**/*.log
+model/color_results/
+model/mini_fashion.local.json
 *.tmp
 *.temp
 *.bak

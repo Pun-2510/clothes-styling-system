@@ -1,0 +1,119 @@
+{
+  "evaluation_set": {
+    "policy": "complement of checkpoint dataset_indices",
+    "samples": 600,
+    "class_counts": {
+      "Jackets": 100,
+      "Trousers": 100,
+      "Shirts": 100,
+      "Dresses": 100,
+      "Jeans": 100,
+      "Tshirts": 100
+    }
+  },
+  "embedding": {
+    "shape": [
+      600,
+      512
+    ],
+    "finite": true,
+    "norm_min": 0.9999998807907104,
+    "norm_max": 1.0000001192092896
+  },
+  "cosine": {
+    "self_similarity_min": 0.999999463558197,
+    "self_similarity_max": 1.0000004768371582,
+    "implementation_max_error": 4.172325134277344e-07,
+    "retrieval_top1": 0.9383333333333334,
+    "retrieval_top5": 0.9766666666666667
+  },
+  "classification": {
+    "accuracy": 0.9266666666666666,
+    "macro_accuracy": 0.9266666666666667,
+    "average_confidence": 0.9150031805038452,
+    "per_class": {
+      "Tshirts": {
+        "samples": 100,
+        "accuracy": 0.99
+      },
+      "Shirts": {
+        "samples": 100,
+        "accuracy": 0.97
+      },
+      "Jeans": {
+        "samples": 100,
+        "accuracy": 0.97
+      },
+      "Trousers": {
+        "samples": 100,
+        "accuracy": 0.9
+      },
+      "Dresses": {
+        "samples": 100,
+        "accuracy": 0.92
+      },
+      "Jackets": {
+        "samples": 100,
+        "accuracy": 0.81
+      }
+    },
+    "confusion_matrix": [
+      [
+        99,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        2,
+        97,
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        97,
+        3,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        9,
+        90,
+        0,
+        0
+      ],
+      [
+        5,
+        1,
+        0,
+        0,
+        92,
+        2
+      ],
+      [
+        17,
+        2,
+        0,
+        0,
+        0,
+        81
+      ]
+    ]
+  },
+  "classes": [
+    "Tshirts",
+    "Shirts",
+    "Jeans",
+    "Trousers",
+    "Dresses",
+    "Jackets"
+  ]
+}

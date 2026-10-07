@@ -402,25 +402,23 @@ print("Dataset:", DATASET_NAME)
 # Nếu bạn đã export CSV
 # ------------------------------------------------------------
 
-if os.path.isfile(DATASET_NAME):
-
-    df = pd.read_csv(
-        DATASET_NAME
+if not os.path.isfile(DATASET_NAME):
+    raise FileNotFoundError(
+        f"Không tìm thấy dataset đã chuẩn hóa của project: {DATASET_NAME}. "
+        "Hãy chạy python -m src.prepare_dataset trong thư mục project trước."
     )
 
-else:
+df = pd.read_csv(DATASET_NAME, dtype={"product_id": str})
 
-    # --------------------------------------------------------
-    # HuggingFace dataset
-    # --------------------------------------------------------
-
-    from datasets import load_dataset
-
-    dataset = load_dataset(
-        DATASET_NAME
-    )
-
-    df = dataset["train"].to_pandas()
+# Compatibility aliases for the prepared project catalog.
+aliases = {
+    "product_name": "productDisplayName",
+    "category": "articleType",
+    "brand": "brandName",
+}
+for source, target in aliases.items():
+    if target not in df.columns and source in df.columns:
+        df[target] = df[source]
 
 
 print(

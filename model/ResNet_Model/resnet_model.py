@@ -1,5 +1,13 @@
 import random
 import torch
+
+# Backward-compatible command entrypoint. The former monolithic experiment
+# below is retained for reference, while direct execution now uses the audited
+# pretrained + balanced + contrastive pipeline in train_resnet.py.
+if __name__ == "__main__":
+    from train_resnet import main as train_resnet_main
+    train_resnet_main()
+    raise SystemExit
 from datasets import load_dataset
 from sklearn.model_selection import train_test_split
 from torch.utils.data import (Dataset, DataLoader)
@@ -200,7 +208,7 @@ pretrained=False
 
 ).to(DEVICE)
 
-baseline_model, baseline_train_accs, baseline_val_accs = train_model(
+baseline_model, baseline_train_accs, baseline_val_accs, _ = train_model(
 
 baseline_model,
 
@@ -233,7 +241,7 @@ pretrained=True
 
 ).to(DEVICE)
 
-model, train_accs, val_accs = train_model(
+model, train_accs, val_accs, _ = train_model(
 
 model,
 

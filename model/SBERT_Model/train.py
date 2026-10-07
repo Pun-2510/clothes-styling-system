@@ -2,14 +2,13 @@
 # BERT FASHION CLASSIFICATION - TRAIN
 # ============================================================
 #
-# Dataset:
-# https://huggingface.co/datasets/nreimers/fashion-dataset
+# Dataset: ../../project/data/processed/products.csv
 #
 # Input:
-#     productDisplayName
+#     product_name
 #
 # Label:
-#     articleType
+#     category
 #
 # Output:
 #     ./bert_fashion_model
@@ -34,7 +33,8 @@ import json
 import numpy as np
 import torch
 
-from datasets import load_dataset
+from datasets import Dataset
+import pandas as pd
 
 from sklearn.metrics import (
     accuracy_score,
@@ -110,9 +110,15 @@ print("=" * 60)
 print("Dataset:", DATASET_NAME)
 print("Loading...")
 
-dataset = load_dataset(DATASET_NAME)
+dataset_path = os.path.abspath(DATASET_NAME)
+if not os.path.isfile(dataset_path):
+    raise FileNotFoundError(
+        f"Không tìm thấy dataset đã chuẩn hóa của project: {dataset_path}. "
+        "Hãy chạy python -m src.prepare_dataset trong thư mục project trước."
+    )
 
-data = dataset["train"]
+source_df = pd.read_csv(dataset_path, dtype={"product_id": str})
+data = Dataset.from_pandas(source_df, preserve_index=False)
 
 print()
 print("Original samples:", len(data))
@@ -336,10 +342,10 @@ print()
 # KEEP ONLY NECESSARY COLUMNS
 # ============================================================
 
-data = data.select_columns([
-    "text",
-    "label"
-])
+columns_to_keep = ["text", "label"]
+if "split" in data.column_names:
+    columns_to_keep.append("split")
+data = data.select_columns(columns_to_keep)
 
 
 # ============================================================
@@ -351,40 +357,25 @@ print("TRAIN / VALIDATION SPLIT")
 print("=" * 60)
 
 # Convert labels for stratification
-labels_for_split = np.array(
-    data["label"]
-)
-
-indices = np.arange(
-    len(data)
-)
-
-try:
-
-    train_indices, eval_indices = train_test_split(
-        indices,
-        test_size=TEST_SIZE,
-        random_state=SEED,
-        shuffle=True,
-        stratify=labels_for_split
-    )
-
-except ValueError:
-
-    print(
-        "Warning: stratified split failed."
-    )
-
-    print(
-        "Using random split."
-    )
-
-    train_indices, eval_indices = train_test_split(
-        indices,
-        test_size=TEST_SIZE,
-        random_state=SEED,
-        shuffle=True
-    )
+if "split" in data.column_names:
+    split_values = np.array(data["split"])
+    train_indices = np.flatnonzero(split_values == "train")
+    eval_indices = np.flatnonzero(split_values == "validation")
+    if len(train_indices) == 0 or len(eval_indices) == 0:
+        raise ValueError("Dataset split must contain nonempty train and validation rows.")
+else:
+    labels_for_split = np.array(data["label"])
+    indices = np.arange(len(data))
+    try:
+        train_indices, eval_indices = train_test_split(
+            indices, test_size=TEST_SIZE, random_state=SEED,
+            shuffle=True, stratify=labels_for_split
+        )
+    except ValueError:
+        print("Warning: stratified split failed. Using random split.")
+        train_indices, eval_indices = train_test_split(
+            indices, test_size=TEST_SIZE, random_state=SEED, shuffle=True
+        )
 
 
 train_dataset = data.select(
@@ -394,6 +385,10 @@ train_dataset = data.select(
 eval_dataset = data.select(
     eval_indices.tolist()
 )
+
+if "split" in train_dataset.column_names:
+    train_dataset = train_dataset.remove_columns("split")
+    eval_dataset = eval_dataset.remove_columns("split")
 
 
 print(

@@ -2,6 +2,7 @@ torch==2.13.0
 torchvision==0.28.0
 datasets==5.0.1
 Pillow==12.3.0
+rembg[cpu]>=2.0.61
 numpy==2.4.6
 sentence-transformers==6.0.0
 transformers==5.15.1

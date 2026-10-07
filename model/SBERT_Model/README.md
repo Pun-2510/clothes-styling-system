@@ -1,5 +1,11 @@
 # SBERT Fashion Embedding
 
+## Dataset
+
+Model dùng chung `../../project/data/processed/products.csv` với project. Các
+cột huấn luyện là `product_name` và `category`; nếu có cột `split`, script giữ
+nguyên hai tập `train` và `validation` của project.
+
 ## Cài đặt
 
 ```bash

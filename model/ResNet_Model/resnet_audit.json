@@ -1,0 +1,119 @@
+{
+  "evaluation_set": {
+    "policy": "complement of checkpoint dataset_indices",
+    "samples": 600,
+    "class_counts": {
+      "Jackets": 100,
+      "Trousers": 100,
+      "Shirts": 100,
+      "Dresses": 100,
+      "Jeans": 100,
+      "Tshirts": 100
+    }
+  },
+  "embedding": {
+    "shape": [
+      600,
+      512
+    ],
+    "finite": true,
+    "norm_min": 0.9999998211860657,
+    "norm_max": 1.0000001192092896
+  },
+  "cosine": {
+    "self_similarity_min": 0.9999995231628418,
+    "self_similarity_max": 1.0000005960464478,
+    "implementation_max_error": 3.5762786865234375e-07,
+    "retrieval_top1": 0.935,
+    "retrieval_top5": 0.98
+  },
+  "classification": {
+    "accuracy": 0.9266666666666666,
+    "macro_accuracy": 0.9266666666666667,
+    "average_confidence": 0.9119091629981995,
+    "per_class": {
+      "Tshirts": {
+        "samples": 100,
+        "accuracy": 0.99
+      },
+      "Shirts": {
+        "samples": 100,
+        "accuracy": 0.95
+      },
+      "Jeans": {
+        "samples": 100,
+        "accuracy": 0.93
+      },
+      "Trousers": {
+        "samples": 100,
+        "accuracy": 0.95
+      },
+      "Dresses": {
+        "samples": 100,
+        "accuracy": 0.95
+      },
+      "Jackets": {
+        "samples": 100,
+        "accuracy": 0.79
+      }
+    },
+    "confusion_matrix": [
+      [
+        99,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        4,
+        95,
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        93,
+        6,
+        1,
+        0
+      ],
+      [
+        1,
+        0,
+        4,
+        95,
+        0,
+        0
+      ],
+      [
+        4,
+        0,
+        0,
+        0,
+        95,
+        1
+      ],
+      [
+        15,
+        5,
+        0,
+        0,
+        1,
+        79
+      ]
+    ]
+  },
+  "classes": [
+    "Tshirts",
+    "Shirts",
+    "Jeans",
+    "Trousers",
+    "Dresses",
+    "Jackets"
+  ]
+}

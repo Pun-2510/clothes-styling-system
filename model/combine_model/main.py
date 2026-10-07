@@ -169,6 +169,19 @@ def main():
         f"{search_result['confidence']:.4f}"
     )
 
+    print(
+        "Background removed: "
+        f"{search_result['background_removed']}"
+    )
+
+    print("\nClass probabilities:")
+    for category, probability in sorted(
+        search_result["class_probabilities"].items(),
+        key=lambda item: item[1],
+        reverse=True
+    ):
+        print(f"   {category}: {probability:.4f}")
+
     print("\nTop products:\n")
 
     for result in search_result["results"]:

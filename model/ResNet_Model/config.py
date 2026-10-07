@@ -1,4 +1,8 @@
 import torch
+import os
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
 
 # ============================================================
 
@@ -29,7 +33,12 @@ SELECTED_CLASSES = [
 "Jackets"
 ]
 
-MAX_IMAGES = 2000
+# Add one folder per extra class, for example custom_data/Cheongsam/*.jpg.
+CUSTOM_DATA_DIR = ROOT / "custom_data"
+CUSTOM_CLASSES = []
+MIN_CUSTOM_IMAGES_PER_CLASS = 20
+
+MAX_IMAGES = 3000
 
 # ============================================================
 
@@ -41,9 +50,12 @@ MODEL_NAME = "resnet18"
 
 NUM_CLASSES = len(SELECTED_CLASSES)
 
-MODEL_PATH = "resnet_outfit.pth"
+MODEL_PATH = Path(os.getenv(
+    "RESNET_MODEL_PATH",
+    str(ROOT.parent / "Web_Test" / "models" / "resnet_outfit.pth"),
+))
 
-BEST_MODEL_PATH = "best_model.pth"
+BEST_MODEL_PATH = Path(os.getenv("RESNET_BEST_MODEL_PATH", str(ROOT / "best_model.pth")))
 
 # ============================================================
 
@@ -51,9 +63,9 @@ BEST_MODEL_PATH = "best_model.pth"
 
 # ============================================================
 
-BATCH_SIZE = 32
+BATCH_SIZE = 16
 
-EPOCHS = 5
+EPOCHS = int(os.getenv("RESNET_EPOCHS", "8"))
 
 LEARNING_RATE = 1e-4
 
@@ -62,6 +74,15 @@ WEIGHT_DECAY = 1e-4
 TEST_SIZE = 0.2
 
 RANDOM_STATE = 42
+
+LABEL_SMOOTHING = 0.05
+EARLY_STOPPING_PATIENCE = 3
+LR_PATIENCE = 2
+LR_FACTOR = 0.3
+MIN_LEARNING_RATE = 1e-6
+GRADIENT_CLIP_NORM = 1.0
+CONTRASTIVE_WEIGHT = 0.10
+CONTRASTIVE_TEMPERATURE = 0.07
 
 # ============================================================
 

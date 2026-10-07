@@ -1,5 +1,9 @@
 Combine Model
 
+Dataset mặc định là `../../project/data/processed/products.csv`, giống pipeline
+chính. Có thể đổi đường dẫn bằng biến môi trường `FASHION_DATASET_PATH`. Khi có
+cột `split`, phần đánh giá combine ưu tiên tập `test`.
+
 Mô hình kết hợp tìm kiếm sản phẩm thời trang bằng:
 
 ResNet18: Image Search

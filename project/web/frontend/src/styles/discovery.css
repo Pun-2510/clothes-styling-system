@@ -1,0 +1,112 @@
+:root {
+  color: #292238;
+  background: #faf9fc;
+  --ink: #292238;
+  --muted: #716a7e;
+  --surface-soft: #f2edf8;
+  --line: #e7e1ef;
+  --primary: #7041b5;
+  --primary-soft: #f0e8fa;
+}
+.site-header { height: 80px; backdrop-filter: blur(16px); background: #ffffffed; }
+.brand { font-size: 19px; letter-spacing: -.7px; font-weight: 750; }
+.brand strong { font-weight: 400; }
+.brand-mark { width: 38px; height: 38px; border-radius: 12px; font-size: 28px; }
+.header-nav { display: flex; gap: 30px; }
+.header-nav a { color: var(--muted); text-decoration: none; font-size: 13px; }
+.header-nav a:hover { color: var(--primary); }
+.status { border: 1px solid var(--line); border-radius: 30px; padding: 9px 13px; background: white; }
+#finder, #how-it-works, #top { scroll-margin-top: 100px; }
+.hero-section { max-width: none; display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: center; padding: 62px 0 66px; }
+.hero-copy .eyebrow { font-size: 10px; letter-spacing: .09em; }
+.hero-copy .eyebrow > span { margin-right: 6px; }
+.hero-section h1 { font-size: clamp(44px, 5.7vw, 72px); line-height: 1.12; font-weight: 650; margin: 23px 0; letter-spacing: -3px; }
+.hero-section h1 em { color: var(--primary); font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
+.hero-section p { font-size: 15px; max-width: 430px; line-height: 1.85; }
+.hero-link { display: inline-flex; gap: 34px; align-items: center; margin: 25px 0 20px; padding-bottom: 8px; color: var(--primary); border-bottom: 1px solid #bea6dc; text-decoration: none; font-weight: 650; font-size: 14px; }
+.hero-link span { font-size: 23px; }
+.hero-note { color: var(--muted); font-size: 11px; line-height: 1.8; }
+.hero-note > span { color: var(--primary); margin-right: 5px; }
+.style-board { position: relative; height: 385px; border-radius: 32px; background: #eee6f7; overflow: hidden; }
+.board-caption { position: absolute; top: 24px; left: 26px; right: 26px; display: flex; justify-content: space-between; font-size: 9px; letter-spacing: 2px; color: #71568f; }
+.board-orbit { position: absolute; width: 370px; height: 370px; border: 1px solid #dacee9; border-radius: 50%; top: 70px; left: 80px; }
+.garment-card { position: absolute; background: #fffdfc; box-shadow: 0 16px 32px #48306415; border-radius: 12px; }
+.garment-card--shirt { left: 35px; top: 65px; width: 235px; padding: 16px; transform: rotate(-8deg); }
+.garment-label { font-size: 8px; color: #8d7c9f; letter-spacing: 2px; }
+.garment-card--shirt svg { display: block; width: 100%; height: 213px; }
+.garment-bottom { display: flex; justify-content: space-between; font-size: 10px; color: #756285; padding-top: 8px; border-top: 1px solid #eee7f4; }
+.garment-card--bag { right: 22px; top: 155px; width: 153px; padding: 12px; transform: rotate(10deg); background: #f8f4ee; }
+.garment-card--bag svg { width: 100%; display: block; }
+.garment-card--bag > span { display: block; text-align: center; font-size: 7px; letter-spacing: 1px; color: #8b7967; }
+.board-spark { position: absolute; right: 43px; top: 62px; color: #9470c5; font-size: 66px; }
+.board-tag { position: absolute; bottom: 18px; left: 70px; padding: 12px 17px; border-radius: 30px; background: white; color: #655077; box-shadow: 0 5px 25px #51317410; font-size: 11px; }
+.board-tag > span { color: var(--primary); font-size: 18px; margin-right: 6px; }
+.finder-section { padding: 32px; background: white; border: 1px solid var(--line); border-radius: 24px; box-shadow: 0 14px 50px #49316d06; }
+.finder-heading { display: flex; justify-content: space-between; gap: 20px; align-items: end; margin-bottom: 26px; }
+.finder-heading .eyebrow { font-size: 9px; letter-spacing: 1.5px; }
+.finder-heading h2 { margin: 9px 0 0; font-size: 25px; letter-spacing: -.7px; }
+.finder-heading > span { font-size: 11px; color: var(--muted); }
+.search-tabs { width: fit-content; max-width: 100%; padding: 5px; background: #f5f2f9; border-radius: 12px; margin-bottom: 27px; }
+.search-tabs button { border: none; font-size: 12px; }
+.search-tabs button.active { background: white; color: var(--primary); box-shadow: 0 2px 8px #422a6810; }
+.search-tabs button:disabled { cursor: wait; opacity: .65; }
+.search-panel { border: none; border-radius: 0; box-shadow: none; padding: 0; }
+.field-heading label, .field-heading .field-title { font-size: 15px; }
+.field-heading > span:last-child { font-size: 11px; }
+.query-box textarea { background: #fcfbfe; border-radius: 12px; font-size: 16px; min-height: 132px; }
+.query-box textarea:focus { outline-color: #7041b526; }
+.query-box textarea::placeholder { color: #92899f; }
+.examples button { font-size: 11px; padding: 8px 12px; background: #faf8fd; }
+.form-controls { border-bottom: 1px solid var(--line); margin-bottom: 22px; }
+.segmented-control button.active, .mode-options button.active { border-color: #cdb7e8; }
+.primary-button { min-height: 52px; border-radius: 12px; box-shadow: 0 5px 14px #7041b51c; font-size: 14px; }
+.primary-button:hover:not(:disabled) { background: #59308f; }
+.dropzone { background: #fcfaff; border-color: #c7b3e0; }
+.how-it-works { padding: 35px 0 48px; gap: 28px; }
+.how-it-works article { background: transparent; border: none; padding: 14px 0; }
+.how-it-works article > span { display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; background: var(--primary-soft); }
+.how-it-works h3 { font-size: 14px; }
+.how-it-works p { font-size: 12px; }
+.results { border-top: none; padding-bottom: 16px; }
+.product-card { border-radius: 16px; transition: transform .2s, box-shadow .2s; }
+.product-card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px #51317412; }
+.product-image img { object-fit: contain; padding: 12px; }
+.site-footer { background: transparent; }
+button:focus-visible, textarea:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible { outline-color: #7041b56b; }
+@media (max-width: 960px) {
+  .hero-section { gap: 24px; }
+  .garment-card--shirt { left: 18px; width: 200px; }
+  .garment-card--bag { right: 12px; width: 130px; top: 185px; }
+  .board-tag { left: 20px; }
+  .header-nav { gap: 18px; }
+}
+@media (max-width: 760px) {
+  .header-nav { display: none; }
+  .hero-section { grid-template-columns: 1fr; padding: 36px 0; gap: 28px; }
+  .hero-section h1 { letter-spacing: -2px; }
+  .hero-section p { max-width: 520px; }
+  .style-board { height: 280px; }
+  .garment-card--shirt { top: 42px; left: 15%; width: 195px; }
+  .garment-card--shirt svg { height: 153px; }
+  .garment-card--bag { top: 85px; right: 12%; width: 130px; }
+  .board-spark { top: 25px; right: 15%; font-size: 45px; }
+  .board-tag { bottom: 8px; left: 22%; }
+  .finder-section { padding: 22px 18px; border-radius: 18px; }
+  .finder-heading > span { display: none; }
+  .finder-heading h2 { font-size: 22px; }
+  .how-it-works { grid-template-columns: 1fr; gap: 4px; }
+}
+@media (max-width: 460px) {
+  .brand > span:last-child { display: inline; }
+  .brand { font-size: 15px; gap: 7px; }
+  .brand-mark { width: 30px; height: 30px; font-size: 23px; }
+  .status { font-size: 10px; padding: 7px; gap: 5px; }
+  .site-header { padding-inline: 14px; height: 66px; }
+  .hero-copy .eyebrow { font-size: 9px; letter-spacing: 0; }
+  .hero-section h1 { font-size: 46px; }
+  .search-tabs { display: flex; width: 100%; gap: 2px; }
+  .search-tabs button { flex: 1; padding-inline: 5px; font-size: 10px; gap: 4px; }
+  .garment-card--shirt { left: 7%; }
+  .garment-card--bag { right: 5%; }
+  .board-tag { left: 10%; }
+}

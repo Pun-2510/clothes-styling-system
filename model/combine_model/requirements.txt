@@ -4,3 +4,4 @@ datasets
 Pillow
 numpy
 python-dotenv
+rembg[cpu]>=2.0.61

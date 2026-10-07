@@ -7,6 +7,9 @@
 !/.gitattributes
 !/models/
 /models/*
+!/models/resnet_outfit.pth
+!/models/resnet_outfit.json
+!/models/resnet_gender.pth
 !/models/bert_fashion_model/
 /models/bert_fashion_model/*
 !/models/bert_fashion_model/config.json
