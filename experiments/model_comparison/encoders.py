@@ -86,6 +86,44 @@ def encode_clip_text(texts, source, device="cpu", batch_size=16):
     return _normalize(embeddings), metadata
 
 
+def encode_clip_images(image_paths, source, device="cpu", batch_size=16):
+    """Encode held-out images with the selected CLIP vision encoder."""
+    import torch
+    from PIL import Image
+    from transformers import AutoProcessor, CLIPModel
+
+    source_path = Path(source)
+    source_name = str(source_path.resolve()) if source_path.exists() else str(source)
+    processor = AutoProcessor.from_pretrained(source_name)
+    model = CLIPModel.from_pretrained(source_name).to(device).eval()
+    paths = [Path(path) for path in image_paths]
+    batches = []
+    with torch.inference_mode():
+        for start in range(0, len(paths), batch_size):
+            images = []
+            for path in paths[start:start + batch_size]:
+                with Image.open(path) as image:
+                    images.append(image.convert("RGB").copy())
+            inputs = processor(images=images, return_tensors="pt").to(device)
+            output = model.vision_model(
+                pixel_values=inputs["pixel_values"],
+                return_dict=True,
+            )
+            features = model.visual_projection(output.pooler_output)
+            batches.append(torch.nn.functional.normalize(features, dim=-1).cpu().numpy())
+    embeddings = np.concatenate(batches)
+    metadata = {
+        "architecture": "CLIP vision encoder",
+        "source": source_name,
+        "parameters": sum(parameter.numel() for parameter in model.parameters()),
+        "embedding_dimension": int(embeddings.shape[1]),
+    }
+    del model, processor
+    if str(device).startswith("cuda"):
+        torch.cuda.empty_cache()
+    return _normalize(embeddings), metadata
+
+
 def _load_resnet18(device, source, checkpoint):
     import torch
     from torchvision import models, transforms

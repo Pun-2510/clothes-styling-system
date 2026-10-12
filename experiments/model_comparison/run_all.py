@@ -32,9 +32,12 @@ def build_matched_outputs(output):
     category_rows = pd.read_csv(modality_category_csv).to_dict(orient="records")
     clip_report = json.loads(clip_json.read_text(encoding="utf-8"))
     ks = sorted(set(int(k) for k in clip_report["ks"]))
+    existing_systems = {str(row["system"]) for row in rows}
     for variant in ("pretrained", "finetuned"):
         metrics = clip_report["metrics"][variant]["image_to_image_category"]
         system = f"clip_{variant}_image_only"
+        if system in existing_systems:
+            continue
         for k in ks:
             rows.append(
                 {
@@ -83,6 +86,7 @@ def build_matched_outputs(output):
                 "limitations": [
                     "The fine-tuned CLIP text result is a category-free inference ablation; its training prompts included category.",
                     "The RRF system requires both image and text, while the other rows use one input modality.",
+                    "The CLIP fusion rows isolate score fusion and do not apply category filtering or attribute overrides.",
                 ],
             },
             indent=2,
@@ -109,6 +113,7 @@ def build_matched_outputs(output):
         "",
         "The RRF row requires both image and text and should not be treated as a single-input model.",
         "The fine-tuned CLIP text result is an inference ablation because its training prompts included category.",
+        "The CLIP fusion rows use the same fine-tuned checkpoint for both modalities and exclude category/attribute post-processing.",
     ]
     (output / "matched_summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     return [
@@ -127,6 +132,8 @@ def arguments():
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--ks", nargs="+", type=int, default=[1, 5, 10])
     parser.add_argument("--rrf-k", type=int, default=60)
+    parser.add_argument("--clip-image-weight", type=float, default=0.5)
+    parser.add_argument("--clip-text-image-weight", type=float, default=0.5)
     parser.add_argument("--resnet-source", choices=("project-trained", "imagenet"), default="project-trained")
     parser.add_argument("--resnet-checkpoint", type=Path, default=DEFAULT_RESNET_CHECKPOINT)
     parser.add_argument("--clip-catalog-csv", type=Path)
@@ -169,6 +176,8 @@ def main():
             "--batch-size", str(args.batch_size),
             "--ks", *[str(k) for k in args.ks],
             "--rrf-k", str(args.rrf_k),
+            "--clip-image-weight", str(args.clip_image_weight),
+            "--clip-text-image-weight", str(args.clip_text_image_weight),
             "--resnet-source", args.resnet_source,
             "--resnet-checkpoint", str(args.resnet_checkpoint.resolve()),
         ]

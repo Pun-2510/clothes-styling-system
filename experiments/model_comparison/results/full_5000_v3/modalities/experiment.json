@@ -1,0 +1,27 @@
+{
+  "run_dir": "D:\\dacntt\\project\\runs\\clip_finetune_3epochs",
+  "dataset_sha256": "96801376518f5dbba1a505cfc43903e11365dac15635f6d33575a0860e5b951b",
+  "training_json_sha256": "e4c2a1c7b5acabf185f415027b9f6c9ed8bc85a4968cfb7d1748f42014b99982",
+  "split": "test",
+  "rows": 473,
+  "categories": 132,
+  "ks": [
+    1,
+    5,
+    10
+  ],
+  "rrf_k": 60,
+  "clip_image_weight": 0.5,
+  "clip_text_image_weight": 0.5,
+  "batch_size": 16,
+  "device": "cpu",
+  "resnet_source": "project-trained",
+  "resnet_checkpoint": "D:\\dacntt\\model\\Web_Test\\models\\resnet_outfit.pth",
+  "sbert_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+  "clip_base_model": "openai/clip-vit-base-patch32",
+  "clip_checkpoint": "D:\\dacntt\\project\\runs\\clip_finetune_3epochs\\best",
+  "text_template": "Product: {product_name}. Description: {description}",
+  "category_in_text": false,
+  "relevance": "same ground-truth category, excluding the query product",
+  "aggregation": "per-query macro average; category macro also reported"
+}

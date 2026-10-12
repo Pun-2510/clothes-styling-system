@@ -5,6 +5,170 @@ from __future__ import annotations
 import numpy as np
 
 
+def _normalize_rows(matrix):
+    values = np.asarray(matrix, dtype=np.float32)
+    if values.ndim != 2 or not np.isfinite(values).all():
+        raise ValueError("Embeddings must be a finite two-dimensional matrix.")
+    norms = np.linalg.norm(values, axis=1, keepdims=True)
+    if (norms == 0).any():
+        raise ValueError("Embeddings must be nonzero.")
+    return values / norms
+
+
+def _percentile_rows(scores):
+    """Convert every score row to tie-aware percentile ranks in [0, 1]."""
+    values = np.asarray(scores, dtype=np.float32)
+    if values.ndim != 2 or values.shape[1] < 2:
+        raise ValueError("Scores must be a matrix with at least two candidates.")
+    order = np.argsort(values, axis=1, kind="stable")
+    sorted_values = np.take_along_axis(values, order, axis=1)
+    percentiles = np.empty_like(values, dtype=np.float32)
+    denominator = float(values.shape[1] - 1)
+
+    # Average tied ranks, matching pandas rank(method="average") without adding
+    # pandas to the low-level fusion module.
+    for row_index, row in enumerate(sorted_values):
+        sorted_ranks = np.empty(len(row), dtype=np.float32)
+        start = 0
+        while start < len(row):
+            end = start + 1
+            while end < len(row) and row[end] == row[start]:
+                end += 1
+            sorted_ranks[start:end] = ((start + end - 1) / 2.0) / denominator
+            start = end
+        percentiles[row_index, order[row_index]] = sorted_ranks
+    return percentiles
+
+
+def clip_score_fusion(
+    image_embeddings,
+    text_embeddings,
+    product_ids,
+    image_weight=0.5,
+    text_image_weight=0.5,
+    percentile=False,
+):
+    """Fuse CLIP image and text retrieval scores and return aligned rankings.
+
+    The text signal mirrors serving: it combines text-to-image and
+    text-to-text similarities. ``percentile=True`` applies the same per-query
+    scale alignment used by the web system before weighted fusion.
+    """
+    return clip_query_gallery_score_fusion(
+        image_embeddings,
+        text_embeddings,
+        image_embeddings,
+        text_embeddings,
+        product_ids,
+        product_ids,
+        image_weight=image_weight,
+        text_image_weight=text_image_weight,
+        percentile=percentile,
+    )
+
+
+def clip_query_gallery_score_fusion(
+    query_image_embeddings,
+    query_text_embeddings,
+    gallery_image_embeddings,
+    gallery_text_embeddings,
+    query_product_ids,
+    gallery_product_ids,
+    image_weight=0.5,
+    text_image_weight=0.5,
+    percentile=False,
+):
+    """Fuse CLIP signals for held-out queries against a larger gallery."""
+    if not 0.0 <= image_weight <= 1.0:
+        raise ValueError("image_weight must be between 0 and 1.")
+    if not 0.0 <= text_image_weight <= 1.0:
+        raise ValueError("text_image_weight must be between 0 and 1.")
+
+    query_images = _normalize_rows(query_image_embeddings)
+    query_texts = _normalize_rows(query_text_embeddings)
+    gallery_images = _normalize_rows(gallery_image_embeddings)
+    gallery_texts = _normalize_rows(gallery_text_embeddings)
+    query_ids = np.asarray(query_product_ids, dtype=str)
+    gallery_ids = np.asarray(gallery_product_ids, dtype=str)
+    if query_images.shape != query_texts.shape or len(query_ids) != len(query_images):
+        raise ValueError("Query image/text embeddings and IDs must align.")
+    if gallery_images.shape != gallery_texts.shape or len(gallery_ids) != len(gallery_images):
+        raise ValueError("Gallery image/text embeddings and IDs must align.")
+    if query_images.shape[1] != gallery_images.shape[1]:
+        raise ValueError("Query and gallery CLIP dimensions must match.")
+
+    image_scores = query_images @ gallery_images.T
+    text_to_image_scores = query_texts @ gallery_images.T
+    text_to_text_scores = query_texts @ gallery_texts.T
+    if percentile:
+        image_scores = _percentile_rows(image_scores)
+        text_to_image_scores = _percentile_rows(text_to_image_scores)
+        text_to_text_scores = _percentile_rows(text_to_text_scores)
+
+    text_scores = (
+        text_image_weight * text_to_image_scores
+        + (1.0 - text_image_weight) * text_to_text_scores
+    )
+    fused_scores = image_weight * image_scores + (1.0 - image_weight) * text_scores
+
+    rankings = []
+    for query_index, row_scores in enumerate(fused_scores):
+        candidates = np.flatnonzero(gallery_ids != query_ids[query_index])
+        rankings.append(candidates[np.argsort(-row_scores[candidates], kind="stable")])
+    return rankings
+
+
+def clip_text_query_gallery_score_fusion(
+    query_text_embeddings,
+    gallery_image_embeddings,
+    gallery_text_embeddings,
+    query_product_ids,
+    gallery_product_ids,
+    text_image_weight=0.5,
+    percentile=False,
+):
+    """Mirror the website's text-input retrieval over a multimodal catalog.
+
+    The query is text only, while catalog candidates contribute both an image
+    representation (text-to-image) and a text representation (text-to-text).
+    Individual score families may be converted to per-query percentiles before
+    applying the configured weight.
+    """
+    if not 0.0 <= text_image_weight <= 1.0:
+        raise ValueError("text_image_weight must be between 0 and 1.")
+
+    query_texts = _normalize_rows(query_text_embeddings)
+    gallery_images = _normalize_rows(gallery_image_embeddings)
+    gallery_texts = _normalize_rows(gallery_text_embeddings)
+    query_ids = np.asarray(query_product_ids, dtype=str)
+    gallery_ids = np.asarray(gallery_product_ids, dtype=str)
+    if len(query_ids) != len(query_texts):
+        raise ValueError("Query text embeddings and IDs must align.")
+    if len(gallery_ids) != len(gallery_images) or len(gallery_ids) != len(gallery_texts):
+        raise ValueError("Gallery image/text embeddings and IDs must align.")
+    if (
+        query_texts.shape[1] != gallery_images.shape[1]
+        or query_texts.shape[1] != gallery_texts.shape[1]
+    ):
+        raise ValueError("Query and gallery CLIP dimensions must match.")
+
+    text_to_image_scores = query_texts @ gallery_images.T
+    text_to_text_scores = query_texts @ gallery_texts.T
+    if percentile:
+        text_to_image_scores = _percentile_rows(text_to_image_scores)
+        text_to_text_scores = _percentile_rows(text_to_text_scores)
+    fused_scores = (
+        text_image_weight * text_to_image_scores
+        + (1.0 - text_image_weight) * text_to_text_scores
+    )
+
+    rankings = []
+    for query_index, row_scores in enumerate(fused_scores):
+        candidates = np.flatnonzero(gallery_ids != query_ids[query_index])
+        rankings.append(candidates[np.argsort(-row_scores[candidates], kind="stable")])
+    return rankings
+
+
 def reciprocal_rank_fusion(ranking_groups, catalog_size, rrf_k=60):
     """Fuse aligned ranking lists using Reciprocal Rank Fusion (RRF).
 

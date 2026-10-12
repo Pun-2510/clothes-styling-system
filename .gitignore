@@ -66,6 +66,29 @@ project/comparisons/results/**
 !project/comparisons/results/.gitkeep
 experiments/model_comparison/results/**
 !experiments/model_comparison/results/.gitkeep
+# Keep lightweight, report-ready experiment tables in Git. Large JSON reports,
+# evaluation catalogs, embeddings and caches remain ignored.
+!experiments/model_comparison/results/full_5000_v3/
+!experiments/model_comparison/results/full_5000_v3/**/
+!experiments/model_comparison/results/full_5000_v3/**/comparison.csv
+!experiments/model_comparison/results/full_5000_v3/**/comparison_by_category.csv
+!experiments/model_comparison/results/full_5000_v3/**/matched_comparison.csv
+!experiments/model_comparison/results/full_5000_v3/**/matched_comparison_by_category.csv
+!experiments/model_comparison/results/full_5000_v3/**/summary.md
+!experiments/model_comparison/results/full_5000_v3/**/matched_summary.md
+!experiments/model_comparison/results/full_5000_v3/run_manifest.json
+!experiments/model_comparison/results/full_5000_v3/modalities/experiment.json
+!experiments/model_comparison/results/full_gallery_5000_v1/
+!experiments/model_comparison/results/full_gallery_5000_v1/comparison.csv
+!experiments/model_comparison/results/full_gallery_5000_v1/comparison_by_category.csv
+!experiments/model_comparison/results/full_gallery_5000_v1/summary.md
+!experiments/model_comparison/results/full_gallery_5000_v1/experiment.json
+!experiments/model_comparison/results/full_gallery_5000_v2/
+!experiments/model_comparison/results/full_gallery_5000_v2/**/
+!experiments/model_comparison/results/full_gallery_5000_v2/**/comparison.csv
+!experiments/model_comparison/results/full_gallery_5000_v2/**/comparison_by_category.csv
+!experiments/model_comparison/results/full_gallery_5000_v2/summary.md
+!experiments/model_comparison/results/full_gallery_5000_v2/experiment.json
 experiments/model_comparison/cache/**
 project/datasets/**
 !project/datasets/.gitkeep

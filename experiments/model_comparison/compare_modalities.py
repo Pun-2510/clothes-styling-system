@@ -2,8 +2,9 @@
 
 The benchmark uses the exact held-out test split saved by CLIP fine-tuning.
 SBERT and both CLIP text encoders receive product names/descriptions without
-the category label, ResNet18 receives images, and the combined baseline fuses
-the SBERT and ResNet18 rankings with RRF.
+the category label. Image baselines use ResNet18 and fine-tuned CLIP. Combined
+baselines include SBERT + ResNet18 RRF and two score-fusion variants using the
+same fine-tuned CLIP checkpoint as the web application.
 """
 
 from __future__ import annotations
@@ -20,9 +21,15 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from .encoders import SBERT_MODEL_ID, encode_clip_text, encode_resnet18, encode_sbert
+from .encoders import (
+    SBERT_MODEL_ID,
+    encode_clip_images,
+    encode_clip_text,
+    encode_resnet18,
+    encode_sbert,
+)
 from .evaluation import evaluate_category_rankings, rank_by_cosine
-from .fusion import reciprocal_rank_fusion
+from .fusion import clip_score_fusion, reciprocal_rank_fusion
 
 
 REPOSITORY = Path(__file__).resolve().parents[2]
@@ -43,6 +50,8 @@ def arguments():
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--ks", nargs="+", type=int, default=[1, 5, 10])
     parser.add_argument("--rrf-k", type=int, default=60)
+    parser.add_argument("--clip-image-weight", type=float, default=0.5)
+    parser.add_argument("--clip-text-image-weight", type=float, default=0.5)
     parser.add_argument(
         "--resnet-source",
         choices=("project-trained", "imagenet"),
@@ -131,14 +140,20 @@ def _prepare_output(requested):
     return output
 
 
-def _metric_rows(system, input_type, metrics, ks):
+def _metric_rows(
+    system,
+    input_type,
+    metrics,
+    ks,
+    task="same-category product retrieval",
+):
     rows = []
     for k in ks:
         rows.append(
             {
                 "system": system,
                 "input": input_type,
-                "task": "same-category product retrieval",
+                "task": task,
                 "k": k,
                 "precision": metrics[f"precision@{k}"],
                 "recall": metrics[f"recall@{k}"],
@@ -197,6 +212,9 @@ def _summary(rows, products, settings):
         "This table measures same-category retrieval, which is a proxy for relevance rather than human judgement of visual style.",
         "The combined system uses rank fusion because SBERT and ResNet18 embeddings are not in a shared vector space.",
         f"RRF uses k = {settings['rrf_k']}.",
+        "CLIP raw fusion combines cosine similarities directly; CLIP percentile fusion first aligns each query's score scales.",
+        f"CLIP fusion uses image weight {settings['clip_image_weight']:.2f} and text-to-image weight {settings['clip_text_image_weight']:.2f}.",
+        "These CLIP fusion rows do not apply category filtering or attribute overrides; those require a separate system-level ablation.",
         "The project-trained ResNet18 checkpoint was trained on six categories, so its result must not be presented as a 142-category classifier score.",
         "The fine-tuned CLIP checkpoint was trained with category-bearing prompts; its category-free text result is therefore an inference ablation, not a category-free retraining run.",
     ]
@@ -216,9 +234,15 @@ def self_test():
     assert result["recall@2"] == 1.0
     fused = reciprocal_rank_fusion([rankings, rankings], len(ids), 60)
     assert all(np.array_equal(left, right) for left, right in zip(fused, rankings))
+    clip_images = np.eye(4, dtype=np.float32)
+    clip_texts = np.eye(4, dtype=np.float32)
+    raw = clip_score_fusion(clip_images, clip_texts, ids, percentile=False)
+    percentile = clip_score_fusion(clip_images, clip_texts, ids, percentile=True)
+    assert len(raw) == len(percentile) == len(ids)
+    assert all(index not in ranking for index, ranking in enumerate(raw))
     sample = pd.Series({"product_name": "Red dress", "description": "Short cotton dress", "category": "Dresses"})
     assert "Dresses" not in build_evaluation_text(sample)
-    print("PASS: category metrics, self exclusion assumptions, RRF, and label-free text")
+    print("PASS: category metrics, self exclusion, RRF, CLIP fusion, and label-free text")
 
 
 def main():
@@ -228,6 +252,10 @@ def main():
         return
     if args.batch_size < 1 or args.rrf_k < 1 or any(k < 1 for k in args.ks):
         raise ValueError("batch-size, rrf-k and every K value must be positive.")
+    if not 0.0 <= args.clip_image_weight <= 1.0:
+        raise ValueError("clip-image-weight must be between 0 and 1.")
+    if not 0.0 <= args.clip_text_image_weight <= 1.0:
+        raise ValueError("clip-text-image-weight must be between 0 and 1.")
 
     import torch
 
@@ -249,10 +277,10 @@ def main():
     if not clip_checkpoint.is_dir():
         raise FileNotFoundError(f"Fine-tuned CLIP checkpoint not found: {clip_checkpoint}")
     base_identity = model_identity(clip_base_model)
-    checkpoint_identity = model_identity(clip_checkpoint)
+    clip_checkpoint_identity = model_identity(clip_checkpoint)
     if not same_model_identity(training["base_model_identity"], base_identity):
         raise ValueError("The pretrained CLIP identity differs from the training record.")
-    if not same_model_identity(training["checkpoint_identity"], checkpoint_identity):
+    if not same_model_identity(training["checkpoint_identity"], clip_checkpoint_identity):
         raise ValueError("The fine-tuned CLIP checkpoint differs from the training record.")
     products = products.loc[products.split == "test"].copy().reset_index(drop=True)
     if len(products) < 2:
@@ -269,6 +297,8 @@ def main():
         "categories": int(products.category.nunique()),
         "ks": ks,
         "rrf_k": args.rrf_k,
+        "clip_image_weight": args.clip_image_weight,
+        "clip_text_image_weight": args.clip_text_image_weight,
         "batch_size": args.batch_size,
         "device": args.device,
         "resnet_source": args.resnet_source,
@@ -295,13 +325,13 @@ def main():
         output / "evaluation_catalog.csv", index=False
     )
 
-    checkpoint_identity = (
+    resnet_checkpoint_identity = (
         file_sha256(args.resnet_checkpoint)
         if args.resnet_source == "project-trained" and args.resnet_checkpoint.is_file()
         else "torchvision.ResNet18_Weights.DEFAULT"
     )
     resnet_signature = _cache_signature(
-        products, {"architecture": "ResNet18", "source": args.resnet_source, "identity": checkpoint_identity}
+        products, {"architecture": "ResNet18", "source": args.resnet_source, "identity": resnet_checkpoint_identity}
     )
     sbert_signature = _cache_signature(
         products, {"architecture": "Sentence-BERT", "source": args.sbert_model, "category_in_text": False}
@@ -312,7 +342,11 @@ def main():
     )
     clip_finetuned_signature = _cache_signature(
         products,
-        {"architecture": "CLIP text encoder", "identity": checkpoint_identity, "category_in_text": False},
+        {"architecture": "CLIP text encoder", "identity": clip_checkpoint_identity, "category_in_text": False},
+    )
+    clip_finetuned_image_signature = _cache_signature(
+        products,
+        {"architecture": "CLIP vision encoder", "identity": clip_checkpoint_identity},
     )
     use_cache = not args.no_cache
 
@@ -357,6 +391,16 @@ def main():
         ),
         use_cache,
     )
+    print(f"Encoding {len(products)} test images with fine-tuned CLIP...", flush=True)
+    clip_finetuned_images, clip_finetuned_image_metadata = _cached_embeddings(
+        args.cache_dir,
+        "clip_finetuned_image_test",
+        clip_finetuned_image_signature,
+        lambda: encode_clip_images(
+            products.image_path.tolist(), clip_checkpoint, args.device, args.batch_size
+        ),
+        use_cache,
+    )
 
     ids = products.product_id.astype(str).to_numpy()
     categories = products.category.fillna("").astype(str).to_numpy()
@@ -364,8 +408,25 @@ def main():
     text_rankings = rank_by_cosine(text_embeddings, ids)
     clip_pretrained_text_rankings = rank_by_cosine(clip_pretrained_text, ids)
     clip_finetuned_text_rankings = rank_by_cosine(clip_finetuned_text, ids)
+    clip_finetuned_image_rankings = rank_by_cosine(clip_finetuned_images, ids)
     combined_rankings = reciprocal_rank_fusion(
         [text_rankings, image_rankings], len(products), args.rrf_k
+    )
+    clip_raw_fusion_rankings = clip_score_fusion(
+        clip_finetuned_images,
+        clip_finetuned_text,
+        ids,
+        image_weight=args.clip_image_weight,
+        text_image_weight=args.clip_text_image_weight,
+        percentile=False,
+    )
+    clip_percentile_fusion_rankings = clip_score_fusion(
+        clip_finetuned_images,
+        clip_finetuned_text,
+        ids,
+        image_weight=args.clip_image_weight,
+        text_image_weight=args.clip_text_image_weight,
+        percentile=True,
     )
     systems = {
         "sbert_text_only": ("text", text_rankings),
@@ -373,6 +434,9 @@ def main():
         "clip_finetuned_text_only": ("text", clip_finetuned_text_rankings),
         "resnet18_image_only": ("image", image_rankings),
         "sbert_resnet18_rrf": ("image + text", combined_rankings),
+        "clip_finetuned_image_only": ("image", clip_finetuned_image_rankings),
+        "clip_finetuned_raw_cosine_fusion": ("image + text", clip_raw_fusion_rankings),
+        "clip_finetuned_percentile_fusion": ("image + text", clip_percentile_fusion_rankings),
     }
     metrics = {
         name: evaluate_category_rankings(rankings, ids, categories, ks)
@@ -402,6 +466,7 @@ def main():
             "sbert": sbert_metadata,
             "clip_pretrained_text": clip_pretrained_metadata,
             "clip_finetuned_text": clip_finetuned_metadata,
+            "clip_finetuned_image": clip_finetuned_image_metadata,
             "resnet18": resnet_metadata,
         },
         "metrics": metrics,

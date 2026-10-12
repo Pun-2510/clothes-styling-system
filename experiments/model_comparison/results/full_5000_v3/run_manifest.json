@@ -1,0 +1,46 @@
+{
+  "created_utc": "2026-10-11T10:23:52.105035+00:00",
+  "status": "complete",
+  "run_dir": "D:\\dacntt\\project\\runs\\clip_finetune_3epochs",
+  "commands": [
+    {
+      "name": "modalities",
+      "cwd": "D:\\dacntt",
+      "command": [
+        "D:\\dacntt\\project\\.venv\\Scripts\\python.exe",
+        "-m",
+        "experiments.model_comparison.compare_modalities",
+        "--run-dir",
+        "D:\\dacntt\\project\\runs\\clip_finetune_3epochs",
+        "--output-dir",
+        "D:\\dacntt\\experiments\\model_comparison\\results\\full_5000_v3\\modalities",
+        "--device",
+        "cpu",
+        "--batch-size",
+        "16",
+        "--ks",
+        "1",
+        "5",
+        "10",
+        "--rrf-k",
+        "60",
+        "--clip-image-weight",
+        "0.5",
+        "--clip-text-image-weight",
+        "0.5",
+        "--resnet-source",
+        "project-trained",
+        "--resnet-checkpoint",
+        "D:\\dacntt\\model\\Web_Test\\models\\resnet_outfit.pth"
+      ]
+    }
+  ],
+  "reused_clip_results": "D:\\dacntt\\experiments\\model_comparison\\results\\full_5000_v1\\clip",
+  "matched_outputs": [
+    "matched_comparison.csv",
+    "matched_comparison_by_category.csv",
+    "matched_comparison.json",
+    "matched_summary.md"
+  ],
+  "completed_utc": "2026-10-11T10:25:56.527155+00:00"
+}
