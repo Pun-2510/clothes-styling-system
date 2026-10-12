@@ -26,6 +26,7 @@ class WebPackageTests(unittest.TestCase):
             routes = client.get("/openapi.json").json()["paths"]
             self.assertIn("/api/recommendations/image", routes)
             self.assertIn("/api/recommendations/text", routes)
+            self.assertIn("/api/recommendations/combined", routes)
             response = client.post("/api/recommendations/text", json={"query": "   "})
             self.assertEqual(response.status_code, 400)
             response = client.post("/api/recommendations/image",
@@ -75,6 +76,59 @@ class WebPackageTests(unittest.TestCase):
         self.assertEqual(
             recommend_by_image.call_args.kwargs["category_mode"],
             "soft_category",
+        )
+
+    def test_combined_route_translates_and_serializes_fusion_scores(self):
+        results = pd.DataFrame({
+            "product_id": ["1"],
+            "product_name": ["Black dress"],
+            "category": ["Dresses"],
+            "image_reference": ["1.jpg"],
+            "visual_similarity": [0.9],
+            "text_to_image_similarity": [0.7],
+            "text_to_text_similarity": [0.8],
+            "text_similarity": [0.75],
+            "similarity": [0.825],
+        })
+        recommend_combined = Mock(return_value={
+            "results": results,
+            "image_weight": 0.5,
+            "text_weight": 0.5,
+            "elapsed": 0.03,
+        })
+        recommender = SimpleNamespace(
+            device="cpu",
+            products=[1],
+            embeddings=object(),
+            has_text_embeddings=True,
+            recommend_combined=recommend_combined,
+        )
+        translator = Mock()
+        translator.translate.return_value = "black office dress"
+        image_buffer = BytesIO()
+        Image.new("RGB", (2, 2), "black").save(image_buffer, format="PNG")
+
+        with patch("web.backend.main.FashionRecommender", return_value=recommender), \
+                patch("web.backend.main.VietnameseEnglishTranslator", return_value=translator), \
+                TestClient(app) as client:
+            response = client.post(
+                "/api/recommendations/combined",
+                data={
+                    "query": "váy đen công sở",
+                    "language": "vi",
+                    "top_k": "5",
+                    "image_weight": "0.5",
+                },
+                files={"file": ("query.png", image_buffer.getvalue(), "image/png")},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["query_used"], "black office dress")
+        self.assertEqual(payload["items"][0]["text_score"], 0.75)
+        self.assertEqual(
+            recommend_combined.call_args.kwargs["text"],
+            "black office dress",
         )
 
 

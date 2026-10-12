@@ -71,3 +71,27 @@ class ImageRecommendationResponse(BaseModel):
     category_confidence: float | None
     processing_times: ImageProcessingTimes
     items: list[ImageProductRecommendation]
+
+
+class CombinedProductRecommendation(BaseModel):
+    product_id: str
+    product_name: str | None
+    category: str | None
+    image_reference: str | None
+    visual_similarity: float
+    text_to_image_score: float
+    text_to_text_score: float | None
+    text_score: float
+    final_score: float
+
+
+class CombinedRecommendationResponse(BaseModel):
+    request_id: str
+    query: str
+    query_used: str
+    language: Literal["vi", "en"]
+    top_k: int
+    image_weight: float
+    text_weight: float
+    elapsed_seconds: float
+    items: list[CombinedProductRecommendation]

@@ -1,6 +1,7 @@
 import Icon from '../common/Icon'
 
 const TABS = [
+  { value: 'combined', label: 'Ảnh + mô tả', icon: 'spark' },
   { value: 'text', label: 'Tìm bằng mô tả', icon: 'search' },
   { value: 'image', label: 'Tìm bằng hình ảnh', icon: 'image' },
 ]

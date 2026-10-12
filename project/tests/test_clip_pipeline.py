@@ -57,6 +57,88 @@ class RecallTests(unittest.TestCase):
         self.assertTrue(torch.allclose(contrastive_loss(logits, torch.eye(2).bool()), expected))
 
 
+class CombinedRecommendationTests(unittest.TestCase):
+    def test_image_text_fusion_uses_requested_weights(self):
+        from src.recommend import FashionRecommender
+
+        recommender = FashionRecommender.__new__(FashionRecommender)
+        recommender.products = pd.DataFrame({
+            "product_id": ["image-match", "text-match"],
+            "product_name": ["Image match", "Text match"],
+            "category": ["shirt", "shoe"],
+            "description": ["", ""],
+            "image_reference": ["a.jpg", "b.jpg"],
+        })
+        recommender.categories = ["shirt", "shoe"]
+        recommender.embeddings = np.eye(2, dtype=np.float32)
+        recommender.text_embeddings = np.eye(2, dtype=np.float32)
+        recommender.encode_image = lambda image: np.array([1.0, 0.0], dtype=np.float32)
+        recommender.encode_text = lambda text: np.array([0.0, 1.0], dtype=np.float32)
+        recommender.predict_category = lambda query, request: (
+            "shirt", 0.5, np.array([1.0, 0.0], dtype=np.float32)
+        )
+
+        image_led = recommender.recommend_combined(
+            image=object(), text="formal", top_k=2, image_weight=0.75,
+        )
+        text_led = recommender.recommend_combined(
+            image=object(), text="formal", top_k=2, image_weight=0.25,
+        )
+
+        self.assertEqual(image_led["results"].iloc[0].product_id, "image-match")
+        self.assertEqual(text_led["results"].iloc[0].product_id, "text-match")
+        self.assertAlmostEqual(image_led["image_weight"], 0.75)
+        self.assertAlmostEqual(image_led["text_weight"], 0.25)
+        self.assertIn("text_similarity", image_led["results"].columns)
+
+    def test_explicit_text_category_and_colour_override_image_colour(self):
+        from src.recommend import FashionRecommender
+
+        recommender = FashionRecommender.__new__(FashionRecommender)
+        recommender.products = pd.DataFrame({
+            "product_id": ["blue-cap", "red-cap", "red-dress"],
+            "product_name": ["Blue Cap", "Ferrari Red Cap", "Red Dress"],
+            "description": ["navy blue cap", "bright red cap", "red dress"],
+            "category": ["Caps", "Caps", "Dresses"],
+            "image_reference": ["blue.jpg", "red-cap.jpg", "dress.jpg"],
+        })
+        recommender.categories = ["Caps", "Dresses"]
+        recommender.embeddings = np.array([
+            [1.0, 0.0],
+            [0.2, 0.98],
+            [0.0, 1.0],
+        ], dtype=np.float32)
+        recommender.text_embeddings = recommender.embeddings.copy()
+        recommender.encode_image = lambda image: np.array([1.0, 0.0], dtype=np.float32)
+        recommender.encode_text = lambda text: np.array([0.0, 1.0], dtype=np.float32)
+        recommender.predict_category = lambda query, request: (
+            "Caps", 0.9, np.array([1.0, 0.6, 0.4], dtype=np.float32)
+        )
+
+        recommendation = recommender.recommend_combined(
+            image=object(), text="red cap", top_k=3, image_weight=0.5,
+        )
+
+        results = recommendation["results"]
+        self.assertEqual(results.iloc[0].product_id, "red-cap")
+        self.assertEqual(set(results.category), {"Caps"})
+        self.assertEqual(recommendation["applied_category"], "Caps")
+        self.assertEqual(recommendation["category_source"], "text_image")
+        self.assertEqual(recommendation["detected_attributes"], ["red"])
+
+        self.assertTrue(
+            recommender.categories_are_related("Tshirts", "Shirts")
+        )
+
+    def test_fashion_translation_rewrites_literal_texture_term(self):
+        from src.translator import normalize_fashion_translation
+
+        self.assertEqual(
+            normalize_fashion_translation("textured blue shirt"),
+            "patterned blue shirt",
+        )
+
+
 class PipelineTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()

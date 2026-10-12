@@ -16,13 +16,19 @@ export default function ProductCard({ item, index, mode }) {
         <span className="category">{item.category || 'Thời trang'}</span>
         <h3>{item.product_name || 'Sản phẩm không tên'}</h3>
         <div className="score-row">
-          <span>{mode === 'text' ? 'Độ khớp hình ảnh' : 'Độ tương đồng'}</span>
+          <span>{mode === 'text' ? 'Độ khớp hình ảnh' : mode === 'combined' ? 'Khớp với ảnh' : 'Độ tương đồng'}</span>
           <strong>{Number(detailScore ?? finalScore).toFixed(3)}</strong>
         </div>
         {mode === 'text' && item.text_to_text_score != null && (
           <div className="score-row score-row--secondary">
             <span>Độ khớp mô tả</span>
             <strong>{Number(item.text_to_text_score).toFixed(3)}</strong>
+          </div>
+        )}
+        {mode === 'combined' && (
+          <div className="score-row score-row--secondary">
+            <span>Khớp với mô tả</span>
+            <strong>{Number(item.text_score).toFixed(3)}</strong>
           </div>
         )}
         {mode === 'image' && Number(item.category_bonus) > 0 && (

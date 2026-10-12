@@ -154,6 +154,37 @@ TEXT_EMBEDDING_BATCH_SIZE = 64
 
 TOP_K = 5
 
+# Text search can compare a text query with both catalog images and catalog
+# descriptions. This value controls that internal text-retrieval mixture.
+TEXT_RETRIEVAL_IMAGE_WEIGHT = float(
+    os.environ.get("TEXT_RETRIEVAL_IMAGE_WEIGHT", "0.50")
+)
+
+# Default balance for a query that contains both an image and text. A value of
+# 0.50 gives the two query modalities equal influence on the final ranking.
+COMBINED_IMAGE_WEIGHT = float(
+    os.environ.get("COMBINED_IMAGE_WEIGHT", "0.50")
+)
+
+# Combined search treats explicit text attributes as requested edits to the
+# reference image. These weights are applied after score calibration and keep
+# the final score in the 0..1 range.
+COMBINED_CATEGORY_WEIGHT = float(
+    os.environ.get("COMBINED_CATEGORY_WEIGHT", "0.10")
+)
+COMBINED_ATTRIBUTE_WEIGHT = float(
+    os.environ.get("COMBINED_ATTRIBUTE_WEIGHT", "0.25")
+)
+
+for setting_name, setting_value in (
+    ("TEXT_RETRIEVAL_IMAGE_WEIGHT", TEXT_RETRIEVAL_IMAGE_WEIGHT),
+    ("COMBINED_IMAGE_WEIGHT", COMBINED_IMAGE_WEIGHT),
+    ("COMBINED_CATEGORY_WEIGHT", COMBINED_CATEGORY_WEIGHT),
+    ("COMBINED_ATTRIBUTE_WEIGHT", COMBINED_ATTRIBUTE_WEIGHT),
+):
+    if not 0.0 <= setting_value <= 1.0:
+        raise ValueError(f"{setting_name} must be between 0 and 1.")
+
 
 # =========================================================
 # CATEGORY

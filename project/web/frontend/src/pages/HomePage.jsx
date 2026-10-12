@@ -5,13 +5,11 @@ import HowItWorks from '../components/home/HowItWorks'
 import Footer from '../components/layout/Footer'
 import Header from '../components/layout/Header'
 import ResultsSection from '../components/results/ResultsSection'
-import ImageSearchForm from '../components/search/ImageSearchForm'
-import SearchTabs from '../components/search/SearchTabs'
-import TextSearchForm from '../components/search/TextSearchForm'
+import CombinedSearchForm from '../components/search/CombinedSearchForm'
 import useServerStatus from '../hooks/useServerStatus'
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState('text')
+  const [searchMode, setSearchMode] = useState(null)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -19,13 +17,8 @@ export default function HomePage() {
 
   function clearSearchState() {
     setResult(null)
+    setSearchMode(null)
     setError('')
-  }
-
-  function switchTab(tab) {
-    setActiveTab(tab)
-    setLoading(false)
-    clearSearchState()
   }
 
   const searchHandlers = {
@@ -34,8 +27,9 @@ export default function HomePage() {
       setLoading(true)
       clearSearchState()
     },
-    onSearchSuccess: (data) => {
+    onSearchSuccess: (data, mode) => {
       setResult(data)
+      setSearchMode(mode)
       setLoading(false)
     },
     onSearchError: (message) => {
@@ -51,16 +45,11 @@ export default function HomePage() {
         <Hero />
 
         <section className="finder-section">
-          <SearchTabs activeTab={activeTab} onChange={switchTab} />
-          {activeTab === 'text' ? (
-            <TextSearchForm {...searchHandlers} />
-          ) : (
-            <ImageSearchForm {...searchHandlers} onClearResult={clearSearchState} />
-          )}
+          <CombinedSearchForm {...searchHandlers} onClearResult={clearSearchState} />
           <ErrorBanner message={error} />
         </section>
 
-        <ResultsSection data={result} mode={activeTab} />
+        <ResultsSection data={result} mode={searchMode} />
         {!result && !loading && <HowItWorks />}
       </main>
       <Footer />

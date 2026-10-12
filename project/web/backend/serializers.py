@@ -1,6 +1,7 @@
 import pandas as pd
 
 from .schemas.recommendation import (
+    CombinedProductRecommendation,
     ImageProductRecommendation,
     ProductRecommendation,
 )
@@ -81,6 +82,31 @@ def serialize_image_results(
                 final_score=float(
                     row["similarity"]
                 ),
+            )
+        )
+
+    return items
+
+
+def serialize_combined_results(
+    results: pd.DataFrame,
+) -> list[CombinedProductRecommendation]:
+    items = []
+
+    for _, row in results.iterrows():
+        items.append(
+            CombinedProductRecommendation(
+                product_id=str(row["product_id"]),
+                product_name=optional_string(row.get("product_name")),
+                category=optional_string(row.get("category")),
+                image_reference=optional_string(row.get("image_reference")),
+                visual_similarity=float(row["visual_similarity"]),
+                text_to_image_score=float(row["text_to_image_similarity"]),
+                text_to_text_score=optional_float(
+                    row.get("text_to_text_similarity")
+                ),
+                text_score=float(row["text_similarity"]),
+                final_score=float(row["similarity"]),
             )
         )
 

@@ -258,6 +258,10 @@ FASHION_EMBEDDINGS_DIR=./embeddings
 FASHION_CHECKPOINT_DIR=./runs/clip_finetune_3epochs/best
 CATEGORY_CONFIDENCE_THRESHOLD=0.60
 CATEGORY_TOP_PER_CLASS=3
+TEXT_RETRIEVAL_IMAGE_WEIGHT=0.50
+COMBINED_IMAGE_WEIGHT=0.50
+COMBINED_CATEGORY_WEIGHT=0.10
+COMBINED_ATTRIBUTE_WEIGHT=0.25
 ```
 
 `FASHION_CATALOG_DIR` và `FASHION_IMAGE_DIR` phải được giữ lại. Chúng lần lượt
@@ -330,7 +334,31 @@ Backend tự áp dụng category khi đủ confidence hoặc fallback sang `no_c
 Hai mode `no_category` và `hard_category` vẫn được giữ trong API để kiểm thử và
 thực hiện thí nghiệm, không dành cho thao tác thông thường trên giao diện.
 
-## 12. KIỂM THỬ
+## 12. TÌM KIẾM KẾT HỢP ẢNH VÀ MÔ TẢ
+
+Frontend sử dụng một form duy nhất và tự chọn luồng xử lý theo input: chỉ có mô
+tả thì gọi text search, chỉ có ảnh thì gọi image search, còn có đủ cả hai thì
+gọi `POST /api/recommendations/combined`. Khi dùng cả ảnh và mô tả, người dùng
+có thể chọn tỷ trọng của hai nguồn thông tin và backend tính:
+
+```text
+final_score = image_weight * visual_score
+            + (1 - image_weight) * text_score
+```
+
+`visual_score` là độ tương đồng giữa ảnh truy vấn và ảnh catalog. `text_score`
+kết hợp text-to-image với text-to-text khi đã có `text_embeddings.npy`. Hai
+nhóm score được đổi sang percentile rank trước khi fusion để tỷ trọng 50/50 có
+ý nghĩa tương đương hơn.
+
+Khi văn bản nêu category rõ ràng, hệ thống dùng category đó làm candidate pool.
+Nếu category trong ảnh và văn bản tương thích, hệ thống giữ subtype từ ảnh, ví
+dụ `Shirts` trong text và `Tshirts` trong ảnh sẽ dùng `Tshirts`. Các thuộc tính
+màu sắc và họa tiết trong text được xem là yêu cầu ghi đè. Vì vậy ảnh mũ xanh
+kết hợp `red cap` sẽ ưu tiên mũ đỏ thuộc `Caps`, còn ảnh áo trơn kết hợp
+`patterned T-shirt` sẽ ưu tiên áo có printed/graphic/striped metadata.
+
+## 13. KIỂM THỬ
 
 ```powershell
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
@@ -345,7 +373,7 @@ npm run build
 Set-Location ../..
 ```
 
-## 13. LỖI THƯỜNG GẶP
+## 14. LỖI THƯỜNG GẶP
 
 - `unrecognized arguments`: đang chạy source cũ hoặc chạy nhầm bản project.
 - Dataset changed: `products.csv` không còn khớp với metadata của run cũ.

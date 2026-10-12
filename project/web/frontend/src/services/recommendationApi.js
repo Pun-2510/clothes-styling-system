@@ -61,6 +61,25 @@ export async function searchByImage({ file, topK }) {
   }
 }
 
+export async function searchByCombined({ file, query, language, topK, imageWeight }) {
+  const payload = new FormData()
+  payload.append('file', file)
+  payload.append('query', query.trim())
+  payload.append('language', language)
+  payload.append('top_k', String(topK))
+  payload.append('image_weight', String(imageWeight))
+
+  try {
+    const response = await fetch(`${API_BASE}/api/recommendations/combined`, {
+      method: 'POST',
+      body: payload,
+    })
+    return await readResponse(response)
+  } catch (error) {
+    throw new Error(getErrorMessage(error), { cause: error })
+  }
+}
+
 export function getCatalogImageUrl(reference) {
   return reference ? `${API_BASE}/catalog-images/${encodeURIComponent(reference)}` : ''
 }

@@ -177,6 +177,18 @@
 
 .image-actions { display: grid; grid-template-columns: 150px 1fr; align-items: end; gap: 18px; }
 
+.combined-inputs {
+  display: grid;
+  grid-template-columns: minmax(260px, .85fr) minmax(320px, 1.15fr);
+  gap: 18px;
+}
+.combined-inputs .dropzone { min-height: 220px; }
+.combined-inputs .dropzone-action { min-height: 218px; }
+.combined-inputs .dropzone.has-preview { height: 250px; }
+.combined-text { display: flex; flex-direction: column; }
+.combined-text .query-box, .combined-text textarea { height: 100%; }
+.combined-text textarea { min-height: 220px; }
+
 .error-banner {
   display: flex;
   gap: 12px;
@@ -196,6 +208,7 @@
   .form-controls { grid-template-columns: 1fr 1fr; gap: 20px 12px; }
   .range-control { grid-column: 1 / -1; }
   .image-actions { grid-template-columns: 1fr; }
+  .combined-inputs { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 460px) {

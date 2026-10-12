@@ -4,7 +4,7 @@ export default function ResultsSection({ data, mode }) {
   if (!data) return null
 
   const items = data.items || []
-  const elapsed = mode === 'text' ? data.elapsed_seconds : data.processing_times?.total
+  const elapsed = mode === 'image' ? data.processing_times?.total : data.elapsed_seconds
 
   return (
     <section className="results" aria-live="polite">
@@ -16,6 +16,14 @@ export default function ResultsSection({ data, mode }) {
         <div className="result-meta">
           {mode === 'text' && data.query_used !== data.query && data.query_used && (
             <span>Truy vấn: “{data.query_used}”</span>
+          )}
+          {mode === 'combined' && (
+            <span>
+              Ảnh {Math.round((data.image_weight || 0) * 100)}% · mô tả {Math.round((data.text_weight || 0) * 100)}%
+            </span>
+          )}
+          {mode === 'combined' && data.query_used !== data.query && data.query_used && (
+            <span>Truy vấn đã dịch: “{data.query_used}”</span>
           )}
           {mode === 'image' && data.category_mode === 'soft_category' && data.predicted_category && (
             <span>Ưu tiên {data.predicted_category} · {Math.round((data.category_confidence || 0) * 100)}% tin cậy</span>
