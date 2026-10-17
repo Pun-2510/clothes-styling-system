@@ -21,24 +21,24 @@ class ComposeLoadBalancingTests(unittest.TestCase):
                                 capture_output=True, text=True, check=True, timeout=30)
         return json.loads(result.stdout)["services"]
 
-    def test_only_gateway_publishes_api_and_frontend_uses_gateway(self):
+    def test_only_nginx_publishes_api_and_frontend_uses_nginx(self):
         services = self.configuration()
         self.assertEqual(
-            set(services), {"frontend", "api-gateway", "backend", "backend_2"}
+            set(services), {"frontend", "nginx", "backend", "backend_2"}
         )
         self.assertFalse(services["backend"].get("ports"))
         self.assertFalse(services["backend_2"].get("ports"))
         self.assertEqual(
-            str(services["api-gateway"]["ports"][0]["published"]), "8000"
+            str(services["nginx"]["ports"][0]["published"]), "8000"
         )
-        self.assertEqual(services["api-gateway"]["ports"][0]["target"], 80)
+        self.assertEqual(services["nginx"]["ports"][0]["target"], 80)
         self.assertEqual(
             services["frontend"]["environment"]["VITE_API_PROXY_TARGET"],
-            "http://api-gateway:80",
+            "http://nginx:80",
         )
         for name in ("backend", "backend_2"):
             self.assertEqual(
-                services["api-gateway"]["depends_on"][name]["condition"],
+                services["nginx"]["depends_on"][name]["condition"],
                 "service_started",
             )
 
@@ -63,16 +63,16 @@ class ComposeLoadBalancingTests(unittest.TestCase):
             ("backend_2", "/app/web/backend", "web/backend"),
             ("frontend", "/app", "web/frontend"),
             (
-                "api-gateway",
+                "nginx",
                 "/etc/nginx/conf.d",
-                "web/api-gateway",
+                "web/nginx",
             ),
         ):
             mount = next(m for m in services[name]["volumes"] if m["target"] == target)
             self.assertEqual(Path(mount["source"]), ROOT / relative)
             self.assertTrue(Path(mount["source"]).exists())
         dockerfile = (ROOT / "web/backend/Dockerfile").read_text(encoding="utf-8")
-        self.assertTrue((ROOT / "web/api-gateway/nginx.conf").is_file())
+        self.assertTrue((ROOT / "web/nginx/nginx.conf").is_file())
         self.assertIn('"web.backend.main:app"', dockerfile)
         for line in dockerfile.splitlines():
             if line.startswith("COPY "):
@@ -84,7 +84,7 @@ class ComposeLoadBalancingTests(unittest.TestCase):
                      "FASHION_EMBEDDINGS_DIR": (ROOT / "example experiment" / "embeddings").as_posix(),
                      "FASHION_CHECKPOINT_DIR": (ROOT / "example experiment" / "best").as_posix()}
         services = self.configuration(variables)
-        targets = dict(zip(("/app/data/processed", "/app/data/data", "/app/embeddings_finetuned",
+        targets = dict(zip(("/app/data/processed", "/app/data/data", "/app/embeddings",
                             "/app/runs/clip_finetune_3epochs_local/best"), variables.values()))
         for name in ("backend", "backend_2"):
             mounts = {m["target"]: m for m in services[name]["volumes"]}
@@ -93,9 +93,9 @@ class ComposeLoadBalancingTests(unittest.TestCase):
                 self.assertTrue(mounts[target]["read_only"])
 
 
-class ApiGatewayConfigurationContractTests(unittest.TestCase):
+class NginxConfigurationContractTests(unittest.TestCase):
     def test_dns_balancing_and_bounded_retry_contract(self):
-        config = (ROOT / "web" / "api-gateway" / "nginx.conf").read_text(
+        config = (ROOT / "web" / "nginx" / "nginx.conf").read_text(
             encoding="utf-8"
         )
         for directive in ("resolver 127.0.0.11", "zone fashion_backends 64k;", "least_conn;",
@@ -109,6 +109,25 @@ class ApiGatewayConfigurationContractTests(unittest.TestCase):
         for route in ("image", "text"):
             block = config.split(f"location = /api/recommendations/{route} {{", 1)[1].split("}", 1)[0]
             self.assertIn("non_idempotent", block)
+
+    def test_api_rate_limiting_contract(self):
+        config = (ROOT / "web" / "nginx" / "nginx.conf").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn(
+            "limit_req_zone $binary_remote_addr zone=fashion_api_per_ip:10m rate=5r/s;",
+            config,
+        )
+        self.assertIn("limit_req_status 429;", config)
+        self.assertIn("error_page 429 = @rate_limited;", config)
+        self.assertIn("add_header Retry-After 1 always;", config)
+        self.assertIn("RATE_LIMIT_EXCEEDED", config)
+        self.assertEqual(
+            config.count("limit_req zone=fashion_api_per_ip burst=10 nodelay;"),
+            4,
+        )
+        health_block = config.split("location = /lb-health {", 1)[1].split("}", 1)[0]
+        self.assertNotIn("limit_req ", health_block)
 
 
 if __name__ == "__main__":

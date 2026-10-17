@@ -18,9 +18,9 @@ services:
     ports:
       - 5173:5173
     environment:
-      VITE_API_PROXY_TARGET: http://api-gateway:80
+      VITE_API_PROXY_TARGET: http://nginx:80
     depends_on:
-      api-gateway:
+      nginx:
         condition: service_healthy
     restart: unless-stopped
     networks:
@@ -95,18 +95,18 @@ services:
       <<: *backend-environment
       RECOMMENDATION_LOG_NAME: recommendation-backend_2.log
 
-  api-gateway:
+  nginx:
     # Dynamic upstream DNS requires Nginx >= 1.27.3.
     image: nginx:stable-alpine
     ports:
       - "8000:80"
     volumes:
       - type: bind
-        source: ./web/api-gateway
+        source: ./web/nginx
         target: /etc/nginx/conf.d
         read_only: true
     depends_on:
-      # One model failing to initialize must not block the entire gateway.
+      # One model failing to initialize must not block the Nginx entry point.
       backend:
         condition: service_started
       backend_2:

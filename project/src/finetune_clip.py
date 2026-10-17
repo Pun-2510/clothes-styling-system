@@ -274,11 +274,11 @@ def main():
     training["status"] = "complete"
     training["checkpoint_identity"] = model_identity(run_dir / "best")
     training_path.write_text(json.dumps(training, indent=2), encoding="utf-8")
-    comparison_dir = Path("comparisons") / "results" / f"{run_dir.name}_comparison"
     print(
         f"Checkpoint: {run_dir / 'best'}\n"
-        f"Compare: python -m comparisons.compare_clip --run-dir {run_dir} "
-        f"--output-dir {comparison_dir}"
+        "Unified comparisons are run from the repository root with "
+        "experiments.model_comparison.compare_full_gallery; see "
+        "experiments/model_comparison/README.md."
     )
 
 

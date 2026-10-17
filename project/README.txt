@@ -22,7 +22,7 @@ Cấu hình .env
 docker compose up -d --build
 ```
 
-Website không lấy dữ liệu từ `comparisons/results/`. Website sử dụng trực tiếp:
+Website không lấy dữ liệu từ kết quả thí nghiệm. Website sử dụng trực tiếp:
 
 ```text
 data/processed/products.csv
@@ -198,23 +198,31 @@ runs/clip_finetune_3epochs/
 Nếu GPU thiếu bộ nhớ, giảm `--batch-size` xuống `8`, `4` hoặc `2`. Khi không có
 CUDA, chương trình tự sử dụng CPU nhưng thời gian huấn luyện sẽ lâu hơn.
 
-## 7. SO SÁNH PRETRAINED VÀ FINE-TUNED CLIP
+## 7. SO SÁNH MODEL (TÙY CHỌN)
 
-Đây là bước đánh giá tùy chọn, không phải dữ liệu đầu vào của website:
+Đây là bước đánh giá phục vụ báo cáo, không phải dữ liệu đầu vào của
+website. Pipeline so sánh thống nhất nằm ngoài `project/`, do đó hãy chạy lệnh sau
+từ thư mục gốc của repository:
 
 ```powershell
-.\.venv\Scripts\python.exe -m comparisons.compare_clip `
-  --run-dir runs/clip_finetune_3epochs `
-  --output-dir comparisons/results/clip_5000 `
-  --ks 1 5 10
+Set-Location ..
+.\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_full_gallery `
+  --run-dir .\project\runs\clip_finetune_3epochs `
+  --catalog-csv .\project\data\processed\products.csv `
+  --expected-gallery-size 5000 `
+  --resnet-source project-trained `
+  --device cpu `
+  --batch-size 16 `
+  --ks 1 5 10 `
+  --clip-image-weight 0.5 `
+  --clip-text-image-weight 0.5 `
+  --output-dir .\experiments\model_comparison\results\full_gallery_5000_v3
+Set-Location .\project
 ```
 
-Kết quả được lưu trong `comparisons/results/clip_5000/`, gồm báo cáo tổng thể và
-báo cáo theo category. Hai model được đánh giá trên cùng test split, query,
-gallery và giá trị K.
-
-Pipeline comparison độc lập theo số lượng sản phẩm được mô tả tại
-`comparisons/README.md`.
+Kết quả được lưu trong `experiments/model_comparison/results/`. Pipeline dùng cùng
+catalog 5.000 sản phẩm, test query, giá trị K và checkpoint cho các nhóm so sánh.
+Xem chi tiết tại `experiments/model_comparison/README.md` ở cấp repository.
 
 ## 8. SINH EMBEDDINGS CHO WEBSITE
 
@@ -290,7 +298,7 @@ Các thành phần được chạy:
 
 ```text
 web/frontend       ReactJS
-web/api-gateway    Nginx/API Gateway
+web/nginx          Nginx reverse proxy/load balancer
 backend            FastAPI instance 1
 backend_2          FastAPI instance 2
 ```
@@ -299,7 +307,7 @@ backend_2          FastAPI instance 2
 
 ```text
 Frontend:    http://localhost:5173
-API Gateway: http://localhost:8000
+API qua Nginx: http://localhost:8000
 Swagger:     http://localhost:8000/docs
 ```
 
@@ -307,7 +315,7 @@ Kiểm tra trạng thái và log:
 
 ```powershell
 docker compose ps
-docker compose logs -f api-gateway backend backend_2
+docker compose logs -f nginx backend backend_2
 Invoke-RestMethod http://localhost:8000/api/health
 Invoke-RestMethod http://localhost:8000/api/health/ready
 ```

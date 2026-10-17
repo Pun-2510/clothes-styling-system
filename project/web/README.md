@@ -1,6 +1,6 @@
-# Website: React + FastAPI + API Gateway (Nginx)
+# Website: React + FastAPI + Nginx Reverse Proxy/Load Balancer
 
-`web/backend/`, `web/frontend/`, `web/api-gateway/` chứa code phục vụ website.
+`web/backend/`, `web/frontend/`, `web/nginx/` chứa code phục vụ website.
 Logic ML dùng chung vẫn ở `src/`. Dữ liệu, embeddings, checkpoint và log vẫn
 nằm ở thư mục gốc `project/`, không chuyển vào web hoặc kết quả thí nghiệm.
 
@@ -14,7 +14,7 @@ docker-compose up -d --build
 
 Lệnh tương đương: `docker compose up -d --build`.
 Web: http://localhost:5173 — API/Swagger: http://localhost:8000/docs.
-Compose tự đọc `.env`, khởi động frontend, API Gateway và hai backend. Không tự
+Compose tự đọc `.env`, khởi động frontend, Nginx và hai backend. Không tự
 tiền xử lý, training, sinh embedding hoặc compare khi khởi động Docker.
 
 ## Artifact riêng cho web
@@ -52,7 +52,8 @@ sau tiền xử lý và trước sinh embeddings. Sau đó dùng đúng checkpoi
 embeddings và cập nhật `FASHION_CHECKPOINT_DIR` trong `.env`. Catalog, embeddings
 và checkpoint phải khớp provenance; không sửa hash để bỏ qua kiểm tra.
 
-`comparisons/` chỉ dùng khi cần số liệu đánh giá. Website không yêu cầu chạy nó.
+Các thí nghiệm so sánh nằm tại `experiments/model_comparison/` ở cấp repository
+và không phải đầu vào của website.
 
 ## Chạy API hoặc frontend riêng ngoài Docker
 
@@ -70,20 +71,20 @@ npm ci
 npm run dev
 ```
 
-Vite mặc định proxy tới localhost:8000; trong Compose proxy tới API Gateway.
+Vite mặc định proxy tới localhost:8000; trong Compose proxy tới Nginx.
 `.env` dành cho Compose không tự cấu hình lệnh Python chạy trực tiếp; Python dùng
 `src/config.py` và các biến `CLIP_MODEL_PATH`, `CLIP_EMBEDDING_DIR` nếu được đặt.
 
 ## Tài liệu và kiểm tra
 
-- [API Gateway (Nginx), phân phối request và thử dự phòng](api-gateway/README.md)
+- [Nginx reverse proxy, load balancing và rate limiting](nginx/README.md)
 - [Workflow và toàn bộ câu lệnh](../README.txt)
-- [Thí nghiệm độc lập](../comparisons/README.md)
+- [Thí nghiệm độc lập](../../experiments/model_comparison/README.md)
 
 ```powershell
 docker compose config --quiet
-docker compose exec api-gateway nginx -t
-docker compose logs -f api-gateway backend backend_2
+docker compose exec nginx nginx -t
+docker compose logs -f nginx backend backend_2
 ```
 
 Hai backend nạp model vào RAM riêng; tên service và đường API không đổi khi
