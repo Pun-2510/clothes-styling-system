@@ -39,7 +39,7 @@ The specific objectives are as follows:
 4. Support image-based retrieval with an automatic category policy: use a soft category preference when the prediction is sufficiently confident and otherwise fall back to unrestricted similarity ranking.
 5. Support text-based retrieval using similarity to catalog image embeddings and, when available, catalog text embeddings. Vietnamese queries are supported through a translation step before encoding.
 6. Compare the baseline approaches with CLIP under matched evaluation conditions where applicable, and compare pretrained and fine-tuned CLIP using Precision@K, Recall@K, and F1@K for K values of 1, 5, and 10. Report classification results separately from retrieval results.
-7. Provide a React web interface, an API gateway, and two FastAPI backend instances, supported by Docker Compose deployment and instructions for preparing or loading the required artifacts.
+7. Provide a React web interface, an Nginx reverse proxy and load balancer, and two FastAPI backend instances, supported by Docker Compose deployment and instructions for preparing or loading the required artifacts.
 
 The experiments address two questions: how CLIP compares with separate text and image approaches on compatible product search tasks, and whether fine-tuning improves CLIP retrieval on the selected fashion dataset. Chapter 5 will organize the numerical results by task and model configuration. The web application demonstrates how the selected model can be used for product search.
 

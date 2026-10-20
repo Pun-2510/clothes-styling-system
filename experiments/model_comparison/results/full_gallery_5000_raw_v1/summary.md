@@ -62,15 +62,9 @@ All tables use the same query rows, catalog rows, K values and model checkpoints
 | clip_finetuned_text_serving_raw | text serving | text | `w_t*S_TI + (1-w_t)*S_TT` | 1 | 0.8266 | 0.0229 | 0.0409 |
 | clip_finetuned_text_serving_raw | text serving | text | `w_t*S_TI + (1-w_t)*S_TT` | 5 | 0.7319 | 0.0833 | 0.1198 |
 | clip_finetuned_text_serving_raw | text serving | text | `w_t*S_TI + (1-w_t)*S_TT` | 10 | 0.6882 | 0.1368 | 0.1719 |
-| clip_finetuned_text_serving_percentile | text fusion ablation | text | `w_t*P(S_TI) + (1-w_t)*P(S_TT)` | 1 | 0.7801 | 0.0183 | 0.0335 |
-| clip_finetuned_text_serving_percentile | text fusion ablation | text | `w_t*P(S_TI) + (1-w_t)*P(S_TT)` | 5 | 0.7137 | 0.0766 | 0.1121 |
-| clip_finetuned_text_serving_percentile | text fusion ablation | text | `w_t*P(S_TI) + (1-w_t)*P(S_TT)` | 10 | 0.6732 | 0.1276 | 0.1637 |
-| clip_finetuned_multimodal_raw | multimodal fusion ablation | image + text | `w_i*S_II + (1-w_i)*(w_t*S_TI + (1-w_t)*S_TT)` | 1 | 0.8520 | 0.0248 | 0.0437 |
-| clip_finetuned_multimodal_raw | multimodal fusion ablation | image + text | `w_i*S_II + (1-w_i)*(w_t*S_TI + (1-w_t)*S_TT)` | 5 | 0.7459 | 0.0915 | 0.1282 |
-| clip_finetuned_multimodal_raw | multimodal fusion ablation | image + text | `w_i*S_II + (1-w_i)*(w_t*S_TI + (1-w_t)*S_TT)` | 10 | 0.7112 | 0.1506 | 0.1860 |
-| clip_finetuned_multimodal_percentile | multimodal serving | image + text | `w_i*P(S_II) + (1-w_i)*(w_t*P(S_TI) + (1-w_t)*P(S_TT))` | 1 | 0.8118 | 0.0213 | 0.0379 |
-| clip_finetuned_multimodal_percentile | multimodal serving | image + text | `w_i*P(S_II) + (1-w_i)*(w_t*P(S_TI) + (1-w_t)*P(S_TT))` | 5 | 0.7370 | 0.0888 | 0.1244 |
-| clip_finetuned_multimodal_percentile | multimodal serving | image + text | `w_i*P(S_II) + (1-w_i)*(w_t*P(S_TI) + (1-w_t)*P(S_TT))` | 10 | 0.7004 | 0.1439 | 0.1791 |
+| clip_finetuned_multimodal_raw | multimodal serving | image + text | `w_i*S_II + (1-w_i)*(w_t*S_TI + (1-w_t)*S_TT)` | 1 | 0.8520 | 0.0248 | 0.0437 |
+| clip_finetuned_multimodal_raw | multimodal serving | image + text | `w_i*S_II + (1-w_i)*(w_t*S_TI + (1-w_t)*S_TT)` | 5 | 0.7459 | 0.0915 | 0.1282 |
+| clip_finetuned_multimodal_raw | multimodal serving | image + text | `w_i*S_II + (1-w_i)*(w_t*S_TI + (1-w_t)*S_TT)` | 10 | 0.7112 | 0.1506 | 0.1860 |
 
 ## Interpretation boundary
 

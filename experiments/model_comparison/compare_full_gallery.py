@@ -260,11 +260,11 @@ def self_test():
     assert metrics["evaluated_queries"] == 1
     assert metrics["skipped_queries"] == 1
     fused = clip_query_gallery_score_fusion(
-        queries, queries, gallery, gallery, query_ids, gallery_ids, percentile=True
+        queries, queries, gallery, gallery, query_ids, gallery_ids
     )
     assert len(fused) == len(query_ids)
     text_fused = clip_text_query_gallery_score_fusion(
-        queries, gallery, gallery, query_ids, gallery_ids, percentile=True
+        queries, gallery, gallery, query_ids, gallery_ids
     )
     assert len(text_fused) == len(query_ids)
     paired_rankings = rank_queries_by_cosine(
@@ -482,29 +482,12 @@ def main():
             query_ids,
             gallery_ids,
             args.clip_text_image_weight,
-            False,
-        )
-    )
-    serving_rankings["clip_finetuned_text_serving_percentile"] = (
-        clip_text_query_gallery_score_fusion(
-            query_rows(clip_finetuned_text),
-            clip_finetuned_images,
-            clip_finetuned_text,
-            query_ids,
-            gallery_ids,
-            args.clip_text_image_weight,
-            True,
         )
     )
     serving_rankings["clip_finetuned_multimodal_raw"] = clip_query_gallery_score_fusion(
         query_rows(clip_finetuned_images), query_rows(clip_finetuned_text),
         clip_finetuned_images, clip_finetuned_text, query_ids, gallery_ids,
-        args.clip_image_weight, args.clip_text_image_weight, False,
-    )
-    serving_rankings["clip_finetuned_multimodal_percentile"] = clip_query_gallery_score_fusion(
-        query_rows(clip_finetuned_images), query_rows(clip_finetuned_text),
-        clip_finetuned_images, clip_finetuned_text, query_ids, gallery_ids,
-        args.clip_image_weight, args.clip_text_image_weight, True,
+        args.clip_image_weight, args.clip_text_image_weight,
     )
 
     alignment_rankings = {
@@ -586,20 +569,10 @@ def main():
             "deployed": True, "input": "text",
             "formula": "w_t*S_TI + (1-w_t)*S_TT",
         },
-        "clip_finetuned_text_serving_percentile": {
-            "comparison_group": "serving_ablation", "role": "text fusion ablation",
-            "deployed": False, "input": "text",
-            "formula": "w_t*P(S_TI) + (1-w_t)*P(S_TT)",
-        },
         "clip_finetuned_multimodal_raw": {
-            "comparison_group": "serving_ablation", "role": "multimodal fusion ablation",
-            "deployed": False, "input": "image + text",
-            "formula": "w_i*S_II + (1-w_i)*(w_t*S_TI + (1-w_t)*S_TT)",
-        },
-        "clip_finetuned_multimodal_percentile": {
             "comparison_group": "serving_ablation", "role": "multimodal serving",
             "deployed": True, "input": "image + text",
-            "formula": "w_i*P(S_II) + (1-w_i)*(w_t*P(S_TI) + (1-w_t)*P(S_TT))",
+            "formula": "w_i*S_II + (1-w_i)*(w_t*S_TI + (1-w_t)*S_TT)",
         },
     }
     alignment_specs = {

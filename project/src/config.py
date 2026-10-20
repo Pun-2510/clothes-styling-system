@@ -167,8 +167,7 @@ COMBINED_IMAGE_WEIGHT = float(
 )
 
 # Combined search treats explicit text attributes as requested edits to the
-# reference image. These weights are applied after score calibration and keep
-# the final score in the 0..1 range.
+# reference image. These weights are applied after raw cosine fusion.
 COMBINED_CATEGORY_WEIGHT = float(
     os.environ.get("COMBINED_CATEGORY_WEIGHT", "0.10")
 )
@@ -199,15 +198,21 @@ CATEGORY_TOP_PER_CLASS = int(
 if CATEGORY_TOP_PER_CLASS < 1:
     raise ValueError("CATEGORY_TOP_PER_CLASS must be at least 1.")
 
-# Soft category is only applied when the weighted-neighbor vote is
-# sufficiently decisive. Otherwise image retrieval ignores category.
+# Confidence at or below this floor has no influence on ranking. Between the
+# floor and the full threshold, category influence increases linearly.
+CATEGORY_CONFIDENCE_FLOOR = float(
+    os.environ.get("CATEGORY_CONFIDENCE_FLOOR", "0.50")
+)
+
+# Confidence at or above this threshold receives the full configured bonus.
 CATEGORY_CONFIDENCE_THRESHOLD = float(
     os.environ.get("CATEGORY_CONFIDENCE_THRESHOLD", "0.60")
 )
 
-if not 0.0 <= CATEGORY_CONFIDENCE_THRESHOLD <= 1.0:
+if not 0.0 <= CATEGORY_CONFIDENCE_FLOOR < CATEGORY_CONFIDENCE_THRESHOLD <= 1.0:
     raise ValueError(
-        "CATEGORY_CONFIDENCE_THRESHOLD must be between 0 and 1."
+        "Category thresholds must satisfy 0 <= CATEGORY_CONFIDENCE_FLOOR "
+        "< CATEGORY_CONFIDENCE_THRESHOLD <= 1."
     )
 
 
@@ -219,7 +224,12 @@ if not 0.0 <= CATEGORY_CONFIDENCE_THRESHOLD <= 1.0:
 # Nó chỉ cộng thêm điểm nếu category
 # của sản phẩm trùng với category dự đoán.
 
-CATEGORY_BONUS = 0.05
+CATEGORY_BONUS = float(
+    os.environ.get("CATEGORY_BONUS", "0.05")
+)
+
+if CATEGORY_BONUS < 0.0:
+    raise ValueError("CATEGORY_BONUS cannot be negative.")
 
 # Brand chỉ là soft constraint
 # BRAND_BONUS = 0.05

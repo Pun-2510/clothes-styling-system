@@ -3,7 +3,7 @@
 The benchmark uses the exact held-out test split saved by CLIP fine-tuning.
 SBERT and both CLIP text encoders receive product names/descriptions without
 the category label. Image baselines use ResNet18 and fine-tuned CLIP. Combined
-baselines include SBERT + ResNet18 RRF and two score-fusion variants using the
+baselines include SBERT + ResNet18 RRF and weighted raw-cosine fusion using the
 same fine-tuned CLIP checkpoint as the web application.
 """
 
@@ -212,7 +212,7 @@ def _summary(rows, products, settings):
         "This table measures same-category retrieval, which is a proxy for relevance rather than human judgement of visual style.",
         "The combined system uses rank fusion because SBERT and ResNet18 embeddings are not in a shared vector space.",
         f"RRF uses k = {settings['rrf_k']}.",
-        "CLIP raw fusion combines cosine similarities directly; CLIP percentile fusion first aligns each query's score scales.",
+        "CLIP fusion combines cosine similarities directly using the configured weights.",
         f"CLIP fusion uses image weight {settings['clip_image_weight']:.2f} and text-to-image weight {settings['clip_text_image_weight']:.2f}.",
         "These CLIP fusion rows do not apply category filtering or attribute overrides; those require a separate system-level ablation.",
         "The project-trained ResNet18 checkpoint was trained on six categories, so its result must not be presented as a 142-category classifier score.",
@@ -236,9 +236,8 @@ def self_test():
     assert all(np.array_equal(left, right) for left, right in zip(fused, rankings))
     clip_images = np.eye(4, dtype=np.float32)
     clip_texts = np.eye(4, dtype=np.float32)
-    raw = clip_score_fusion(clip_images, clip_texts, ids, percentile=False)
-    percentile = clip_score_fusion(clip_images, clip_texts, ids, percentile=True)
-    assert len(raw) == len(percentile) == len(ids)
+    raw = clip_score_fusion(clip_images, clip_texts, ids)
+    assert len(raw) == len(ids)
     assert all(index not in ranking for index, ranking in enumerate(raw))
     sample = pd.Series({"product_name": "Red dress", "description": "Short cotton dress", "category": "Dresses"})
     assert "Dresses" not in build_evaluation_text(sample)
@@ -418,15 +417,6 @@ def main():
         ids,
         image_weight=args.clip_image_weight,
         text_image_weight=args.clip_text_image_weight,
-        percentile=False,
-    )
-    clip_percentile_fusion_rankings = clip_score_fusion(
-        clip_finetuned_images,
-        clip_finetuned_text,
-        ids,
-        image_weight=args.clip_image_weight,
-        text_image_weight=args.clip_text_image_weight,
-        percentile=True,
     )
     systems = {
         "sbert_text_only": ("text", text_rankings),
@@ -436,7 +426,6 @@ def main():
         "sbert_resnet18_rrf": ("image + text", combined_rankings),
         "clip_finetuned_image_only": ("image", clip_finetuned_image_rankings),
         "clip_finetuned_raw_cosine_fusion": ("image + text", clip_raw_fusion_rankings),
-        "clip_finetuned_percentile_fusion": ("image + text", clip_percentile_fusion_rankings),
     }
     metrics = {
         name: evaluate_category_rankings(rankings, ids, categories, ks)

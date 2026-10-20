@@ -264,7 +264,9 @@ FASHION_CATALOG_DIR=./data/processed
 FASHION_IMAGE_DIR=./data/data
 FASHION_EMBEDDINGS_DIR=./embeddings
 FASHION_CHECKPOINT_DIR=./runs/clip_finetune_3epochs/best
+CATEGORY_CONFIDENCE_FLOOR=0.50
 CATEGORY_CONFIDENCE_THRESHOLD=0.60
+CATEGORY_BONUS=0.05
 CATEGORY_TOP_PER_CLASS=3
 TEXT_RETRIEVAL_IMAGE_WEIGHT=0.50
 COMBINED_IMAGE_WEIGHT=0.50
@@ -332,13 +334,15 @@ Không dùng `docker compose down -v` nếu muốn giữ cache model Hugging Fac
 
 Backend hỗ trợ:
 
-- `soft_category`: confidence cao thì cộng category bonus; confidence thấp tự
-  fallback về `no_category`.
+- `soft_category`: category bonus tăng dần theo confidence. Confidence bằng hoặc
+  thấp hơn floor thì fallback về `no_category`; confidence từ floor đến
+  threshold nhận bonus từ 0% đến 100%.
 - `no_category`: chỉ dùng độ tương đồng CLIP.
 - `hard_category`: giới hạn ứng viên theo category, chủ yếu dành cho thử nghiệm.
 
 Frontend không hiển thị nút chọn category mode và luôn gửi `soft_category`.
-Backend tự áp dụng category khi đủ confidence hoặc fallback sang `no_category`.
+Backend tự tính category strength từ confidence, không còn chỉ bật/tắt
+category tại một ngưỡng duy nhất.
 Hai mode `no_category` và `hard_category` vẫn được giữ trong API để kiểm thử và
 thực hiện thí nghiệm, không dành cho thao tác thông thường trên giao diện.
 
@@ -354,10 +358,10 @@ final_score = image_weight * visual_score
             + (1 - image_weight) * text_score
 ```
 
-`visual_score` là độ tương đồng giữa ảnh truy vấn và ảnh catalog. `text_score`
-kết hợp text-to-image với text-to-text khi đã có `text_embeddings.npy`. Hai
-nhóm score được đổi sang percentile rank trước khi fusion để tỷ trọng 50/50 có
-ý nghĩa tương đương hơn.
+`visual_score` là cosine similarity giữa ảnh truy vấn và ảnh catalog.
+`text_score` kết hợp cosine similarity text-to-image với text-to-text khi đã
+có `text_embeddings.npy`. Website kết hợp trực tiếp các raw cosine score sau
+khi nhân trọng số.
 
 Khi văn bản nêu category rõ ràng, hệ thống dùng category đó làm candidate pool.
 Nếu category trong ảnh và văn bản tương thích, hệ thống giữ subtype từ ảnh, ví

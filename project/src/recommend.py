@@ -1,5 +1,4 @@
 from pathlib import Path
-import re
 import sys
 import time
 import uuid
@@ -36,6 +35,7 @@ from src.config import (
     TEXT_EMBEDDINGS_FILE,
     TOP_K,
     CATEGORY_TOP_PER_CLASS,
+    CATEGORY_CONFIDENCE_FLOOR,
     CATEGORY_CONFIDENCE_THRESHOLD,
     CATEGORY_BONUS,
     TEXT_RETRIEVAL_IMAGE_WEIGHT,
@@ -45,6 +45,21 @@ from src.config import (
 )
 
 from src.clip_runtime import model_identity, validate_embedding_metadata
+
+from src.category_ranking import (
+    apply_confidence_weighted_category_bonus,
+    category_confidence_strength,
+    rank_category_candidates,
+)
+
+from src.query_signals import (
+    ATTRIBUTE_RULES,
+    categories_are_related,
+    category_aliases,
+    extract_query_attributes,
+    infer_category_from_text,
+    normalize_words,
+)
 
 from src.similarity import (
     cosine_similarity,
@@ -57,55 +72,6 @@ from src.logger import (
     log_error,
     log_exception,
 )
-
-
-ATTRIBUTE_RULES = (
-    ("black", (r"\bblack\b",), (r"\bblack\b",)),
-    ("white", (r"\bwhite\b",), (r"\bwhite\b",)),
-    ("red", (r"\bred\b",), (r"\bred\b",)),
-    ("blue", (r"\bblue\b",), (r"\bblue\b",)),
-    ("green", (r"\bgreen\b",), (r"\bgreen\b",)),
-    ("yellow", (r"\byellow\b",), (r"\byellow\b",)),
-    ("pink", (r"\bpink\b",), (r"\bpink\b",)),
-    ("orange", (r"\borange\b",), (r"\borange\b",)),
-    ("purple", (r"\bpurple\b",), (r"\bpurple\b",)),
-    ("brown", (r"\bbrown\b",), (r"\bbrown\b",)),
-    ("grey", (r"\b(?:grey|gray)\b",), (r"\b(?:grey|gray)\b",)),
-    ("navy", (r"\bnavy\b",), (r"\bnavy\b",)),
-    ("maroon", (r"\bmaroon\b",), (r"\bmaroon\b",)),
-    ("beige", (r"\bbeige\b",), (r"\bbeige\b",)),
-    ("gold", (r"\b(?:gold|golden)\b",), (r"\b(?:gold|golden)\b",)),
-    ("silver", (r"\bsilver\b",), (r"\bsilver\b",)),
-    (
-        "patterned",
-        (r"\b(?:patterned|printed|graphic|motif)\b",),
-        (r"\b(?:patterned|printed|graphic|pattern|striped|check|checked|plaid|floral|polka)\b",),
-    ),
-    ("striped", (r"\b(?:stripe|striped|stripes)\b",), (r"\b(?:stripe|striped|stripes)\b",)),
-    ("checked", (r"\b(?:check|checked|checkered|plaid)\b",), (r"\b(?:check|checked|checkered|plaid)\b",)),
-    ("floral", (r"\b(?:floral|flower|flowers)\b",), (r"\b(?:floral|flower|flowers)\b",)),
-)
-
-
-def rank_normalize_scores(scores):
-    """Convert one query's scores to tie-aware percentile ranks in 0..1."""
-    values = np.asarray(scores, dtype=np.float32)
-    if values.ndim != 1 or len(values) == 0:
-        raise ValueError("scores must be a non-empty one-dimensional array")
-    if len(values) == 1:
-        return np.ones(1, dtype=np.float32)
-    ranks = pd.Series(values).rank(method="average").to_numpy(dtype=np.float32)
-    return (ranks - 1.0) / float(len(values) - 1)
-
-
-def extract_query_attributes(text):
-    """Return explicit fashion attributes that should override the image."""
-    query = str(text).lower()
-    return [
-        name
-        for name, query_patterns, _ in ATTRIBUTE_RULES
-        if any(re.search(pattern, query) for pattern in query_patterns)
-    ]
 
 
 # =========================================================
@@ -415,52 +381,20 @@ class FashionRecommender:
 
     @staticmethod
     def _normalize_words(value):
-        return re.sub(r"[^a-z0-9]+", " ", str(value).lower()).strip()
+        return normalize_words(value)
 
     @classmethod
     def _category_aliases(cls, category):
-        normalized = cls._normalize_words(category)
-        aliases = {normalized}
-        words = normalized.split()
-
-        if words:
-            last = words[-1]
-            if last.endswith("ies") and len(last) > 3:
-                singular = last[:-3] + "y"
-            elif last.endswith("ses") and len(last) > 3:
-                singular = last[:-2]
-            elif last.endswith("s") and len(last) > 2:
-                singular = last[:-1]
-            else:
-                singular = last
-            aliases.add(" ".join(words[:-1] + [singular]))
-
-        if "tshirts" in normalized:
-            aliases.add(normalized.replace("tshirts", "t shirts"))
-            aliases.add(normalized.replace("tshirts", "t shirt"))
-        if normalized == "tshirts":
-            aliases.update({"tee", "tees"})
-
-        return {alias for alias in aliases if alias}
+        return category_aliases(category)
 
     def infer_category_from_text(self, text):
         """Find an explicitly named catalog category without a classifier."""
-        normalized_query = self._normalize_words(text)
-        matches = []
-
-        for category in self.categories:
-            for alias in self._category_aliases(category):
-                if re.search(rf"\b{re.escape(alias)}\b", normalized_query):
-                    matches.append((len(alias), str(category)))
-
-        return max(matches)[1] if matches else None
+        return infer_category_from_text(text, self.categories)
 
     @classmethod
     def categories_are_related(cls, first, second):
         """Treat a broad text category as compatible with an image subtype."""
-        left = cls._normalize_words(first).replace(" ", "")
-        right = cls._normalize_words(second).replace(" ", "")
-        return left == right or left.endswith(right) or right.endswith(left)
+        return categories_are_related(first, second)
 
     def attribute_match_scores(self, attributes):
         """Score how many requested attributes occur in catalog metadata."""
@@ -522,11 +456,16 @@ class FashionRecommender:
         predicted_category, category_confidence, visual_scores = (
             self.predict_category(image_query, request_id)
         )
+        image_category_strength = category_confidence_strength(
+            category_confidence,
+            CATEGORY_CONFIDENCE_FLOOR,
+            CATEGORY_CONFIDENCE_THRESHOLD,
+        )
 
         text_category = self.infer_category_from_text(text)
         if text_category is not None:
             if (
-                category_confidence >= CATEGORY_CONFIDENCE_THRESHOLD
+                image_category_strength > 0.0
                 and self.categories_are_related(
                     predicted_category,
                     text_category,
@@ -538,12 +477,10 @@ class FashionRecommender:
                 applied_category = text_category
                 category_source = "text"
             contextual_text = str(text).strip()
-        elif category_confidence >= CATEGORY_CONFIDENCE_THRESHOLD:
+        elif image_category_strength > 0.0:
             applied_category = predicted_category
             category_source = "image"
-            contextual_text = (
-                f"{str(text).strip()}. Product category: {applied_category}."
-            )
+            contextual_text = str(text).strip()
         else:
             applied_category = None
             category_source = None
@@ -552,33 +489,25 @@ class FashionRecommender:
         text_query = self.encode_text(contextual_text)
         text_to_image_scores = cosine_similarity(text_query, self.embeddings)
 
-        normalized_visual_scores = rank_normalize_scores(visual_scores)
-        normalized_text_to_image = rank_normalize_scores(
-            text_to_image_scores
-        )
-
         text_image_weight = float(np.clip(text_image_weight, 0.0, 1.0))
         if self.text_embeddings is not None:
             text_to_text_scores = cosine_similarity(
                 text_query,
                 self.text_embeddings,
             )
-            normalized_text_to_text = rank_normalize_scores(
-                text_to_text_scores
-            )
-            normalized_text_scores = (
-                text_image_weight * normalized_text_to_image
-                + (1.0 - text_image_weight) * normalized_text_to_text
+            text_scores = (
+                text_image_weight * text_to_image_scores
+                + (1.0 - text_image_weight) * text_to_text_scores
             )
         else:
             text_to_text_scores = None
-            normalized_text_scores = normalized_text_to_image
+            text_scores = text_to_image_scores
 
         image_weight = float(np.clip(image_weight, 0.0, 1.0))
         text_weight = 1.0 - image_weight
         final_scores = (
-            image_weight * normalized_visual_scores
-            + text_weight * normalized_text_scores
+            image_weight * visual_scores
+            + text_weight * text_scores
         )
 
         attributes = extract_query_attributes(text)
@@ -604,10 +533,22 @@ class FashionRecommender:
         # text category is safe to use as the candidate pool and lets a phrase
         # such as "red cap" override the blue colour in the reference image.
         if category_source == "image":
-            final_scores = (
-                (1.0 - COMBINED_CATEGORY_WEIGHT) * final_scores
-                + COMBINED_CATEGORY_WEIGHT * category_scores
+            final_scores, category_strength, effective_category_bonus = (
+                apply_confidence_weighted_category_bonus(
+                    final_scores,
+                    category_scores,
+                    category_confidence,
+                    COMBINED_CATEGORY_WEIGHT,
+                    CATEGORY_CONFIDENCE_FLOOR,
+                    CATEGORY_CONFIDENCE_THRESHOLD,
+                )
             )
+        elif category_source in {"text", "text_image"}:
+            category_strength = 1.0
+            effective_category_bonus = 0.0
+        else:
+            category_strength = 0.0
+            effective_category_bonus = 0.0
 
         eligible_indices = np.arange(len(final_scores))
         if category_source in {"text", "text_image"}:
@@ -622,12 +563,11 @@ class FashionRecommender:
         )
         top_indices = eligible_indices[local_indices]
         results = self.products.iloc[top_indices].copy().reset_index(drop=True)
-        results["raw_visual_similarity"] = visual_scores[top_indices]
-        results["visual_similarity"] = normalized_visual_scores[top_indices]
+        results["visual_similarity"] = visual_scores[top_indices]
         results["text_to_image_similarity"] = text_to_image_scores[top_indices]
         if text_to_text_scores is not None:
             results["text_to_text_similarity"] = text_to_text_scores[top_indices]
-        results["text_similarity"] = normalized_text_scores[top_indices]
+        results["text_similarity"] = text_scores[top_indices]
         results["attribute_match"] = attribute_scores[top_indices]
         results["category_match"] = category_scores[top_indices]
         results["similarity"] = final_scores[top_indices]
@@ -638,7 +578,10 @@ class FashionRecommender:
             f"query={str(text)[:80]!r} | context={contextual_text[:100]!r} | "
             f"category={applied_category or 'not_used'} | "
             f"category_source={category_source or 'not_used'} | "
+            f"category_strength={category_strength:.4f} | "
+            f"category_bonus={effective_category_bonus:.4f} | "
             f"attributes={attributes or 'not_used'} | top_k={actual_k} | "
+            "fusion=raw_cosine | "
             f"image_weight={image_weight:.2f} | text_weight={text_weight:.2f} | "
             f"elapsed={elapsed:.4f}s"
         )
@@ -649,6 +592,7 @@ class FashionRecommender:
             "text_weight": text_weight,
             "applied_category": applied_category,
             "category_source": category_source,
+            "category_strength": category_strength,
             "detected_attributes": attributes,
             "elapsed": elapsed,
         }
@@ -672,72 +616,16 @@ class FashionRecommender:
             self.embeddings
         )
 
-        # Every category contributes at most the same number of its strongest
-        # similarities. Large categories therefore cannot win only by count.
-        category_scores = {}
-
-        for category, indices in self.category_indices.items():
-
-            category_similarities = (
-                np.maximum(scores[indices], 0.0)
-                ** 4
-            )
-
-            sample_size = min(
-                CATEGORY_TOP_PER_CLASS,
-                len(category_similarities)
-            )
-
-            if sample_size == 0:
-                continue
-
-            strongest = np.partition(
-                category_similarities,
-                len(category_similarities) - sample_size
-            )[-sample_size:]
-
-            category_scores[category] = float(
-                strongest.mean()
-            )
-
-        if not category_scores:
-
-            raise RuntimeError(
-                "Không thể xác định category."
-            )
-
-        # -------------------------------------------------
-        # Sort categories
-        # -------------------------------------------------
-
-        ranked_categories = sorted(
-            category_scores.items(),
-            key=lambda item: item[1],
-            reverse=True
+        # Every category contributes the same maximum number of its strongest
+        # similarities, so large categories cannot win only by count.
+        ranked_categories, confidence = rank_category_candidates(
+            scores,
+            self.category_indices,
+            CATEGORY_TOP_PER_CLASS,
         )
 
         predicted_category = (
             ranked_categories[0][0]
-        )
-
-        top_score = float(
-            ranked_categories[0][1]
-        )
-
-        second_score = (
-            float(ranked_categories[1][1])
-            if len(ranked_categories) > 1
-            else 0.0
-        )
-
-        # Relative top-two confidence. This remains a heuristic score rather
-        # than a calibrated classification probability.
-        confidence = (
-            top_score
-            /
-            (top_score + second_score)
-            if top_score + second_score > 0
-            else 0.0
         )
 
         # -------------------------------------------------
@@ -921,6 +809,7 @@ class FashionRecommender:
         self,
         query_embedding,
         predicted_category,
+        category_confidence,
         top_k=TOP_K
     ):
 
@@ -951,9 +840,15 @@ class FashionRecommender:
         # Final score
         # -------------------------------------------------
 
-        final_scores = (
-            visual_scores
-            + CATEGORY_BONUS * category_scores
+        final_scores, category_strength, effective_category_bonus = (
+            apply_confidence_weighted_category_bonus(
+                visual_scores,
+                category_scores,
+                category_confidence,
+                CATEGORY_BONUS,
+                CATEGORY_CONFIDENCE_FLOOR,
+                CATEGORY_CONFIDENCE_THRESHOLD,
+            )
         )
 
         # -------------------------------------------------
@@ -982,7 +877,7 @@ class FashionRecommender:
         )
 
         results["category_bonus"] = (
-            CATEGORY_BONUS
+            effective_category_bonus
             * category_scores[top_indices]
         )
 
@@ -1081,14 +976,20 @@ class FashionRecommender:
 
             else:
 
-                if confidence < CATEGORY_CONFIDENCE_THRESHOLD:
+                category_strength = category_confidence_strength(
+                    confidence,
+                    CATEGORY_CONFIDENCE_FLOOR,
+                    CATEGORY_CONFIDENCE_THRESHOLD,
+                )
+
+                if category_strength <= 0.0:
 
                     log_info(
                         f"request={request_id} | "
                         "CATEGORY_FALLBACK | "
                         f"predicted={predicted_category} | "
                         f"confidence={confidence:.4f} | "
-                        f"threshold={CATEGORY_CONFIDENCE_THRESHOLD:.4f} | "
+                        f"floor={CATEGORY_CONFIDENCE_FLOOR:.4f} | "
                         "applied=no_category"
                     )
 
@@ -1100,15 +1001,13 @@ class FashionRecommender:
                     )
 
                     category_mode = "no_category"
-                    predicted_category = None
-                    confidence = None
-
                 else:
 
                     results, ranking_time = (
                         self.recommend_soft_category(
                             query_embedding,
                             predicted_category,
+                            confidence,
                             top_k
                         )
                     )
@@ -1131,6 +1030,7 @@ class FashionRecommender:
             f"mode={category_mode} | "
             f"category={predicted_category or 'not_used'} | "
             f"confidence={confidence_log} | "
+            f"category_strength={category_confidence_strength(confidence, CATEGORY_CONFIDENCE_FLOOR, CATEGORY_CONFIDENCE_THRESHOLD) if confidence is not None else 0.0:.4f} | "
             f"ranking={ranking_time:.4f}s | "
             f"total={total_time:.4f}s"
         )
@@ -1219,6 +1119,7 @@ class FashionRecommender:
             self.recommend_soft_category(
                 query_embedding,
                 predicted_category,
+                confidence,
                 top_k
             )
         )

@@ -15,45 +15,14 @@ def _normalize_rows(matrix):
     return values / norms
 
 
-def _percentile_rows(scores):
-    """Convert every score row to tie-aware percentile ranks in [0, 1]."""
-    values = np.asarray(scores, dtype=np.float32)
-    if values.ndim != 2 or values.shape[1] < 2:
-        raise ValueError("Scores must be a matrix with at least two candidates.")
-    order = np.argsort(values, axis=1, kind="stable")
-    sorted_values = np.take_along_axis(values, order, axis=1)
-    percentiles = np.empty_like(values, dtype=np.float32)
-    denominator = float(values.shape[1] - 1)
-
-    # Average tied ranks, matching pandas rank(method="average") without adding
-    # pandas to the low-level fusion module.
-    for row_index, row in enumerate(sorted_values):
-        sorted_ranks = np.empty(len(row), dtype=np.float32)
-        start = 0
-        while start < len(row):
-            end = start + 1
-            while end < len(row) and row[end] == row[start]:
-                end += 1
-            sorted_ranks[start:end] = ((start + end - 1) / 2.0) / denominator
-            start = end
-        percentiles[row_index, order[row_index]] = sorted_ranks
-    return percentiles
-
-
 def clip_score_fusion(
     image_embeddings,
     text_embeddings,
     product_ids,
     image_weight=0.5,
     text_image_weight=0.5,
-    percentile=False,
 ):
-    """Fuse CLIP image and text retrieval scores and return aligned rankings.
-
-    The text signal mirrors serving: it combines text-to-image and
-    text-to-text similarities. ``percentile=True`` applies the same per-query
-    scale alignment used by the web system before weighted fusion.
-    """
+    """Fuse raw CLIP cosine scores and return aligned rankings."""
     return clip_query_gallery_score_fusion(
         image_embeddings,
         text_embeddings,
@@ -63,7 +32,6 @@ def clip_score_fusion(
         product_ids,
         image_weight=image_weight,
         text_image_weight=text_image_weight,
-        percentile=percentile,
     )
 
 
@@ -76,9 +44,8 @@ def clip_query_gallery_score_fusion(
     gallery_product_ids,
     image_weight=0.5,
     text_image_weight=0.5,
-    percentile=False,
 ):
-    """Fuse CLIP signals for held-out queries against a larger gallery."""
+    """Fuse raw CLIP cosine scores for queries against a larger gallery."""
     if not 0.0 <= image_weight <= 1.0:
         raise ValueError("image_weight must be between 0 and 1.")
     if not 0.0 <= text_image_weight <= 1.0:
@@ -100,10 +67,6 @@ def clip_query_gallery_score_fusion(
     image_scores = query_images @ gallery_images.T
     text_to_image_scores = query_texts @ gallery_images.T
     text_to_text_scores = query_texts @ gallery_texts.T
-    if percentile:
-        image_scores = _percentile_rows(image_scores)
-        text_to_image_scores = _percentile_rows(text_to_image_scores)
-        text_to_text_scores = _percentile_rows(text_to_text_scores)
 
     text_scores = (
         text_image_weight * text_to_image_scores
@@ -125,14 +88,12 @@ def clip_text_query_gallery_score_fusion(
     query_product_ids,
     gallery_product_ids,
     text_image_weight=0.5,
-    percentile=False,
 ):
     """Mirror the website's text-input retrieval over a multimodal catalog.
 
     The query is text only, while catalog candidates contribute both an image
     representation (text-to-image) and a text representation (text-to-text).
-    Individual score families may be converted to per-query percentiles before
-    applying the configured weight.
+    The configured weight is applied directly to the raw cosine scores.
     """
     if not 0.0 <= text_image_weight <= 1.0:
         raise ValueError("text_image_weight must be between 0 and 1.")
@@ -154,9 +115,6 @@ def clip_text_query_gallery_score_fusion(
 
     text_to_image_scores = query_texts @ gallery_images.T
     text_to_text_scores = query_texts @ gallery_texts.T
-    if percentile:
-        text_to_image_scores = _percentile_rows(text_to_image_scores)
-        text_to_text_scores = _percentile_rows(text_to_text_scores)
     fused_scores = (
         text_image_weight * text_to_image_scores
         + (1.0 - text_image_weight) * text_to_text_scores

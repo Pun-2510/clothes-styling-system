@@ -57,6 +57,74 @@ class RecallTests(unittest.TestCase):
 
 
 class CombinedRecommendationTests(unittest.TestCase):
+    def test_category_confidence_strength_and_bonus_are_gradual(self):
+        from src.category_ranking import (
+            apply_confidence_weighted_category_bonus,
+            category_confidence_strength,
+        )
+
+        self.assertEqual(category_confidence_strength(0.50, 0.50, 0.60), 0.0)
+        self.assertAlmostEqual(
+            category_confidence_strength(0.55, 0.50, 0.60),
+            0.5,
+        )
+        self.assertEqual(category_confidence_strength(0.60, 0.50, 0.60), 1.0)
+
+        adjusted, strength, effective_bonus = (
+            apply_confidence_weighted_category_bonus(
+                np.array([0.70, 0.69], dtype=np.float32),
+                np.array([1.0, 0.0], dtype=np.float32),
+                confidence=0.55,
+                bonus=0.05,
+                floor=0.50,
+                full_threshold=0.60,
+            )
+        )
+        self.assertAlmostEqual(strength, 0.5)
+        self.assertAlmostEqual(effective_bonus, 0.025)
+        np.testing.assert_allclose(adjusted, [0.725, 0.69])
+
+    def test_combined_search_fuses_raw_cosine_scores(self):
+        from src.recommend import FashionRecommender
+
+        recommender = FashionRecommender.__new__(FashionRecommender)
+        recommender.products = pd.DataFrame({
+            "product_id": ["first", "raw-winner", "third"],
+            "product_name": ["First", "Raw winner", "Third"],
+            "category": ["shirt", "shirt", "shirt"],
+            "description": ["", "", ""],
+            "image_reference": ["a.jpg", "b.jpg", "c.jpg"],
+        })
+        recommender.categories = ["shirt"]
+        recommender.embeddings = np.eye(3, dtype=np.float32)
+        recommender.text_embeddings = np.eye(3, dtype=np.float32)
+        recommender.encode_image = lambda image: np.ones(3, dtype=np.float32)
+        recommender.encode_text = lambda text: np.ones(3, dtype=np.float32)
+        recommender.predict_category = lambda query, request: (
+            "shirt", 0.5, np.array([0.95, 0.75, 0.10], dtype=np.float32)
+        )
+
+        with patch(
+            "src.recommend.cosine_similarity",
+            side_effect=[
+                np.array([0.10, 0.70, 0.20], dtype=np.float32),
+                np.array([0.20, 0.60, 0.40], dtype=np.float32),
+            ],
+        ):
+            recommendation = recommender.recommend_combined(
+                image=object(),
+                text="formal",
+                top_k=3,
+                image_weight=0.5,
+                text_image_weight=0.5,
+            )
+
+        winner = recommendation["results"].iloc[0]
+        self.assertEqual(winner.product_id, "raw-winner")
+        self.assertAlmostEqual(winner.visual_similarity, 0.75)
+        self.assertAlmostEqual(winner.text_similarity, 0.65)
+        self.assertAlmostEqual(winner.similarity, 0.70)
+
     def test_image_text_fusion_uses_requested_weights(self):
         from src.recommend import FashionRecommender
 

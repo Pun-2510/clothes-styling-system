@@ -33,7 +33,7 @@ Luồng xử lý khi website hoạt động:
         ↓
 React frontend
         ↓
-Nginx API Gateway
+Nginx reverse proxy and load balancer
         ↓
 Hai FastAPI backend
         ↓
@@ -68,14 +68,16 @@ tương đối trong cấu hình được thiết kế dựa trên thư mục n�
 ```text
 project/
 ├── src/                    Tiền xử lý, fine-tuning và recommendation
-├── comparisons/            Thí nghiệm so sánh model, độc lập với website
 ├── web/
 │   ├── frontend/           ReactJS
 │   ├── backend/            FastAPI
-│   └── api-gateway/        Nginx và load balancing
+│   └── nginx/              Reverse proxy, load balancing và rate limiting
 ├── data/                   Dataset và catalog đã xử lý
 ├── runs/                   Checkpoint và metadata huấn luyện
 ├── embeddings/             Embeddings dùng cho website
 ├── docker-compose.yml
 └── README.txt              Hướng dẫn câu lệnh đầy đủ
+
+experiments/model_comparison/
+└── compare_full_gallery.py Pipeline so sánh model dùng cho báo cáo
 ```
