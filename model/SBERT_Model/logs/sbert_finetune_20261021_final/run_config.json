@@ -1,0 +1,16 @@
+{
+  "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+  "dataset": "ashraq/fashion-product-images-small",
+  "epochs": 3,
+  "batch_size": 12,
+  "max_per_class": 200,
+  "validation_ratio": 0.2,
+  "learning_rate": 2e-05,
+  "margin": 0.2,
+  "max_seq_length": 64,
+  "trainable_layers": 2,
+  "seed": 42,
+  "cpu_threads": 4,
+  "output_dir": "C:\\DACNTT\\model\\SBERT_Model\\models\\sbert_fashion_finetuned",
+  "log_dir": "C:\\DACNTT\\model\\SBERT_Model\\logs\\sbert_finetune_20261021_final"
+}

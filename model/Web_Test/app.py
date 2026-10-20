@@ -1,4 +1,8 @@
-"""ResNet image-search test website. Run: python app.py --warmup image."""
+"""SBERT + ResNet18 fashion search website.
+
+Run ``python app.py --warmup combined`` to prepare both retrieval indexes in
+the background while the web server starts.
+"""
 
 # 1. Thu vien va cau hinh
 import argparse
@@ -12,6 +16,7 @@ import io
 import json
 import logging
 import os
+import re
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -19,6 +24,38 @@ from pathlib import Path
 
 SBERT_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 RESNET_CLASSES = ["Tshirts", "Shirts", "Jeans", "Trousers", "Dresses", "Jackets"]
+SEARCH_MODES = {"text", "image", "combined"}
+FASHION_QUERY_ALIASES = (
+    ("áo sơ mi", "shirt"),
+    ("áo phông", "t-shirt"),
+    ("áo thun", "t-shirt"),
+    ("áo khoác", "jacket"),
+    ("quần jean", "jeans"),
+    ("quần bò", "jeans"),
+    ("quần tây", "trousers"),
+    ("quần âu", "trousers"),
+    ("váy liền", "dress"),
+    ("đầm", "dress"),
+    ("giày thể thao", "sports shoes"),
+    ("giày", "shoes"),
+    ("túi xách", "handbag"),
+    ("mũ", "cap"),
+    ("xanh dương", "blue"),
+    ("xanh navy", "navy blue"),
+    ("xanh lá", "green"),
+    ("trắng", "white"),
+    ("đen", "black"),
+    ("đỏ", "red"),
+    ("vàng", "yellow"),
+    ("dành cho nam", "men"),
+    ("thời trang nam", "men"),
+    ("đồ nam", "men"),
+    ("dành cho nữ", "women"),
+    ("thời trang nữ", "women"),
+    ("đồ nữ", "women"),
+    ("công sở", "office formal"),
+    ("thể thao", "sports"),
+)
 _BACKGROUND_SESSION = None
 _PERSON_CLOTHING_MODULE = None
 
@@ -44,12 +81,36 @@ def create_resnet(num_classes, pretrained=False):
 
 # 3. Dữ liệu, cache embedding và suy luận
 ROOT = Path(__file__).resolve().parent
-CACHE_VERSION = "fashion-web-v2"
+CACHE_VERSION = "fashion-web-v3"
 
 
 def fingerprint(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False,
                                      default=str).encode("utf-8")).hexdigest()
+
+
+def runtime_dependencies():
+    """Report heavyweight inference packages without importing them."""
+    packages = {
+        "torch": "torch",
+        "torchvision": "torchvision",
+        "sentence_transformers": "sentence-transformers",
+        "datasets": "datasets",
+    }
+    return {
+        display: importlib.util.find_spec(module_name) is not None
+        for module_name, display in packages.items()
+    }
+
+
+def require_runtime_dependencies():
+    dependencies = runtime_dependencies()
+    missing = [name for name, available in dependencies.items() if not available]
+    if missing:
+        raise RuntimeError(
+            "Thiếu dependency inference: " + ", ".join(missing)
+            + ". Hãy cài model/Web_Test/requirements.txt."
+        )
 
 
 def file_digest(path):
@@ -75,13 +136,15 @@ def top_indices(scores, candidates, limit):
     return candidates[np.lexsort((candidates, -values))[:count]]
 
 
-def fused_rank_scores(rankings, weights, size):
+def fused_rank_scores(rankings, weights, size, rrf_k=60):
     """RRF over complete candidate rankings; no approximate truncation."""
     import numpy as np
+    if rrf_k < 1:
+        raise ValueError("WEB_RRF_K phải lớn hơn hoặc bằng 1.")
     scores = np.zeros(size, dtype=np.float64)
     for ranking, weight in zip(rankings, weights):
         if weight:
-            scores[ranking] += weight / (60 + np.arange(1, len(ranking) + 1))
+            scores[ranking] += weight / (rrf_k + np.arange(1, len(ranking) + 1))
     return scores
 
 
@@ -95,6 +158,38 @@ def reciprocal_rank_fusion(rankings, weights, limit):
     return sorted(scores.items(), key=lambda pair: (-pair[1], pair[0]))[:limit]
 
 
+def normalize_fashion_query(query):
+    """Add stable English fashion cues to a Vietnamese/English query."""
+    original = " ".join(str(query).strip().split())
+    lowered = original.casefold()
+    expansions = []
+    for phrase, translation in FASHION_QUERY_ALIASES:
+        if re.search(rf"(?<!\w){re.escape(phrase)}(?!\w)", lowered):
+            if translation not in expansions:
+                expansions.append(translation)
+    if not expansions:
+        return original
+    return f"{original}. Fashion attributes: {', '.join(expansions)}"
+
+
+def catalog_product_text(product, compact=False):
+    """Create a field-aware sentence for domain-friendly SBERT retrieval."""
+    name = str(product.get("productDisplayName") or "").strip()
+    category = str(product.get("articleType") or "").strip()
+    if compact:
+        return ". ".join(value for value in (name, category) if value)
+    fields = (
+        ("Product", name),
+        ("Category", category),
+        ("Colour", str(product.get("baseColour") or "").strip()),
+        ("Gender", str(product.get("gender") or "").strip()),
+        ("Brand", str(product.get("brandName") or "").strip()),
+        ("Usage", str(product.get("usage") or "").strip()),
+        ("Season", str(product.get("season") or "").strip()),
+    )
+    return ". ".join(f"{label}: {value}" for label, value in fields if value)
+
+
 def garment_views(image):
     """Global and local views used to preserve garment pattern/logo detail."""
     image = image.convert("RGB")
@@ -106,6 +201,31 @@ def garment_views(image):
         image.crop((int(width * 0.15), int(height * 0.15),
                     int(width * 0.85), int(height * 0.85))),
     ]
+
+
+def retrieval_views(image, pattern_enabled=False, flip_enabled=True):
+    """Return the same deterministic image views for catalog and query."""
+    from PIL import ImageOps
+    base = garment_views(image) if pattern_enabled else [image.convert("RGB")]
+    return base + ([ImageOps.mirror(view) for view in base] if flip_enabled else [])
+
+
+def aggregate_retrieval_features(features, base_view_count, flip_enabled=True):
+    """Aggregate normalized ResNet views while preserving a 2D batch shape."""
+    import torch
+    if features.ndim == 2:
+        features = features.unsqueeze(0)
+    normalized = torch.nn.functional.normalize(features, dim=-1)
+    if flip_enabled:
+        normalized = torch.nn.functional.normalize(
+            normalized[:, :base_view_count] + normalized[:, base_view_count:],
+            dim=-1,
+        )
+    if base_view_count > 1:
+        result = 0.55 * normalized[:, 0] + 0.45 * normalized[:, 1:].mean(dim=1)
+    else:
+        result = normalized[:, 0]
+    return torch.nn.functional.normalize(result, dim=1)
 
 
 class RecommendationEngine:
@@ -304,15 +424,30 @@ class RecommendationEngine:
             digest.update(memoryview(tensor.detach().cpu().contiguous().numpy()).cast("B"))
         model.to(self.device)
         tokenizer = model.tokenizer.backend_tokenizer.to_str()
+        multiview = os.getenv("WEB_TEXT_MULTIVIEW", "1") != "0"
         identity = [name, digest.hexdigest(), tokenizer, model.max_seq_length,
-                    str(model), sentence_transformers.__version__, "name-type-colour-gender-brand-v1"]
-        texts = [" ".join(str(p.get(key) or "") for key in
-                 ("productDisplayName", "articleType", "baseColour", "gender", "brandName"))
-                 for p in self.products]
+                    str(model), sentence_transformers.__version__,
+                    "field-aware-fashion-v2", f"multiview={int(multiview)}"]
+        texts = [catalog_product_text(product) for product in self.products]
         def build():
             self.status = "Đang mã hóa mô tả sản phẩm (chỉ lần đầu)..."
-            return model.encode(texts, normalize_embeddings=True, convert_to_numpy=True,
-                                batch_size=self.batch_size, show_progress_bar=True)
+            embeddings = model.encode(
+                texts, normalize_embeddings=True, convert_to_numpy=True,
+                batch_size=self.batch_size, show_progress_bar=True,
+            )
+            if multiview:
+                compact = [catalog_product_text(product, compact=True)
+                           for product in self.products]
+                compact_embeddings = model.encode(
+                    compact, normalize_embeddings=True, convert_to_numpy=True,
+                    batch_size=self.batch_size, show_progress_bar=True,
+                )
+                embeddings = embeddings + compact_embeddings
+                embeddings /= np.maximum(
+                    np.linalg.norm(embeddings, axis=1, keepdims=True), 1e-12
+                )
+            return embeddings
+        import numpy as np
         embeddings = self.cached_embeddings("text", identity, model.get_embedding_dimension(), build)
         self.text_embeddings, self.text_model = embeddings, model
 
@@ -334,9 +469,13 @@ class RecommendationEngine:
         model.load_state_dict(checkpoint.get("model_state_dict", checkpoint))
         model.to(self.device).eval()
         transform = transforms.Compose([
-            transforms.Resize((256, 256)), transforms.CenterCrop(224), transforms.ToTensor(),
+            transforms.Resize(256), transforms.CenterCrop(224), transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
         backbone = torch.nn.Sequential(*list(model.model.children())[:-1])
+        pattern_enabled = os.getenv("WEB_PATTERN_SEARCH", "0") == "1"
+        flip_enabled = os.getenv("WEB_IMAGE_TTA", "1") != "0"
+        base_view_count = 4 if pattern_enabled else 1
+        view_count = base_view_count * (2 if flip_enabled else 1)
         def build():
             features = []
             with torch.inference_mode():
@@ -345,20 +484,23 @@ class RecommendationEngine:
                     product_images = [self.product_image(i) for i in range(
                         offset, min(offset + self.batch_size, len(self.products))
                     )]
-                    pattern_enabled = os.getenv("WEB_PATTERN_SEARCH", "0") == "1"
                     batch = torch.stack([
                         transform(view) for image in product_images
-                        for view in (garment_views(image) if pattern_enabled else [image])
+                        for view in retrieval_views(
+                            image, pattern_enabled=pattern_enabled,
+                            flip_enabled=flip_enabled,
+                        )
                     ])
                     feature = backbone(batch.to(self.device)).flatten(1)
-                    feature = torch.nn.functional.normalize(feature, dim=1)
-                    if pattern_enabled:
-                        feature = feature.reshape(len(product_images), 4, -1)
-                        feature = 0.55 * feature[:, 0] + 0.45 * feature[:, 1:].mean(dim=1)
-                    features.append(torch.nn.functional.normalize(feature, dim=1).cpu())
+                    feature = feature.reshape(len(product_images), view_count, -1)
+                    feature = aggregate_retrieval_features(
+                        feature, base_view_count, flip_enabled=flip_enabled
+                    )
+                    features.append(feature.cpu())
             return torch.cat(features).numpy()
         identity = [file_digest(path), classes, str(transform), torchvision.__version__,
-                    torch.__version__, "pattern=" + os.getenv("WEB_PATTERN_SEARCH", "0")]
+                    torch.__version__, f"pattern={int(pattern_enabled)}",
+                    f"flip_tta={int(flip_enabled)}", "preserve-aspect-v1"]
         embeddings = self.cached_embeddings("image", identity, 512, build)
         self.image_embeddings = embeddings
         def build_colors():
@@ -372,6 +514,10 @@ class RecommendationEngine:
             "color", color_identity, 23, build_colors
         )
         self.transform, self.backbone, self.classes = transform, backbone, classes
+        self.pattern_enabled = pattern_enabled
+        self.flip_enabled = flip_enabled
+        self.base_view_count = base_view_count
+        self.view_count = view_count
         self.image_model = model
         gender_path = ROOT / "models" / "resnet_gender.pth"
         if gender_path.is_file():
@@ -563,11 +709,14 @@ class RecommendationEngine:
         return value
 
     def query_embedding(self, query):
-        if query in self.query_cache:
-            self.query_cache.move_to_end(query)
-            return self.query_cache[query]
-        vector = self.text_model.encode(query, normalize_embeddings=True, convert_to_numpy=True)
-        return self.remember(self.query_cache, query, vector)
+        normalized_query = normalize_fashion_query(query)
+        if normalized_query in self.query_cache:
+            self.query_cache.move_to_end(normalized_query)
+            return self.query_cache[normalized_query]
+        vector = self.text_model.encode(
+            normalized_query, normalize_embeddings=True, convert_to_numpy=True
+        )
+        return self.remember(self.query_cache, normalized_query, vector)
 
     def classify_text(self, query):
         if query in self.bert_cache:
@@ -593,8 +742,8 @@ class RecommendationEngine:
 
     def search(self, query="", image=None, mode="text", top_k=12, category="",
                text_weight=0.5, use_bert=False):
-        if mode != "image":
-            raise ValueError("SBERT và Combine đang tạm tắt; chỉ dùng ResNet image search.")
+        if mode not in SEARCH_MODES:
+            raise ValueError("Chế độ tìm kiếm phải là text, image hoặc combined.")
         query = query.strip()
         if mode in ("text", "combined") and not query:
             raise ValueError("Vui lòng nhập mô tả sản phẩm.")
@@ -617,17 +766,23 @@ class RecommendationEngine:
                         metadata["bert"] = self.classify_text(query)
                 if mode in ("image", "combined"):
                     import torch
-                    from PIL import ImageOps
                     self.load_image()
                     image = self.prepare_uploaded_image(image)
                     person_image, person_detection = self.detect_clothing_region(image)
                     processed_image, background_removed = self.remove_background(person_image)
                     # Dual path protects product-only images from rembg errors:
                     # retain the original signal and add a smaller foreground signal.
-                    base_views = [person_image]
+                    base_images = [person_image]
                     if background_removed:
-                        base_views.append(processed_image)
-                    views = base_views + [ImageOps.mirror(view) for view in base_views]
+                        base_images.append(processed_image)
+                    views = [
+                        view for base_image in base_images
+                        for view in retrieval_views(
+                            base_image,
+                            pattern_enabled=self.pattern_enabled,
+                            flip_enabled=self.flip_enabled,
+                        )
+                    ]
                     tensor = torch.stack([
                         self.transform(view) for view in views
                     ]).to(self.device)
@@ -638,16 +793,23 @@ class RecommendationEngine:
                             view_features
                         ).mean(dim=0, keepdim=True)
                         probabilities = classification_logits.softmax(-1)[0]
-                        normalized = torch.nn.functional.normalize(view_features, dim=1)
-                        features = normalized[:1]
+                        grouped_features = view_features.reshape(
+                            len(base_images), self.view_count, -1
+                        )
+                        variant_features = aggregate_retrieval_features(
+                            grouped_features,
+                            self.base_view_count,
+                            flip_enabled=self.flip_enabled,
+                        )
+                        features = variant_features[:1]
                         if background_removed:
-                            features = 0.75 * normalized[:1] + 0.25 * normalized[1:2]
+                            features = 0.75 * variant_features[:1] + 0.25 * variant_features[1:2]
                         vector = torch.nn.functional.normalize(features, dim=1)
                         gender_probabilities = None
                         if self.gender_head is not None:
                             # Gender head was trained on the original single-view
                             # embedding; keep inference in the same distribution.
-                            gender_vector = normalized[0].unsqueeze(0)
+                            gender_vector = variant_features[:1]
                             gender_probabilities = self.gender_head(
                                 gender_vector
                             ).softmax(-1)[0]
@@ -656,8 +818,11 @@ class RecommendationEngine:
                         "confidence": float(probabilities.max()),
                         "background_removed": background_removed,
                         "person_detection": person_detection,
-                        "tta": "original+foreground+horizontal_flips" if background_removed
-                               else "original+horizontal_flip",
+                        "tta": (
+                            f"pattern_crops={int(self.pattern_enabled)};"
+                            f"horizontal_flip={int(self.flip_enabled)};"
+                            f"foreground={int(background_removed)}"
+                        ),
                         "foreground_embedding_weight": 0.25 if background_removed else 0.0,
                         "input_size": [image.width, image.height],
                     }
@@ -709,7 +874,19 @@ class RecommendationEngine:
             elif mode == "combined":
                 rankings = [candidates[np.argsort(-scores[candidates], kind="stable")]
                             for scores in (text_scores, image_scores)]
-                fused = fused_rank_scores(rankings, (text_weight, 1 - text_weight), len(self.products))
+                rrf_k = int(os.getenv("WEB_RRF_K", "60"))
+                fused = fused_rank_scores(
+                    rankings,
+                    (text_weight, 1 - text_weight),
+                    len(self.products),
+                    rrf_k=rrf_k,
+                )
+                metadata["fusion"] = {
+                    "method": "weighted_rrf",
+                    "rrf_k": rrf_k,
+                    "text_weight": text_weight,
+                    "image_weight": 1 - text_weight,
+                }
                 indices = top_indices(fused, candidates, top_k)
                 selected = [(int(i), float(fused[i])) for i in indices]
             else:
@@ -729,13 +906,57 @@ class RecommendationEngine:
             self.status = f"Đã sẵn sàng · {len(self.products)} sản phẩm · {self.device or 'chưa tải model'}"
             return {"results": results, "metadata": metadata, "mode": mode,
                     "catalog_size": len(self.products), "categories": self.categories,
-                    "cache_hits": dict(self.cache_hits), "device": self.device}
+                    "cache_hits": dict(self.cache_hits), "device": self.device,
+                    "query_used": normalize_fashion_query(query) if query else ""}
 
     def warmup(self, mode="combined", use_bert=False):
         with self.lock:
             self.catalog()
             image = self.product_image(0) if mode != "text" else None
             return self.search(query="shirt", image=image, mode=mode, top_k=1, use_bert=use_bert)
+
+    def self_test(self, sample_index=0, top_k=5):
+        """Run text, image and combined retrieval against one catalog product."""
+        import math
+        require_runtime_dependencies()
+        self.catalog()
+        if not 0 <= sample_index < len(self.products):
+            raise ValueError("sample_index nằm ngoài catalog.")
+        product = self.products[sample_index]
+        query = catalog_product_text(product, compact=True)
+        image = self.product_image(sample_index)
+        checks = {}
+        for mode in ("text", "image", "combined"):
+            result = self.search(
+                query=query if mode != "image" else "",
+                image=image.copy() if mode != "text" else None,
+                mode=mode,
+                top_k=top_k,
+            )
+            ids = [item["id"] for item in result["results"]]
+            finite = all(math.isfinite(item["score"]) for item in result["results"])
+            checks[mode] = {
+                "result_count": len(ids),
+                "scores_finite": finite,
+                "query_product_rank": ids.index(sample_index) + 1
+                if sample_index in ids else None,
+                "top_product": result["results"][0]["name"] if ids else None,
+            }
+        passed = (
+            self.text_model is not None
+            and self.image_model is not None
+            and all(value["result_count"] > 0 and value["scores_finite"]
+                    for value in checks.values())
+        )
+        return {
+            "status": "pass" if passed else "fail",
+            "sample_index": sample_index,
+            "sample_product": product.get("productDisplayName", ""),
+            "query": query,
+            "checks": checks,
+            "cache_hits": dict(self.cache_hits),
+            "device": self.device,
+        }
 
 
 # 4. Giao dien: HTML, CSS va JavaScript
@@ -778,7 +999,7 @@ button:disabled { cursor: wait; }
 </style>
 </head>
 <body>
-<h1>ResNet Web Test - Tìm sản phẩm</h1>
+<h1>SBERT + ResNet18 Web Test - Tìm sản phẩm</h1>
 <section aria-labelledby="benchmark-title">
 <h2 id="benchmark-title">Kiểm thử ResNet18 trên ảnh catalog</h2>
 <p>Baseline, pretrained và trained được kiểm thử trước trên cùng tập ảnh. Combine dùng checkpoint trained.</p>
@@ -794,11 +1015,11 @@ button:disabled { cursor: wait; }
 <hr>
 <form id="search-form">
 <div class="tabs" role="group" aria-label="Chế độ tìm kiếm">
-<button type="button" data-mode="text" hidden disabled aria-pressed="false">Mô tả (SBERT) · Tạm tắt</button>
-<button type="button" data-mode="image" class="active" aria-pressed="true">Ảnh (ResNet18)</button>
-<button type="button" data-mode="combined" hidden disabled aria-pressed="false">Kết hợp (RRF) · Tạm tắt</button>
+<button type="button" data-mode="text" aria-pressed="false">Mô tả (SBERT)</button>
+<button type="button" data-mode="image" aria-pressed="false">Ảnh (ResNet18)</button>
+<button type="button" data-mode="combined" class="active" aria-pressed="true">Kết hợp (RRF)</button>
 </div>
-<div id="text-field" hidden>
+<div id="text-field">
 <label for="query">Mô tả sản phẩm</label>
 <textarea id="query" rows="3" maxlength="1000" placeholder="Ví dụ: áo sơ mi xanh dành cho nam"></textarea>
 </div>
@@ -812,12 +1033,11 @@ button:disabled { cursor: wait; }
 <div><label for="category">Loại sản phẩm</label><select id="category"><option value="">Tất cả sản phẩm</option></select></div>
 <div><label for="top-k">Số kết quả</label><select id="top-k"><option>6</option><option selected>12</option><option>24</option><option>48</option></select></div>
 </div>
-<div id="weight-field" hidden>
+<div id="weight-field">
 <label for="weight">Trọng số mô tả: <output id="weight-label">50%</output></label>
 <input id="weight" type="range" min="0" max="100" value="50">
 <small>Phần còn lại là trọng số ảnh.</small>
 </div>
-<label id="bert-field" hidden><input id="use-bert" type="checkbox"> Phân loại thêm bằng BERT</label>
 <button id="submit" type="submit">Tìm sản phẩm</button>
 <p>Lần tìm đầu cần tải model và xử lý dữ liệu.</p>
 <p id="status" role="status" aria-live="polite"></p>
@@ -832,7 +1052,7 @@ button:disabled { cursor: wait; }
 <div id="grid" aria-live="polite"></div>
 <script>
 const $ = id => document.getElementById(id);
-let mode = "image", imageData = null, busy = false, imageVersion = 0;
+let mode = "combined", imageData = null, busy = false, imageVersion = 0;
 const showError = message => { $("error").textContent = message; $("error").hidden = !message; };
 document.querySelectorAll("[data-mode]").forEach(button => button.onclick = () => {
   if (busy) return;
@@ -841,7 +1061,6 @@ document.querySelectorAll("[data-mode]").forEach(button => button.onclick = () =
   $("text-field").hidden = mode === "image";
   $("image-field").hidden = mode === "text";
   $("weight-field").hidden = mode !== "combined";
-  $("bert-field").hidden = mode === "image";
 });
 $("weight").oninput = () => $("weight-label").textContent = $("weight").value + "%";
 function clearImage() {
@@ -918,6 +1137,15 @@ function render(data) {
   $("result-count").textContent = data.results.length + " sản phẩm";
   $("result-info").textContent = method + " · " + data.catalog_size + " sản phẩm trong danh mục · " + data.elapsed + " giây";
   for (const [name, prediction] of Object.entries(data.metadata)) {
+    if (name === "fusion") {
+      $("metadata").append(element(
+        "p",
+        "FUSION: Weighted RRF (k=" + prediction.rrf_k + ") · mô tả " +
+          Math.round(prediction.text_weight * 100) + "% · ảnh " +
+          Math.round(prediction.image_weight * 100) + "%"
+      ));
+      continue;
+    }
     const background = prediction.background_removed ? " · Đã xóa nền" : "";
     const gender = prediction.gender ? " · " + prediction.gender + " " +
       (prediction.gender_confidence * 100).toFixed(1) + "%" : "";
@@ -943,7 +1171,7 @@ $("search-form").onsubmit = async event => {
   if (mode !== "image" && !query) return showError("Nhập mô tả sản phẩm bạn muốn tìm.");
   if (mode !== "text" && !imageData) return showError("Vui lòng chọn và chờ ảnh tải xong.");
   const payload = {mode, query, image: mode === "text" ? null : imageData, top_k: Number($("top-k").value),
-    category: $("category").value, text_weight: Number($("weight").value) / 100, use_bert: $("use-bert").checked};
+    category: $("category").value, text_weight: Number($("weight").value) / 100, use_bert: false};
   busy = true; showError(""); $("submit").textContent = "Đang tìm sản phẩm...";
   $("search-form").setAttribute("aria-busy", "true");
   const controls = [...document.querySelectorAll("form button,form input,form textarea,form select")];
@@ -992,7 +1220,15 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = self.path.split("?")[0]
         if path == "/api/status":
-            return self.send(200, {"message": ENGINE.status, "catalog_size": len(ENGINE.products)})
+            return self.send(200, {
+                "message": ENGINE.status,
+                "catalog_size": len(ENGINE.products),
+                "models": {
+                    "sbert_loaded": ENGINE.text_model is not None,
+                    "resnet_loaded": ENGINE.image_model is not None,
+                },
+                "dependencies": runtime_dependencies(),
+            })
         if path == "/api/resnet-benchmark":
             try:
                 force = "force=1" in self.path.partition("?")[2]
@@ -1069,9 +1305,11 @@ class Handler(BaseHTTPRequestHandler):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=8000)
-    parser.add_argument("--warmup", choices=("image",))
+    parser.add_argument("--warmup", choices=("text", "image", "combined"))
     parser.add_argument("--prepare-only", action="store_true",
-                        help="Build/validate both indexes, then exit.")
+                        help="Build/validate the selected index or indexes, then exit.")
+    parser.add_argument("--self-test", action="store_true",
+                        help="Run text, image and combined retrieval, then exit.")
     parser.add_argument("--benchmark-resnet", action="store_true",
                         help="Benchmark baseline, pretrained and trained ResNet, then exit.")
     args = parser.parse_args()
@@ -1082,8 +1320,21 @@ def main():
             indent=2,
         ))
         return
+    if args.self_test:
+        try:
+            result = ENGINE.self_test()
+        except Exception as error:
+            result = {
+                "status": "fail",
+                "error": str(error),
+                "dependencies": runtime_dependencies(),
+            }
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        if result["status"] != "pass":
+            raise SystemExit(1)
+        return
     if args.prepare_only:
-        ENGINE.warmup(args.warmup or "image")
+        ENGINE.warmup(args.warmup or "combined")
         print("Index ready:", ENGINE.cache_hits, flush=True)
         return
     server = ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
@@ -1095,7 +1346,7 @@ def main():
                 logging.exception("Warmup failed")
                 ENGINE.status = "Chưa tải được model hoặc dữ liệu. Kiểm tra terminal và thử lại."
         threading.Thread(target=prepare, daemon=True).start()
-    print(f"ResNet Web Test: http://127.0.0.1:{args.port}", flush=True)
+    print(f"SBERT + ResNet18 Web Test: http://127.0.0.1:{args.port}", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

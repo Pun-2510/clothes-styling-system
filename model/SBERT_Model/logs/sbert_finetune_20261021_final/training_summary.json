@@ -1,0 +1,150 @@
+{
+  "status": "complete",
+  "base_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+  "output_model": "C:\\DACNTT\\model\\SBERT_Model\\models\\sbert_fashion_finetuned",
+  "dataset": "ashraq/fashion-product-images-small",
+  "classes": [
+    "Tshirts",
+    "Shirts",
+    "Jeans",
+    "Trousers",
+    "Dresses",
+    "Jackets"
+  ],
+  "class_counts": {
+    "Tshirts": {
+      "selected": 200,
+      "train": 160,
+      "validation": 40
+    },
+    "Shirts": {
+      "selected": 200,
+      "train": 160,
+      "validation": 40
+    },
+    "Jeans": {
+      "selected": 200,
+      "train": 160,
+      "validation": 40
+    },
+    "Trousers": {
+      "selected": 200,
+      "train": 160,
+      "validation": 40
+    },
+    "Dresses": {
+      "selected": 200,
+      "train": 160,
+      "validation": 40
+    },
+    "Jackets": {
+      "selected": 200,
+      "train": 160,
+      "validation": 40
+    }
+  },
+  "train_samples": 960,
+  "validation_rows": 240,
+  "evaluation_queries": 60,
+  "evaluation_corpus": 180,
+  "epochs": 3,
+  "batch_size": 12,
+  "learning_rate": 2e-05,
+  "margin": 0.2,
+  "max_seq_length": 64,
+  "trainable_layers": 2,
+  "trainable_parameters": 3548928,
+  "total_parameters": 117653760,
+  "seed": 42,
+  "device": "cpu",
+  "optimizer": "AdamW",
+  "loss": "BatchAllTripletLoss_cosine",
+  "best_epoch": 2,
+  "best_mrr_at_10": 0.9857142857142857,
+  "global_steps": 240,
+  "baseline": {
+    "fashion_validation_cosine_accuracy@1": 0.7833333333333333,
+    "fashion_validation_cosine_accuracy@5": 0.9,
+    "fashion_validation_cosine_accuracy@10": 0.9833333333333333,
+    "fashion_validation_cosine_precision@1": 0.7833333333333333,
+    "fashion_validation_cosine_precision@5": 0.58,
+    "fashion_validation_cosine_precision@10": 0.5016666666666667,
+    "fashion_validation_cosine_recall@1": 0.026111111111111116,
+    "fashion_validation_cosine_recall@5": 0.09666666666666665,
+    "fashion_validation_cosine_recall@10": 0.1672222222222222,
+    "fashion_validation_cosine_ndcg@10": 0.5553446418579331,
+    "fashion_validation_cosine_mrr@10": 0.8452777777777778,
+    "fashion_validation_cosine_map@10": 0.4119576719576719
+  },
+  "final": {
+    "fashion_validation_cosine_accuracy@1": 0.9833333333333333,
+    "fashion_validation_cosine_accuracy@5": 0.9833333333333333,
+    "fashion_validation_cosine_accuracy@10": 1.0,
+    "fashion_validation_cosine_precision@1": 0.9833333333333333,
+    "fashion_validation_cosine_precision@5": 0.9766666666666667,
+    "fashion_validation_cosine_precision@10": 0.98,
+    "fashion_validation_cosine_recall@1": 0.03277777777777778,
+    "fashion_validation_cosine_recall@5": 0.16277777777777772,
+    "fashion_validation_cosine_recall@10": 0.32666666666666655,
+    "fashion_validation_cosine_ndcg@10": 0.9797836322057816,
+    "fashion_validation_cosine_mrr@10": 0.9857142857142857,
+    "fashion_validation_cosine_map@10": 0.9747526455026455
+  },
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.1414203479886055,
+      "learning_rate": 1.4814814814814815e-05,
+      "epoch_seconds": 62.711,
+      "fashion_validation_cosine_accuracy@1": 0.9333333333333333,
+      "fashion_validation_cosine_accuracy@5": 1.0,
+      "fashion_validation_cosine_accuracy@10": 1.0,
+      "fashion_validation_cosine_precision@1": 0.9333333333333333,
+      "fashion_validation_cosine_precision@5": 0.8933333333333332,
+      "fashion_validation_cosine_precision@10": 0.88,
+      "fashion_validation_cosine_recall@1": 0.031111111111111114,
+      "fashion_validation_cosine_recall@5": 0.14888888888888882,
+      "fashion_validation_cosine_recall@10": 0.2933333333333332,
+      "fashion_validation_cosine_ndcg@10": 0.8884621482679002,
+      "fashion_validation_cosine_mrr@10": 0.9569444444444445,
+      "fashion_validation_cosine_map@10": 0.8358756613756614
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.12755468916147947,
+      "learning_rate": 7.4074074074074075e-06,
+      "epoch_seconds": 63.236,
+      "fashion_validation_cosine_accuracy@1": 0.9833333333333333,
+      "fashion_validation_cosine_accuracy@5": 0.9833333333333333,
+      "fashion_validation_cosine_accuracy@10": 1.0,
+      "fashion_validation_cosine_precision@1": 0.9833333333333333,
+      "fashion_validation_cosine_precision@5": 0.9766666666666667,
+      "fashion_validation_cosine_precision@10": 0.98,
+      "fashion_validation_cosine_recall@1": 0.03277777777777778,
+      "fashion_validation_cosine_recall@5": 0.16277777777777772,
+      "fashion_validation_cosine_recall@10": 0.32666666666666655,
+      "fashion_validation_cosine_ndcg@10": 0.9797836322057816,
+      "fashion_validation_cosine_mrr@10": 0.9857142857142857,
+      "fashion_validation_cosine_map@10": 0.9747526455026455
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.09039363970514387,
+      "learning_rate": 0.0,
+      "epoch_seconds": 59.091,
+      "fashion_validation_cosine_accuracy@1": 0.9833333333333333,
+      "fashion_validation_cosine_accuracy@5": 0.9833333333333333,
+      "fashion_validation_cosine_accuracy@10": 1.0,
+      "fashion_validation_cosine_precision@1": 0.9833333333333333,
+      "fashion_validation_cosine_precision@5": 0.98,
+      "fashion_validation_cosine_precision@10": 0.9833333333333333,
+      "fashion_validation_cosine_recall@1": 0.03277777777777778,
+      "fashion_validation_cosine_recall@5": 0.16333333333333327,
+      "fashion_validation_cosine_recall@10": 0.32777777777777767,
+      "fashion_validation_cosine_ndcg@10": 0.982656422313129,
+      "fashion_validation_cosine_mrr@10": 0.9854166666666667,
+      "fashion_validation_cosine_map@10": 0.9800489417989418
+    }
+  ],
+  "elapsed_seconds": 220.353
+}
