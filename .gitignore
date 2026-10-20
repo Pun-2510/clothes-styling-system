@@ -118,8 +118,8 @@ lightning_logs/
 # Runtime logs and temporary files
 *.log
 !docs/reports/evidence/**/*.log
-model/color_results/
-model/mini_fashion.local.json
+model/experiments/results/color/
+model/experiments/mini_fashion.local.json
 *.tmp
 *.temp
 *.bak

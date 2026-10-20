@@ -28,7 +28,7 @@ def parse_args():
     parser.add_argument('--source', type=Path, required=True,
                         help='Directory containing report.json, comparison.csv and evaluation_catalog.csv')
     parser.add_argument('--output-dir', type=Path,
-                        help='Output directory; default: model/reports/<source directory name> beside this script')
+                        help='Output directory; default: model/experiments/results/comparison/<source name>')
     parser.add_argument('--csv', type=Path,
                         help='Relocated dataset.csv; default: settings.csv recorded in report.json')
     parser.add_argument('--image-dir', type=Path,
@@ -41,7 +41,7 @@ def parse_args():
 def main():
     args = parse_args()
     SOURCE = args.source.expanduser().resolve()
-    OUT = (args.output_dir or MODEL_DIR / 'reports' / SOURCE.name).expanduser().resolve()
+    OUT = (args.output_dir or MODEL_DIR / 'results' / 'comparison' / SOURCE.name).expanduser().resolve()
     for name in ('report.json', 'comparison.csv', 'evaluation_catalog.csv'):
         if not (SOURCE / name).is_file():
             raise FileNotFoundError(f'Missing input file: {SOURCE / name}; check --source')

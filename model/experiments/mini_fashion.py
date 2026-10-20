@@ -6,13 +6,14 @@ from pathlib import Path
 
 MODEL_DIR = Path(__file__).resolve().parent
 LOCAL_CONFIG = MODEL_DIR / 'mini_fashion.local.json'
+REPOSITORY_ROOT = MODEL_DIR.parents[1]
 
 
 def project_dir():
     configured = os.environ.get('MINI_FASHION_PROJECT')
     if not configured and LOCAL_CONFIG.is_file():
         configured = json.loads(LOCAL_CONFIG.read_text(encoding='utf-8'))['project_dir']
-    return Path(configured).expanduser().resolve() if configured else MODEL_DIR.parent / 'project'
+    return Path(configured).expanduser().resolve() if configured else REPOSITORY_ROOT / 'project'
 
 
 def dataset_paths(root=None):
@@ -28,7 +29,8 @@ def load_catalog(split='all', root=None):
     source = paths['catalog'] if split == 'all' else paths['experiment']
     if not source.is_file():
         raise FileNotFoundError(f'Missing Mini Fashion CSV: {source}. Prepare project data first, '
-                                'or configure MINI_FASHION_PROJECT / model/mini_fashion.py --project-dir ... --save-local')
+                                'or configure MINI_FASHION_PROJECT / model/experiments/mini_fashion.py '
+                                '--project-dir ... --save-local')
     frame = pd.read_csv(source, dtype=str).fillna('')
     required = ['product_id', 'product_name', 'category', 'image_path']
     if not set(required) <= set(frame):

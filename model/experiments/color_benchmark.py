@@ -210,7 +210,7 @@ def main():
     if min(args.batch_size, *args.ks) < 1:
         parser.error('batch-size and ks must be positive')
     args.ks = sorted(set(args.ks))
-    output = args.output or ROOT / 'color_results' / datetime.now().strftime('%Y%m%d_%H%M%S_%f')
+    output = args.output or ROOT / 'results' / 'color' / datetime.now().strftime('%Y%m%d_%H%M%S_%f')
     output.mkdir(parents=True, exist_ok=False)
     products, input_rows = prepare(args, output)
     queries, skipped = query_set(products)

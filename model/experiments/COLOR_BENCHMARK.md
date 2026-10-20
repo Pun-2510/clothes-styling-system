@@ -49,7 +49,7 @@ Không xếp hạng tất cả model như thể chúng nhận cùng lượng th�
 Ví dụ dùng dữ liệu và môi trường đã có ở `C:\DACNTT`, nhưng lưu kết quả tại repository đang mở:
 
 ```powershell
-& C:/DACNTT/model/.venv/Scripts/python.exe -B model/color_benchmark.py `
+& C:/DACNTT/.venv/Scripts/python.exe -B model/experiments/color_benchmark.py `
   --csv C:/DACNTT/project/runs/clip_finetune_3epochs_local/dataset.csv `
   --image-dir C:/DACNTT/project/data/data `
   --resnet-checkpoint C:/DACNTT/model/Web_Test/models/resnet_outfit.pth `
@@ -57,7 +57,7 @@ Ví dụ dùng dữ liệu và môi trường đã có ở `C:\DACNTT`, nhưng l
   --device cpu
 ```
 
-Mặc định chạy cả 7 cấu hình ở K=1,5,10, batch=16. `--output model/color_results/ten_lan_chay` chọn thư mục **chưa tồn tại**; nếu bỏ qua sẽ tự sinh timestamp. Có thể giảm phạm vi bằng `--models resnet18 sbert clip combine` khi chưa có checkpoint đã train. `--device cuda` chỉ dùng khi có GPU/PyTorch hỗ trợ.
+Mặc định chạy cả 7 cấu hình ở K=1,5,10, batch=16. `--output model/experiments/results/color/ten_lan_chay` chọn thư mục **chưa tồn tại**; nếu bỏ qua sẽ tự sinh timestamp. Có thể giảm phạm vi bằng `--models resnet18 sbert clip combine` khi chưa có checkpoint đã train. `--device cuda` chỉ dùng khi có GPU/PyTorch hỗ trợ.
 
 Lần đầu cần tải model pretrained, hoặc dùng cache có sẵn. Để bắt buộc dùng cache offline, đặt `HF_HUB_OFFLINE=1` và `TRANSFORMERS_OFFLINE=1`. Không đổi CSV thí nghiệm cũ; `--image-dir` định vị lại ảnh bằng tên file.
 
@@ -84,7 +84,7 @@ Template review ban đầu chỉ chứa những sản phẩm trích được nh�
 Tạo HTML và bảng chênh lệch từ một lần chạy đã xong, không cần nạp model:
 
 ```powershell
-python model/build_color_report.py --source model/color_results/color_tags_pilot
+python model/experiments/build_color_report.py --source model/experiments/results/color/color_tags_pilot
 ```
 
 Mở `color_report.html`; `deltas.csv` chứa chênh lệch điểm phần trăm so với baseline của đúng model/tác vụ/K. Các file raw có đường dẫn máy và ảnh review được ignore; báo cáo tổng hợp có thể đưa lên Git.
@@ -94,7 +94,7 @@ Mở `color_report.html`; `deltas.csv` chứa chênh lệch điểm phần trăm
 Kiểm tra công thức, không tải model:
 
 ```powershell
-& C:/DACNTT/model/.venv/Scripts/python.exe -B model/test_color_benchmark.py
+& C:/DACNTT/.venv/Scripts/python.exe -B model/experiments/test_color_benchmark.py
 ```
 
 Thời gian `encode_seconds` là tạo embedding, không phải thời gian API/query. Chưa kiểm chứng overlap tập train của các checkpoint. Thử nghiệm chưa đánh giá query tiếng Việt, màu thực tế do ánh sáng hay chất lượng phối đồ.

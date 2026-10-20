@@ -1,6 +1,6 @@
 # Dataset thống nhất: Mini Fashion của project
 
-Các bộ nạp trong `SBERT_Model`, `ResNet_Model`, `combine_model`, `Web_Test`, `compare_models.py` và `color_benchmark.py` dùng cấu hình chung tại `mini_fashion.py`. Không tự chuyển sang `ashraq/fashion-product-images-small` hoặc `nreimers/fashion-dataset` nếu thiếu dữ liệu.
+Các benchmark trong thư mục này dùng cấu hình chung tại `mini_fashion.py`. Không tự chuyển sang `ashraq/fashion-product-images-small` hoặc `nreimers/fashion-dataset` nếu thiếu dữ liệu.
 
 ## Chọn thư mục dữ liệu
 
@@ -17,10 +17,10 @@ project/
 Nếu dataset đang ở bản DACNTT, cấu hình một lần từ thư mục gốc repository:
 
 ```powershell
-& C:/DACNTT/model/.venv/Scripts/python.exe -B model/mini_fashion.py --project-dir C:/DACNTT/project --save-local
+& C:/DACNTT/.venv/Scripts/python.exe -B model/experiments/mini_fashion.py --project-dir C:/DACNTT/project --save-local
 ```
 
-Lệnh kiểm tra catalog và ảnh rồi ghi `model/mini_fashion.local.json` (đã ignore). Nó **dùng chung dữ liệu tại đường dẫn này**, không sao chép hàng nghìn ảnh hay sửa CSV gốc. Trên máy hiện tại đã cấu hình đường dẫn này.
+Lệnh kiểm tra catalog và ảnh rồi ghi `model/experiments/mini_fashion.local.json` (đã ignore). Nó **dùng chung dữ liệu tại đường dẫn này**, không sao chép hàng nghìn ảnh hay sửa CSV gốc. Cấu hình chỉ sử dụng được khi các CSV và ảnh tương ứng đã được chuẩn bị trong project đã chọn.
 
 Hoặc đặt biến môi trường có ưu tiên cao hơn cấu hình local:
 
@@ -56,13 +56,13 @@ Không đoán brand/gender/màu còn thiếu. Tag màu tự động vẫn đư�
 ## Chạy thử tag màu bằng nguồn mặc định mới
 
 ```powershell
-& C:/DACNTT/model/.venv/Scripts/python.exe -B model/color_benchmark.py --prepare-only
+& C:/DACNTT/.venv/Scripts/python.exe -B model/experiments/color_benchmark.py --prepare-only
 ```
 
 Chạy đủ các model, chỉ cần bổ sung checkpoint ResNet nếu nó nằm ngoài repository:
 
 ```powershell
-& C:/DACNTT/model/.venv/Scripts/python.exe -B model/color_benchmark.py `
+& C:/DACNTT/.venv/Scripts/python.exe -B model/experiments/color_benchmark.py `
   --resnet-checkpoint C:/DACNTT/model/Web_Test/models/resnet_outfit.pth
 ```
 

@@ -2,10 +2,10 @@
 
 Run from any directory (Python environment needs torch, torchvision, transformers,
 sentence-transformers, numpy, pandas, Pillow):
-  python model/compare_models.py --help
-  python model/compare_models.py --image-dir project/data/data
-  python model/compare_models.py --models resnet18 sbert clip --device cpu
-  python model/compare_models.py --models clip_finetuned --image-dir project/data/data
+  python model/experiments/compare_models.py --help
+  python model/experiments/compare_models.py --image-dir project/data/data
+  python model/experiments/compare_models.py --models resnet18 sbert clip --device cpu
+  python model/experiments/compare_models.py --models clip_finetuned --image-dir project/data/data
 
 Default input: the saved CLIP experiment dataset, restricted to its test split.
 Use --csv for another catalog with product_id, category, image_path,
@@ -24,7 +24,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 PROJECT = ROOT / "project"
 MODEL_NAMES = ("resnet18", "resnet18_trained", "sbert", "clip", "clip_finetuned")
 
