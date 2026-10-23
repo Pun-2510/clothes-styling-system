@@ -3,6 +3,7 @@
 !/app.py
 !/requirements.txt
 !/README.md
+!/test_app.py
 !/.gitignore
 !/.gitattributes
 !/models/
