@@ -2,13 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Icon from '../common/Icon'
 import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_SIZE, RESULT_COUNTS } from '../../data/searchOptions'
 import { searchByCombined, searchByImage, searchByText } from '../../services/recommendationApi'
+import { clearSearchFile, loadSearchFile, loadSearchFormState, saveSearchFile, saveSearchFormState } from '../../services/searchPersistence'
 
-export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuccess, onSearchError, onClearResult }) {
+export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuccess, onSearchError, onClearResult, initialQuery = '' }) {
+  const [savedForm] = useState(loadSearchFormState)
   const [file, setFile] = useState(null)
-  const [query, setQuery] = useState('')
-  const [language, setLanguage] = useState('vi')
-  const [topK, setTopK] = useState(5)
-  const [dragging, setDragging] = useState(false)
+  const [query, setQuery] = useState(initialQuery || savedForm.query || '')
+  const [language, setLanguage] = useState(savedForm.language === 'en' ? 'en' : 'vi')
+  const [topK, setTopK] = useState(RESULT_COUNTS.includes(savedForm.topK) ? savedForm.topK : 5)
   const inputRef = useRef(null)
   const preview = useMemo(() => file ? URL.createObjectURL(file) : '', [file])
   const hasImage = Boolean(file)
@@ -18,6 +19,20 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
   useEffect(() => () => {
     if (preview) URL.revokeObjectURL(preview)
   }, [preview])
+
+  useEffect(() => {
+    let active = true
+    loadSearchFile().then((savedFile) => {
+      if (!active || !savedFile) return
+      if (ACCEPTED_IMAGE_TYPES.includes(savedFile.type) && savedFile.size <= MAX_IMAGE_SIZE) setFile(savedFile)
+      else clearSearchFile()
+    })
+    return () => { active = false }
+  }, [])
+
+  useEffect(() => {
+    saveSearchFormState({ query, language, topK })
+  }, [query, language, topK])
 
   function acceptFile(candidate) {
     if (!candidate) return
@@ -31,6 +46,7 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
       return
     }
     setFile(candidate)
+    saveSearchFile(candidate)
   }
 
   function updateQuery(value) {
@@ -60,87 +76,65 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
   }
 
   const submitLabel = hasImage && hasText
-    ? 'Tìm bằng ảnh và mô tả'
+    ? 'Tìm kết hợp'
     : hasImage
       ? 'Tìm bằng ảnh'
-      : hasText
-        ? 'Tìm bằng mô tả'
-        : 'Nhập mô tả hoặc chọn ảnh'
+      : 'Tìm kiếm'
 
   return (
-    <form className="search-panel" onSubmit={submit}>
-      <div className="field-heading">
-        <span className="field-title">Tìm sản phẩm</span>
-        <span>Nhập mô tả, tải ảnh lên hoặc sử dụng đồng thời cả hai.</span>
+    <form className="search-panel compact-search-panel" onSubmit={submit}>
+      <input
+        ref={inputRef}
+        className="visually-hidden"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        onChange={(event) => acceptFile(event.target.files?.[0])}
+      />
+      <div className="compact-search-bar">
+        <Icon name="search" size={20} />
+        <input
+          id="combined-fashion-query"
+          value={query}
+          onChange={(event) => updateQuery(event.target.value)}
+          placeholder={language === 'vi' ? 'Bạn đang tìm sản phẩm gì?' : 'What product are you looking for?'}
+          maxLength={512}
+        />
+        <button className={`attach-image ${file ? 'has-file' : ''}`} type="button" onClick={() => inputRef.current?.click()}>
+          <Icon name="image" size={20} /><span>{file ? 'Đổi ảnh' : 'Thêm ảnh'}</span>
+        </button>
+        <button className="compact-submit" type="submit" disabled={!canSearch || loading}>
+          {loading ? <span className="spinner" /> : <Icon name="arrow" size={20} />}
+          <span>{loading ? 'Đang tìm...' : submitLabel}</span>
+        </button>
       </div>
 
-      <div className="combined-inputs">
-        <div>
-          <input ref={inputRef} className="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => acceptFile(event.target.files?.[0])} />
-          <div
-            className={`dropzone ${dragging ? 'dragging' : ''} ${preview ? 'has-preview' : ''}`}
-            onDragOver={(event) => { event.preventDefault(); setDragging(true) }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={(event) => { event.preventDefault(); setDragging(false); acceptFile(event.dataTransfer.files?.[0]) }}
-          >
-            {preview ? (
-              <>
-                <img src={preview} alt="Ảnh truy vấn đã chọn" />
-                <div className="preview-meta">
-                  <div><Icon name="check" size={18} /><span><strong>{file.name}</strong><small>{(file.size / 1024 / 1024).toFixed(2)} MB</small></span></div>
-                  <button type="button" aria-label="Xóa ảnh" onClick={() => { setFile(null); onClearResult() }}><Icon name="close" /></button>
-                </div>
-              </>
-            ) : (
-              <button type="button" className="dropzone-action" onClick={() => inputRef.current?.click()}>
-                <Icon name="upload" size={26} />
-                <strong>Chọn ảnh nếu có</strong>
-                <span>JPG, PNG, WebP · tối đa 5 MB</span>
-              </button>
-            )}
-          </div>
+      {preview && (
+        <div className="selected-image">
+          <img src={preview} alt="Ảnh truy vấn đã chọn" />
+          <span><strong>{file.name}</strong><small>{(file.size / 1024 / 1024).toFixed(2)} MB</small></span>
+          <button type="button" onClick={() => { setFile(null); clearSearchFile(); onClearResult(); if (inputRef.current) inputRef.current.value = '' }}>
+            <Icon name="close" size={17} /> Bỏ ảnh
+          </button>
         </div>
+      )}
 
-        <div className="combined-text">
-          <div className="query-box">
-            <textarea
-              id="combined-fashion-query"
-              value={query}
-              onChange={(event) => updateQuery(event.target.value)}
-              placeholder={language === 'vi' ? 'Nhập mô tả nếu có. Ví dụ: váy màu đen phù hợp đi làm...' : 'Add a description if needed. Example: a black dress suitable for work...'}
-              maxLength={512}
-              rows={7}
-            />
-            <span>{query.length}/512</span>
-          </div>
+      <details className="search-options">
+        <summary><span>Tùy chọn tìm kiếm</span><Icon name="chevron" size={14} /></summary>
+        <div className="search-options-content">
+          {hasText && (
+            <label>Ngôn ngữ
+              <select value={language} onChange={(event) => setLanguage(event.target.value)}>
+                <option value="vi">Tiếng Việt</option><option value="en">English</option>
+              </select>
+            </label>
+          )}
+          <label>Số kết quả
+            <select value={topK} onChange={(event) => setTopK(Number(event.target.value))}>
+              {RESULT_COUNTS.map((value) => <option key={value} value={value}>{value} sản phẩm</option>)}
+            </select>
+          </label>
         </div>
-      </div>
-
-      <div className="form-controls">
-        {hasText && (
-          <div className="control-group">
-            <span className="control-label">Ngôn ngữ mô tả</span>
-            <div className="segmented-control">
-              <button type="button" className={language === 'vi' ? 'active' : ''} onClick={() => setLanguage('vi')}>Tiếng Việt</button>
-              <button type="button" className={language === 'en' ? 'active' : ''} onClick={() => setLanguage('en')}>English</button>
-            </div>
-          </div>
-        )}
-
-        <label className="control-group select-control">
-          <span className="control-label">Số kết quả</span>
-          <select value={topK} onChange={(event) => setTopK(Number(event.target.value))}>
-            {RESULT_COUNTS.map((value) => <option key={value} value={value}>{value} sản phẩm</option>)}
-          </select>
-        </label>
-
-      </div>
-
-      <button className="primary-button" type="submit" disabled={!canSearch || loading}>
-        {loading ? <span className="spinner" /> : <Icon name="spark" />}
-        {loading ? 'Đang tìm kiếm...' : submitLabel}
-        {!loading && canSearch && <Icon name="arrow" />}
-      </button>
+      </details>
     </form>
   )
 }

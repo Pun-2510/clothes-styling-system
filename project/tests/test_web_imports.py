@@ -27,6 +27,9 @@ class WebPackageTests(unittest.TestCase):
             self.assertIn("/api/recommendations/image", routes)
             self.assertIn("/api/recommendations/text", routes)
             self.assertIn("/api/recommendations/combined", routes)
+            self.assertIn("/api/catalog/categories", routes)
+            self.assertIn("/api/catalog/products", routes)
+            self.assertIn("/api/catalog/products/{product_id}", routes)
             response = client.post("/api/recommendations/text", json={"query": "   "})
             self.assertEqual(response.status_code, 400)
             response = client.post("/api/recommendations/image",

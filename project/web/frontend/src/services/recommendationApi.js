@@ -1,3 +1,5 @@
+import { trackedFetch } from './networkActivity'
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
 const AUTOMATIC_CATEGORY_MODE = 'soft_category'
 
@@ -19,7 +21,7 @@ async function readResponse(response) {
 
 export async function checkServerReady() {
   try {
-    const response = await fetch(`${API_BASE}/api/health/ready`)
+    const response = await trackedFetch(`${API_BASE}/api/health/ready`)
     return response.ok
   } catch {
     return false
@@ -28,7 +30,7 @@ export async function checkServerReady() {
 
 export async function searchByText({ query, language, topK }) {
   try {
-    const response = await fetch(`${API_BASE}/api/recommendations/text`, {
+    const response = await trackedFetch(`${API_BASE}/api/recommendations/text`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -50,7 +52,7 @@ export async function searchByImage({ file, topK }) {
   payload.append('category_mode', AUTOMATIC_CATEGORY_MODE)
 
   try {
-    const response = await fetch(`${API_BASE}/api/recommendations/image`, {
+    const response = await trackedFetch(`${API_BASE}/api/recommendations/image`, {
       method: 'POST',
       body: payload,
     })
@@ -68,7 +70,7 @@ export async function searchByCombined({ file, query, language, topK }) {
   payload.append('top_k', String(topK))
 
   try {
-    const response = await fetch(`${API_BASE}/api/recommendations/combined`, {
+    const response = await trackedFetch(`${API_BASE}/api/recommendations/combined`, {
       method: 'POST',
       body: payload,
     })

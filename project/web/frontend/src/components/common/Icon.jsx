@@ -7,6 +7,7 @@ const PATHS = {
   check: <path d="m5 12 4 4L19 6"/>,
   retry: <><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></>,
   close: <><path d="m6 6 12 12"/><path d="m18 6-12 12"/></>,
+  chevron: <path d="m7 10 5 5 5-5"/>,
 }
 
 export default function Icon({ name, size = 20 }) {

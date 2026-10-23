@@ -1,13 +1,13 @@
 import ProductCard from './ProductCard'
 
-export default function ResultsSection({ data, mode }) {
+export default function ResultsSection({ data, mode, sectionRef }) {
   if (!data) return null
 
   const items = data.items || []
   const elapsed = mode === 'image' ? data.processing_times?.total : data.elapsed_seconds
 
   return (
-    <section className="results" aria-live="polite">
+    <section ref={sectionRef} className="results" aria-live="polite">
       <div className="results-header">
         <div>
           <span className="eyebrow">Kết quả</span>
