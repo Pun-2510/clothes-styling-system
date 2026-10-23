@@ -347,7 +347,12 @@ class FashionRecommender:
     def has_text_embeddings(self):
         return self.text_embeddings is not None
 
-    def recommend_by_text(self, text, top_k=TOP_K, image_weight=0.5):
+    def recommend_by_text(
+        self,
+        text,
+        top_k=TOP_K,
+        image_weight=TEXT_RETRIEVAL_IMAGE_WEIGHT,
+    ):
         """Search with combined text-to-image and text-to-text scores."""
         start_time = time.perf_counter()
         query_embedding = self.encode_text(text)

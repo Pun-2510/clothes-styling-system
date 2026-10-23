@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "created_utc": "2026-10-21T05:41:30.516083+00:00",
+  "selection_split": "validation",
+  "objective_k": 10,
+  "selection_policy": {
+    "text_and_image_only": "maximize category-macro F1, then query-macro F1",
+    "combined": "maximize attribute match among candidates within 0.0200 absolute category-macro F1 of the best"
+  },
+  "weights": {
+    "TEXT_RETRIEVAL_IMAGE_WEIGHT": 0.15,
+    "COMBINED_IMAGE_WEIGHT": 0.0,
+    "COMBINED_ATTRIBUTE_WEIGHT": 0.35,
+    "COMBINED_CATEGORY_WEIGHT": 0.0,
+    "CATEGORY_BONUS": 0.2
+  },
+  "selected_metrics": {
+    "text_only": {
+      "text_image_weight": 0.15000000000000002,
+      "precision": 0.7177215189873423,
+      "recall": 0.14430747532570834,
+      "f1": 0.18312523335526493,
+      "category_macro_precision": 0.4956971199871517,
+      "category_macro_recall": 0.31485631615448206,
+      "category_macro_f1": 0.31840105691893283,
+      "evaluated_queries": 474,
+      "skipped_queries": 0,
+      "selected": true
+    },
+    "image_only": {
+      "image_category_bonus": 0.2,
+      "precision": 0.7744725738396624,
+      "recall": 0.15736144498410667,
+      "f1": 0.20356764594732923,
+      "category_macro_precision": 0.5460868070103042,
+      "category_macro_recall": 0.3336805380420827,
+      "category_macro_f1": 0.3489089738585371,
+      "evaluated_queries": 474,
+      "skipped_queries": 0,
+      "selected": true
+    },
+    "combined": {
+      "stage": "refined",
+      "image_weight": 0.0,
+      "attribute_weight": 0.35,
+      "combined_category_weight": 0.0,
+      "precision": 0.6411392405063292,
+      "recall": 0.17204157121639727,
+      "f1": 0.21719738318166693,
+      "category_macro_precision": 0.6508533303996166,
+      "category_macro_recall": 0.43123579344789503,
+      "category_macro_f1": 0.4752933622863565,
+      "evaluated_queries": 474,
+      "skipped_queries": 0,
+      "attribute_queries": 430,
+      "mean_attribute_match": 0.6921987844501124,
+      "all_attributes_match_rate": 0.5247471391657438,
+      "selected": true
+    }
+  },
+  "provenance": {
+    "run_dir": "D:\\dacntt\\project\\runs\\clip_finetune_3epochs",
+    "catalog_csv": "D:\\dacntt\\project\\data\\processed\\products.csv",
+    "dataset_sha256": "96801376518f5dbba1a505cfc43903e11365dac15635f6d33575a0860e5b951b",
+    "training_json_sha256": "e4c2a1c7b5acabf185f415027b9f6c9ed8bc85a4968cfb7d1748f42014b99982",
+    "catalog_sha256": "eba9c393f7ec7bddca2454ec48a061d36ab86fb267eb166283f9c9a5727a2113",
+    "validation_queries": 474,
+    "gallery_size": 5000
+  }
+}

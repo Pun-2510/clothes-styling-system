@@ -26,7 +26,7 @@ export async function checkServerReady() {
   }
 }
 
-export async function searchByText({ query, language, topK, imageWeight }) {
+export async function searchByText({ query, language, topK }) {
   try {
     const response = await fetch(`${API_BASE}/api/recommendations/text`, {
       method: 'POST',
@@ -35,7 +35,6 @@ export async function searchByText({ query, language, topK, imageWeight }) {
         query: query.trim(),
         language,
         top_k: topK,
-        image_weight: imageWeight,
       }),
     })
     return await readResponse(response)
@@ -61,13 +60,12 @@ export async function searchByImage({ file, topK }) {
   }
 }
 
-export async function searchByCombined({ file, query, language, topK, imageWeight }) {
+export async function searchByCombined({ file, query, language, topK }) {
   const payload = new FormData()
   payload.append('file', file)
   payload.append('query', query.trim())
   payload.append('language', language)
   payload.append('top_k', String(topK))
-  payload.append('image_weight', String(imageWeight))
 
   try {
     const response = await fetch(`${API_BASE}/api/recommendations/combined`, {

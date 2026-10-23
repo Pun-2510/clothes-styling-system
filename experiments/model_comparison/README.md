@@ -173,6 +173,38 @@ then performs the combined-search ablation below:
 The experiment reuses `project/embeddings/` and the verified category-free
 query-text cache. It does not fine-tune CLIP or regenerate the catalog.
 
+### Select serving weights on validation data
+
+Run this step after the catalog, split and fine-tuned checkpoint are fixed. It
+uses only the 474 validation products as queries, reuses the 5,000-product
+gallery and writes the selected defaults to
+`project/retrieval_weights.json`. The website loads this file
+automatically; the test split is not used during selection.
+
+```powershell
+.\project\.venv\Scripts\python.exe -m experiments.model_comparison.tune_serving_weights `
+  --run-dir .\project\runs\clip_finetune_3epochs `
+  --catalog-csv .\project\data\processed\products.csv `
+  --image-embeddings .\project\embeddings\image_embeddings.npy `
+  --text-embeddings .\project\embeddings\text_embeddings.npy `
+  --expected-gallery-size 5000 `
+  --device cpu `
+  --batch-size 16 `
+  --objective-k 10 `
+  --min-combined-image-weight 0.20 `
+  --max-combined-image-weight 0.80 `
+  --output-dir .\experiments\model_comparison\results\weight_tuning_5000_v2
+```
+
+Text-only and image-only settings maximize category-macro F1 on validation.
+For combined search, validation text contains only explicit refinements such as
+colour, pattern, or style; the image supplies the product context. The image
+weight is constrained to `0.20-0.80`, so a multimodal setting cannot silently
+become text-only. The selector first protects category-macro F1, then picks the
+candidate with the best explicit-attribute match within the configured F1
+tolerance. The former default (`0.50 / 0.25 / 0.10`) is also evaluated directly.
+Trial tables and the final choice are retained for reproducibility.
+
 Validate the configuration first:
 
 ```powershell
@@ -195,16 +227,15 @@ Run the comparison:
   --device cpu `
   --batch-size 16 `
   --ks 1 5 10 `
-  --image-weight 0.50 `
-  --text-image-weight 0.50 `
-  --attribute-weight 0.25 `
-  --image-category-bonus 0.05 `
-  --combined-category-bonus 0.10 `
   --category-top-per-class 3 `
   --category-confidence-floor 0.50 `
   --category-confidence-threshold 0.60 `
-  --output-dir .\experiments\model_comparison\results\system_pipeline_5000_v1
+  --output-dir .\experiments\model_comparison\results\system_pipeline_5000_tuned_v2
 ```
+
+Unless explicitly overridden on the command line, this final test comparison
+reads the same generated weights as the website. This keeps model selection on
+validation data and reserves the 473-product test split for final reporting.
 
 The main outputs are `comparison.csv`, `attribute_comparison.csv`,
 `query_diagnostics.csv`, `summary.md`, and the separate `query_modes/` and

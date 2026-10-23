@@ -36,12 +36,8 @@ services:
       CLIP_EMBEDDING_DIR: /app/embeddings
       CATEGORY_CONFIDENCE_THRESHOLD: ${CATEGORY_CONFIDENCE_THRESHOLD:-0.60}
       CATEGORY_CONFIDENCE_FLOOR: ${CATEGORY_CONFIDENCE_FLOOR:-0.50}
-      CATEGORY_BONUS: ${CATEGORY_BONUS:-0.05}
       CATEGORY_TOP_PER_CLASS: ${CATEGORY_TOP_PER_CLASS:-3}
-      TEXT_RETRIEVAL_IMAGE_WEIGHT: ${TEXT_RETRIEVAL_IMAGE_WEIGHT:-0.50}
-      COMBINED_IMAGE_WEIGHT: ${COMBINED_IMAGE_WEIGHT:-0.50}
-      COMBINED_CATEGORY_WEIGHT: ${COMBINED_CATEGORY_WEIGHT:-0.10}
-      COMBINED_ATTRIBUTE_WEIGHT: ${COMBINED_ATTRIBUTE_WEIGHT:-0.25}
+      RETRIEVAL_WEIGHTS_PATH: /app/retrieval_weights.json
       HF_HOME: /cache/huggingface
       RECOMMENDATION_LOG_NAME: recommendation-backend.log
     volumes:
@@ -51,6 +47,10 @@ services:
       - type: bind
         source: ./src
         target: /app/src
+      - type: bind
+        source: ./retrieval_weights.json
+        target: /app/retrieval_weights.json
+        read_only: true
       - type: bind
         source: ${FASHION_IMAGE_DIR:-./data/data}
         target: /app/data/data

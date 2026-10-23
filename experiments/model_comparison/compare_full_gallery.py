@@ -139,7 +139,16 @@ def _load_and_validate_data(args, file_sha256):
         ):
             raise ValueError(f"Catalog content changed for product: {product_id}")
 
-    queries = products.loc[products.split == "test"].copy().reset_index(drop=True)
+    query_split = getattr(args, "query_split", "test")
+    if query_split not in {"validation", "test"}:
+        raise ValueError("query_split must be either validation or test.")
+    queries = (
+        products.loc[products.split == query_split]
+        .copy()
+        .reset_index(drop=True)
+    )
+    if queries.empty:
+        raise ValueError(f"No products were assigned to the {query_split} split.")
     queries["evaluation_text"] = queries.apply(build_evaluation_text, axis=1)
     gallery_positions = {value: index for index, value in enumerate(gallery.product_id)}
     query_positions = np.asarray(

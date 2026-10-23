@@ -34,7 +34,33 @@ from .evaluation import evaluate_query_gallery_category_rankings
 DEFAULT_FINETUNED_TEXT = PROJECT / "embeddings" / "text_embeddings.npy"
 
 
+def _serving_defaults():
+    sys.path.insert(0, str(PROJECT))
+    from src.config import (
+        CATEGORY_BONUS,
+        CATEGORY_CONFIDENCE_FLOOR,
+        CATEGORY_CONFIDENCE_THRESHOLD,
+        CATEGORY_TOP_PER_CLASS,
+        COMBINED_ATTRIBUTE_WEIGHT,
+        COMBINED_CATEGORY_WEIGHT,
+        COMBINED_IMAGE_WEIGHT,
+        TEXT_RETRIEVAL_IMAGE_WEIGHT,
+    )
+
+    return {
+        "image_weight": COMBINED_IMAGE_WEIGHT,
+        "text_image_weight": TEXT_RETRIEVAL_IMAGE_WEIGHT,
+        "attribute_weight": COMBINED_ATTRIBUTE_WEIGHT,
+        "image_category_bonus": CATEGORY_BONUS,
+        "combined_category_bonus": COMBINED_CATEGORY_WEIGHT,
+        "category_top_per_class": CATEGORY_TOP_PER_CLASS,
+        "category_confidence_floor": CATEGORY_CONFIDENCE_FLOOR,
+        "category_confidence_threshold": CATEGORY_CONFIDENCE_THRESHOLD,
+    }
+
+
 def arguments():
+    defaults = _serving_defaults()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-dir", type=Path, default=DEFAULT_RUN)
     parser.add_argument("--catalog-csv", type=Path, default=DEFAULT_CATALOG)
@@ -50,14 +76,39 @@ def arguments():
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--ks", nargs="+", type=int, default=[1, 5, 10])
-    parser.add_argument("--image-weight", type=float, default=0.50)
-    parser.add_argument("--text-image-weight", type=float, default=0.50)
-    parser.add_argument("--attribute-weight", type=float, default=0.25)
-    parser.add_argument("--image-category-bonus", type=float, default=0.05)
-    parser.add_argument("--combined-category-bonus", type=float, default=0.10)
-    parser.add_argument("--category-top-per-class", type=int, default=3)
-    parser.add_argument("--category-confidence-floor", type=float, default=0.50)
-    parser.add_argument("--category-confidence-threshold", type=float, default=0.60)
+    parser.add_argument("--query-split", choices=("validation", "test"), default="test")
+    parser.add_argument("--image-weight", type=float, default=defaults["image_weight"])
+    parser.add_argument(
+        "--text-image-weight", type=float, default=defaults["text_image_weight"]
+    )
+    parser.add_argument(
+        "--attribute-weight", type=float, default=defaults["attribute_weight"]
+    )
+    parser.add_argument(
+        "--image-category-bonus",
+        type=float,
+        default=defaults["image_category_bonus"],
+    )
+    parser.add_argument(
+        "--combined-category-bonus",
+        type=float,
+        default=defaults["combined_category_bonus"],
+    )
+    parser.add_argument(
+        "--category-top-per-class",
+        type=int,
+        default=defaults["category_top_per_class"],
+    )
+    parser.add_argument(
+        "--category-confidence-floor",
+        type=float,
+        default=defaults["category_confidence_floor"],
+    )
+    parser.add_argument(
+        "--category-confidence-threshold",
+        type=float,
+        default=defaults["category_confidence_threshold"],
+    )
     parser.add_argument("--no-cache", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--self-test", action="store_true")
@@ -270,6 +321,7 @@ def main():
         "dataset_sha256": experiment["dataset_sha256"],
         "training_json_sha256": file_sha256(training_path),
         "catalog_sha256": file_sha256(args.catalog_csv),
+        "query_split": args.query_split,
         "query_count": len(queries),
         "gallery_size": len(gallery),
         "ks": ks,

@@ -1,0 +1,474 @@
+product_id,actual_category,predicted_image_category,category_confidence,category_strength,text_category,applied_category,category_source,attributes
+product_000916,Accessory Gift Set,Accessory Gift Set,0.7113715,1.0,Accessory Gift Set,Accessory Gift Set,text_image,black;grey;striped
+product_014402,Baby Dolls,Baby Dolls,0.5022982,0.022981986,Nightdress,Nightdress,text,white;pink
+product_009331,Backpacks,Backpacks,0.63349324,1.0,Backpacks,Backpacks,text_image,black;grey
+product_012035,Backpacks,Backpacks,0.50928867,0.09288653,,Backpacks,image,black;grey
+product_035013,Backpacks,Backpacks,0.58340204,0.83402014,Backpacks,Backpacks,text_image,blue;patterned;striped
+product_042178,Backpacks,Backpacks,0.5869461,0.86946154,Backpacks,Backpacks,text_image,red
+product_026893,Backpacks,Rucksacks,0.54052305,0.40523076,Backpacks,Backpacks,text,green;grey
+product_019081,Backpacks,Backpacks,0.6537947,1.0,Backpacks,Backpacks,text_image,black;blue;patterned
+product_040242,Backpacks,Backpacks,0.6155055,1.0,Backpacks,Backpacks,text_image,black;striped
+product_030222,Bangle,Bracelet,0.5079675,0.07967477,Bracelet,Bracelet,text_image,black;white
+product_041804,Basketballs,Basketballs,0.6055743,1.0,Basketballs,Basketballs,text_image,black;white
+product_033647,Bath Robe,Bath Robe,0.6121385,1.0,Bath Robe,Bath Robe,text_image,white;red;pink
+product_004444,Beauty Accessory,Compact,0.5610823,0.610823,Compact,Compact,text_image,
+product_042374,Belts,Belts,0.7094652,1.0,Trousers,Trousers,text,brown
+product_028632,Belts,Belts,0.7078598,1.0,Belts,Belts,text_image,brown
+product_031386,Belts,Belts,0.6992567,1.0,Belts,Belts,text_image,black;brown;floral
+product_005925,Belts,Belts,0.7159063,1.0,Belts,Belts,text_image,brown
+product_014767,Belts,Belts,0.71736634,1.0,Trousers,Trousers,text,black
+product_043962,Belts,Belts,0.66867566,1.0,Belts,Belts,text_image,brown
+product_013386,Belts,Belts,0.6942887,1.0,Belts,Belts,text_image,black;brown
+product_035617,Belts,Belts,0.7073856,1.0,Belts,Belts,text_image,purple
+product_000058,Blazers,Blazers,0.56860566,0.68605655,Blazers,Blazers,text_image,brown;checked
+product_043417,Body Lotion,Body Lotion,0.5311867,0.3118667,Body Lotion,Body Lotion,text_image,
+product_020138,Booties,Booties,0.61753404,1.0,Booties,Booties,text_image,yellow
+product_043921,Booties,Booties,0.54732877,0.47328782,Booties,Booties,text_image,yellow
+product_003622,Boxers,Shorts,0.50223345,0.022334173,Boxers,Boxers,text,red;patterned
+product_038047,Bra,Bra,0.583633,0.83632994,Tshirts,Tshirts,text,black
+product_013113,Bra,Bra,0.54100555,0.41005567,Bra,Bra,text_image,black
+product_043033,Bra,Bra,0.576402,0.7640201,Bra,Bra,text_image,floral
+product_043493,Bra,Bra,0.64451265,1.0,Tights,Tights,text,patterned
+product_037667,Bra,Bra,0.6015499,1.0,Bra,Bra,text_image,
+product_006634,Bracelet,Bracelet,0.50558287,0.05582842,Bracelet,Bracelet,text_image,black;gold;silver
+product_041793,Briefs,Briefs,0.53596085,0.3596084,Briefs,Briefs,text_image,blue;navy;patterned
+product_034840,Briefs,Briefs,0.55622023,0.5622022,Briefs,Briefs,text_image,black
+product_035492,Briefs,Briefs,0.5837144,0.8371445,Briefs,Briefs,text_image,black;red;patterned
+product_015183,Briefs,Briefs,0.649147,1.0,Briefs,Briefs,text_image,brown
+product_019180,Briefs,Briefs,0.70923156,1.0,Briefs,Briefs,text_image,red
+product_030940,Briefs,Briefs,0.59016734,0.90167356,Briefs,Briefs,text_image,blue;navy;patterned
+product_000095,Briefs,Briefs,0.6712077,1.0,Shorts,Shorts,text,beige;patterned
+product_034805,Briefs,Briefs,0.50264865,0.026486624,Briefs,Briefs,text_image,red;grey;patterned
+product_033569,Camisoles,Tops,0.5531569,0.53156894,Camisoles,Camisoles,text,black
+product_014534,Capris,Capris,0.52047473,0.20474721,Track Pants,Track Pants,text,blue;navy
+product_007540,Capris,Trousers,0.5234005,0.23400474,Capris,Capris,text,blue;patterned
+product_031732,Caps,Scarves,0.5098775,0.09877488,,Scarves,image,blue;patterned
+product_023243,Caps,Caps,0.71896935,1.0,Caps,Caps,text_image,black
+product_023063,Caps,Caps,0.6433849,1.0,Caps,Caps,text_image,blue
+product_042080,Casual Shoes,Casual Shoes,0.6218589,1.0,Casual Shoes,Casual Shoes,text_image,white
+product_042313,Casual Shoes,Casual Shoes,0.6339444,1.0,Casual Shoes,Casual Shoes,text_image,blue;navy
+product_007670,Casual Shoes,Formal Shoes,0.5001051,0.0010506466,Casual Shoes,Casual Shoes,text,black
+product_009414,Casual Shoes,Sports Shoes,0.5269352,0.2693519,Tshirts,Tshirts,text,black;white;green;patterned
+product_007185,Casual Shoes,Casual Shoes,0.5934501,0.9345011,Casual Shoes,Casual Shoes,text_image,black
+product_019217,Casual Shoes,Sports Shoes,0.559686,0.5968601,,Sports Shoes,image,white
+product_040085,Casual Shoes,Casual Shoes,0.5288899,0.2888988,Casual Shoes,Casual Shoes,text_image,black;grey
+product_023280,Casual Shoes,Casual Shoes,0.5275791,0.27579138,,Casual Shoes,image,black;white;blue
+product_033302,Casual Shoes,Sports Shoes,0.5187794,0.18779399,,Sports Shoes,image,white
+product_038969,Casual Shoes,Sports Shoes,0.52264965,0.22649674,Casual Shoes,Casual Shoes,text,white;patterned
+product_043363,Casual Shoes,Casual Shoes,0.60567147,1.0,,Casual Shoes,image,red
+product_035580,Casual Shoes,Casual Shoes,0.52991456,0.29914582,Casual Shoes,Casual Shoes,text_image,grey;patterned;striped
+product_035719,Casual Shoes,Casual Shoes,0.5307132,0.30713186,Casual Shoes,Casual Shoes,text_image,brown;beige
+product_043612,Casual Shoes,Formal Shoes,0.5121002,0.12100228,,Formal Shoes,image,black
+product_001993,Casual Shoes,Casual Shoes,0.5236078,0.23607762,,Casual Shoes,image,green
+product_031030,Casual Shoes,Formal Shoes,0.5067007,0.06700719,Casual Shoes,Casual Shoes,text,brown;checked
+product_012927,Casual Shoes,Heels,0.5058992,0.05899169,Leggings,Leggings,text,blue;navy
+product_009314,Casual Shoes,Casual Shoes,0.5799604,0.7996038,Heels,Heels,text,black;striped
+product_039680,Casual Shoes,Casual Shoes,0.566298,0.66298,Blazers,Blazers,text,white;blue;beige
+product_001296,Casual Shoes,Casual Shoes,0.6071539,1.0,Casual Shoes,Casual Shoes,text_image,white;grey
+product_043918,Casual Shoes,Casual Shoes,0.5295621,0.2956213,,Casual Shoes,image,red
+product_042936,Casual Shoes,Casual Shoes,0.50965005,0.09650032,Casual Shoes,Casual Shoes,text_image,green;grey;patterned
+product_002518,Casual Shoes,Casual Shoes,0.62476605,1.0,Casual Shoes,Casual Shoes,text_image,brown;checked
+product_037387,Casual Shoes,Casual Shoes,0.64265835,1.0,Casual Shoes,Casual Shoes,text_image,white;green
+product_001316,Casual Shoes,Casual Shoes,0.61205155,1.0,Casual Shoes,Casual Shoes,text_image,brown
+product_020881,Casual Shoes,Casual Shoes,0.5642177,0.6421767,Shirts,Shirts,text,checked
+product_016729,Casual Shoes,Casual Shoes,0.5192677,0.19267654,Casual Shoes,Casual Shoes,text_image,red
+product_041406,Churidar,Salwar,0.5051177,0.05117734,Earrings,Earrings,text,yellow;patterned
+product_026912,Clothing Set,Clothing Set,0.5691405,0.6914052,Clothing Set,Clothing Set,text_image,white;red;patterned
+product_005818,Clutches,Wallets,0.5301184,0.30118412,Clutches,Clutches,text,gold
+product_027144,Clutches,Wallets,0.51082087,0.10820862,,Wallets,image,pink
+product_017755,Clutches,Handbags,0.5088778,0.08877817,,Handbags,image,black
+product_014683,Compact,Compact,0.78475267,1.0,Compact,Compact,text_image,
+product_027061,Concealer,Lip Gloss,0.523028,0.23028004,Concealer,Concealer,text,
+product_032334,Cufflinks,Cufflinks,0.5527783,0.52778304,Cufflinks,Cufflinks,text_image,black
+product_012757,Deodorant,Deodorant,0.60943556,1.0,,Deodorant,image,
+product_010484,Deodorant,Deodorant,0.5218865,0.21886533,Deodorant,Deodorant,text_image,white;green
+product_041453,Deodorant,Deodorant,0.5690083,0.6900827,,Deodorant,image,floral
+product_030550,Deodorant,Deodorant,0.5801887,0.8018867,Tops,Tops,text,black;green
+product_002145,Dresses,Dresses,0.5025271,0.025271107,Leggings,Leggings,text,white;blue;navy
+product_009023,Dresses,Nightdress,0.52515036,0.2515038,Dresses,Dresses,text,grey
+product_043866,Dresses,Tops,0.5180836,0.180836,Dresses,Dresses,text,blue
+product_012709,Dresses,Kurtas,0.5051864,0.05186368,Tights,Tights,text,brown
+product_039452,Duffel Bag,Duffel Bag,0.5644384,0.64438397,Shorts,Shorts,text,beige
+product_043850,Dupatta,Dupatta,0.5343625,0.34362486,Dupatta,Dupatta,text_image,orange;floral
+product_016302,Earrings,Earrings,0.5752612,0.7526115,Earrings,Earrings,text_image,silver
+product_007399,Earrings,Earrings,0.6394189,1.0,Earrings,Earrings,text_image,white;silver
+product_001382,Earrings,Earrings,0.59188,0.9188003,Earrings,Earrings,text_image,white
+product_026120,Earrings,Earrings,0.6119374,1.0,Earrings,Earrings,text_image,gold;silver
+product_037728,Eye Cream,Lip Care,0.53720856,0.3720856,Eye Cream,Eye Cream,text,
+product_027128,Eyeshadow,Compact,0.5514889,0.5148885,,Compact,image,
+product_032017,Face Moisturisers,Face Wash and Cleanser,0.5041323,0.04132266,,Face Wash and Cleanser,image,
+product_020428,Face Scrub and Exfoliator,Mask and Peel,0.51253223,0.12532212,,Mask and Peel,image,black
+product_028180,Face Wash and Cleanser,Mask and Peel,0.54324704,0.43247038,,Mask and Peel,image,orange
+product_030805,Flats,Heels,0.502473,0.024730163,Sandals,Sandals,text,black
+product_014130,Flats,Flats,0.5169827,0.16982694,,Flats,image,black;patterned
+product_007799,Flats,Flats,0.5159505,0.15950495,Socks,Socks,text,black
+product_030741,Flats,Heels,0.526875,0.2687502,Sandals,Sandals,text,maroon
+product_041345,Flats,Heels,0.51977223,0.1977225,Flats,Flats,text,black;floral
+product_025727,Flip Flops,Flip Flops,0.5341959,0.3419589,Flip Flops,Flip Flops,text_image,black;patterned
+product_011452,Flip Flops,Flip Flops,0.57599336,0.7599337,Flip Flops,Flip Flops,text_image,red
+product_036677,Flip Flops,Flip Flops,0.5415478,0.41547805,Flip Flops,Flip Flops,text_image,blue
+product_026763,Flip Flops,Flip Flops,0.518597,0.18597016,Flip Flops,Flip Flops,text_image,white;blue;green;patterned
+product_001748,Flip Flops,Flip Flops,0.56108046,0.6108047,Flip Flops,Flip Flops,text_image,grey;patterned
+product_019926,Flip Flops,Flip Flops,0.5966683,0.9666831,Flip Flops,Flip Flops,text_image,white;green;floral
+product_031220,Flip Flops,Flip Flops,0.6369781,1.0,Flip Flops,Flip Flops,text_image,blue
+product_007264,Flip Flops,Flip Flops,0.5669964,0.6699639,Flip Flops,Flip Flops,text_image,white;patterned;floral
+product_035465,Flip Flops,Flip Flops,0.5291574,0.29157382,Flip Flops,Flip Flops,text_image,black;patterned;striped
+product_013152,Footballs,Footballs,0.6469827,1.0,Footballs,Footballs,text_image,black;white;red
+product_030475,Formal Shoes,Formal Shoes,0.52628094,0.26280913,Heels,Heels,text,brown
+product_027418,Formal Shoes,Formal Shoes,0.5093885,0.09388519,Heels,Heels,text,brown
+product_041535,Formal Shoes,Formal Shoes,0.5666641,0.666641,Formal Shoes,Formal Shoes,text_image,black
+product_043319,Formal Shoes,Formal Shoes,0.55718505,0.5718507,Formal Shoes,Formal Shoes,text_image,black
+product_028566,Formal Shoes,Formal Shoes,0.56313396,0.6313397,Dresses,Dresses,text,black
+product_031803,Formal Shoes,Formal Shoes,0.55276734,0.52767354,,Formal Shoes,image,black
+product_012770,Foundation and Primer,Face Moisturisers,0.5211039,0.21103902,,Face Moisturisers,image,beige
+product_005909,Fragrance Gift Set,Sunscreen,0.51982033,0.1982036,Fragrance Gift Set,Fragrance Gift Set,text,green
+product_030798,Free Gifts,Sarees,0.5995143,0.99514323,Sarees,Sarees,text_image,black;white;red;yellow;orange;silver;patterned
+product_040955,Gloves,Gloves,0.6832584,1.0,Gloves,Gloves,text_image,green
+product_033231,Hair Colour,Hair Colour,0.7463885,1.0,Hair Colour,Hair Colour,text_image,brown;grey
+product_018229,Handbags,Handbags,0.5949462,0.949462,Belts,Belts,text,black
+product_022662,Handbags,Handbags,0.5269797,0.2697966,Handbags,Handbags,text_image,maroon
+product_029411,Handbags,Handbags,0.56133366,0.61333644,Wallets,Wallets,text,black
+product_031029,Handbags,Handbags,0.59525347,0.9525345,Handbags,Handbags,text_image,yellow
+product_031350,Handbags,Handbags,0.64274764,1.0,Handbags,Handbags,text_image,blue;floral
+product_035291,Handbags,Wallets,0.52181464,0.21814659,,Wallets,image,brown
+product_037167,Handbags,Handbags,0.5342373,0.34237352,,Handbags,image,orange;patterned
+product_025013,Handbags,Travel Accessory,0.509831,0.098310366,Tops,Tops,text,black;grey
+product_031000,Handbags,Handbags,0.60116804,1.0,Mobile Pouch,Mobile Pouch,text,black;blue;striped
+product_038483,Handbags,Handbags,0.6109581,1.0,Handbags,Handbags,text_image,beige
+product_009978,Handbags,Handbags,0.55498093,0.54980934,Handbags,Handbags,text_image,
+product_028993,Handbags,Handbags,0.59036636,0.9036635,Mobile Pouch,Mobile Pouch,text,black;patterned
+product_000652,Handbags,Handbags,0.5610319,0.61031854,Handbags,Handbags,text_image,red
+product_017079,Handbags,Handbags,0.6136284,1.0,Mobile Pouch,Mobile Pouch,text,brown
+product_003613,Handbags,Handbags,0.5981899,0.9818987,Handbags,Handbags,text_image,black
+product_032097,Handbags,Handbags,0.60990334,1.0,Mobile Pouch,Mobile Pouch,text,brown;grey
+product_010545,Hat,Caps,0.547913,0.47913042,Caps,Caps,text_image,red
+product_009091,Headband,Wristbands,0.51084656,0.10846537,Headband,Headband,text,black;white
+product_042015,Heels,Flats,0.507897,0.07897034,Sandals,Sandals,text,brown;floral
+product_028668,Heels,Heels,0.5688573,0.6885733,Sandals,Sandals,text,gold
+product_004907,Heels,Heels,0.5195389,0.19538893,Trousers,Trousers,text,brown
+product_000307,Heels,Flats,0.50727165,0.072716355,Shorts,Shorts,text,white
+product_010695,Heels,Heels,0.534065,0.3406498,Sandals,Sandals,text,grey
+product_029709,Heels,Heels,0.5631002,0.6310019,Sandals,Sandals,text,
+product_001963,Heels,Heels,0.50127435,0.012743458,Sandals,Sandals,text,brown
+product_025869,Heels,Flats,0.5194194,0.19419365,Leggings,Leggings,text,black;floral
+product_018689,Heels,Heels,0.5358186,0.35818583,Sandals,Sandals,text,blue
+product_040098,Heels,Flats,0.50881135,0.08811379,Sandals,Sandals,text,black;white
+product_001911,Heels,Heels,0.5281321,0.2813205,Sandals,Sandals,text,brown;patterned
+product_008144,Heels,Flats,0.51242745,0.12427422,Sandals,Sandals,text,blue;beige;patterned
+product_007949,Highlighter and Blush,Highlighter and Blush,0.5445552,0.44555175,,Highlighter and Blush,image,
+product_018902,Innerwear Vests,Tshirts,0.50259703,0.025970126,Tshirts,Tshirts,text_image,white;patterned
+product_016911,Innerwear Vests,Innerwear Vests,0.58434963,0.8434965,Innerwear Vests,Innerwear Vests,text_image,white;patterned
+product_034345,Innerwear Vests,Innerwear Vests,0.5087749,0.087748945,Track Pants,Track Pants,text,black;red;grey
+product_008275,Jackets,Sweatshirts,0.50004977,0.00049785746,Jackets,Jackets,text,blue;yellow;patterned
+product_036050,Jackets,Rain Jacket,0.50501716,0.050171737,Track Pants,Track Pants,text,black;white
+product_025552,Jackets,Rain Jacket,0.54770064,0.47700655,Jackets,Jackets,text,grey
+product_001543,Jeans,Trousers,0.5005211,0.005211216,Tshirts,Tshirts,text,black
+product_030844,Jeans,Jeggings,0.5086714,0.08671405,Tshirts,Tshirts,text,blue
+product_029167,Jeans,Jeans,0.51333845,0.1333846,Tshirts,Tshirts,text,black
+product_036419,Jeans,Jeans,0.6250665,1.0,Jeans,Jeans,text_image,blue;green;yellow;brown
+product_013068,Jeans,Jeggings,0.51254547,0.1254546,Tshirts,Tshirts,text,black
+product_023687,Jeggings,Jeans,0.5007152,0.0071516787,Jeggings,Jeggings,text,blue;navy
+product_027804,Jewellery Set,Jewellery Set,0.5113263,0.113263115,Jewellery Set,Jewellery Set,text_image,blue
+product_001094,Jumpsuit,Dresses,0.5315407,0.31540665,Jumpsuit,Jumpsuit,text,purple
+product_042744,Kajal and Eyeliner,Kajal and Eyeliner,0.53928316,0.39283147,,Kajal and Eyeliner,image,
+product_030764,Kurta Sets,Kurtas,0.5010666,0.010666319,Salwar and Dupatta,Salwar and Dupatta,text,red;yellow;brown;patterned
+product_038669,Kurtas,Kurtas,0.5225445,0.225445,Leggings,Leggings,text,red;beige;patterned
+product_039391,Kurtas,Kurtas,0.53798634,0.37986362,Kurtas,Kurtas,text_image,white;patterned
+product_020551,Kurtas,Kurtas,0.5234707,0.23470677,Shorts,Shorts,text,white;red;patterned
+product_010890,Kurtas,Kurtas,0.5453869,0.45386916,Shorts,Shorts,text,red;purple;patterned
+product_012529,Kurtas,Kurtas,0.54014975,0.40149775,Kurtas,Kurtas,text_image,beige;patterned
+product_029408,Kurtas,Kurtas,0.590824,0.9082401,Kurta Sets,Kurta Sets,text,black;patterned
+product_003150,Kurtas,Kurtas,0.55441105,0.5441107,Kurtas,Kurtas,text_image,white;patterned
+product_018614,Kurtas,Kurtas,0.5407006,0.40700606,Leggings,Leggings,text,blue;patterned
+product_005724,Kurtas,Kurtas,0.53393614,0.3393616,Leggings,Leggings,text,blue;pink;patterned;floral
+product_035416,Kurtas,Kurtas,0.5616376,0.61637574,Leggings,Leggings,text,green;patterned
+product_035229,Kurtas,Kurtas,0.52090514,0.20905165,Leggings,Leggings,text,blue;floral
+product_009908,Kurtas,Tops,0.50666744,0.0666741,Kurtas,Kurtas,text,black;white;patterned
+product_002627,Kurtas,Kurtas,0.5508025,0.5080252,Kurtas,Kurtas,text_image,
+product_011791,Kurtas,Kurtas,0.5477792,0.47779205,Trousers,Trousers,text,red;silver
+product_029332,Kurtas,Kurtas,0.5603666,0.6036654,Leggings,Leggings,text,white;blue;orange;grey;silver;patterned
+product_034140,Kurtas,Dresses,0.548435,0.48434994,Leggings,Leggings,text,black
+product_018868,Kurtas,Kurtas,0.58437395,0.8437393,Kurtas,Kurtas,text_image,brown;maroon
+product_035946,Kurtis,Kurtas,0.53585887,0.3585886,Leggings,Leggings,text,red;patterned
+product_008288,Kurtis,Kurtis,0.51206493,0.120649554,Kurtis,Kurtis,text_image,black;red;patterned
+product_020309,Kurtis,Kurtis,0.5080327,0.08032664,Leggings,Leggings,text,white;green;pink;patterned
+product_023800,Laptop Bag,Laptop Bag,0.52541494,0.2541493,Mobile Pouch,Mobile Pouch,text,black
+product_002680,Leggings,Churidar,0.5214541,0.21454103,Waistcoat,Waistcoat,text,brown;beige;patterned
+product_008847,Leggings,Capris,0.5250234,0.25023428,Leggings,Leggings,text,white;grey
+product_013425,Lehenga Choli,Sarees,0.5716695,0.7166951,Lehenga Choli,Lehenga Choli,text,red;gold
+product_018427,Lip Care,Mask and Peel,0.598323,0.9832299,,Mask and Peel,image,
+product_040796,Lip Gloss,Lip Gloss,0.5621773,0.6217727,Lip Gloss,Lip Gloss,text_image,
+product_012942,Lip Gloss,Concealer,0.518852,0.18851988,,Concealer,image,
+product_043106,Lip Liner,Lip Liner,0.55082256,0.50822544,,Lip Liner,image,red
+product_032952,Lip Plumper,Lip Plumper,0.57223755,0.72237563,Lip Plumper,Lip Plumper,text_image,pink
+product_030068,Lipstick,Lipstick,0.64780223,1.0,Lipstick,Lipstick,text_image,pink;silver
+product_001314,Lipstick,Lipstick,0.6611623,1.0,Lipstick,Lipstick,text_image,
+product_006509,Lipstick,Lipstick,0.6395326,1.0,Lipstick,Lipstick,text_image,
+product_029461,Lounge Pants,Track Pants,0.50148827,0.014882493,Lounge Pants,Lounge Pants,text,black
+product_041109,Lounge Shorts,Track Pants,0.51476437,0.14764394,Lounge Shorts,Lounge Shorts,text,blue;grey;navy
+product_022512,Lounge Tshirts,Briefs,0.51735103,0.1735103,Tops,Tops,text,black;purple
+product_004421,Makeup Remover,Face Wash and Cleanser,0.51694924,0.16949238,Makeup Remover,Makeup Remover,text,
+product_009604,Mascara,Concealer,0.537226,0.37226048,Mascara,Mascara,text,black
+product_032629,Mask and Peel,Face Serum and Gel,0.5190883,0.19088323,,Face Serum and Gel,image,
+product_017726,Messenger Bag,Handbags,0.51813865,0.1813864,Messenger Bag,Messenger Bag,text,black;white;patterned;checked
+product_007245,Mobile Pouch,Clutches,0.5019935,0.01993503,Mobile Pouch,Mobile Pouch,text,black
+product_037586,Mufflers,Scarves,0.5090978,0.09097796,Tshirts,Tshirts,text,blue
+product_027163,Nail Essentials,Deodorant,0.50535077,0.053507388,Nail Polish,Nail Polish,text,purple
+product_020099,Nail Polish,Nail Polish,0.7430421,1.0,Nail Polish,Nail Polish,text_image,
+product_012211,Nail Polish,Nail Polish,0.61974305,1.0,Nail Polish,Nail Polish,text_image,
+product_036424,Nail Polish,Nail Polish,0.5382491,0.38249055,Nail Polish,Nail Polish,text_image,purple
+product_011083,Necklace and Chains,Necklace and Chains,0.5377861,0.3778611,Ring,Ring,text,brown
+product_037114,Necklace and Chains,Necklace and Chains,0.53193504,0.31935024,,Necklace and Chains,image,white;blue;brown
+product_010363,Nehru Jackets,Nehru Jackets,0.5397856,0.3978563,Jackets,Nehru Jackets,text_image,blue
+product_032170,Night suits,Night suits,0.5775073,0.77507323,Night suits,Night suits,text_image,pink;checked
+product_008582,Night suits,Shorts,0.502673,0.02672993,Tshirts,Tshirts,text,black;grey
+product_044200,Nightdress,Nightdress,0.5384016,0.3840163,Nightdress,Nightdress,text_image,white;red;yellow;floral
+product_029175,Nightdress,Nightdress,0.50433207,0.043320525,Nightdress,Nightdress,text_image,red;orange;striped
+product_010647,Patiala,Salwar,0.5023074,0.023074213,Patiala,Patiala,text,white;blue;green;patterned
+product_032949,Pendant,Pendant,0.5385594,0.38559395,Pendant,Pendant,text_image,white;gold;silver
+product_031990,Pendant,Necklace and Chains,0.53628683,0.36286834,Pendant,Pendant,text,silver
+product_004363,Perfume and Body Mist,Perfume and Body Mist,0.5657285,0.65728474,Tops,Tops,text,white;orange
+product_031276,Perfume and Body Mist,Perfume and Body Mist,0.559848,0.59847987,Caps,Caps,text,green;pink;floral
+product_008625,Perfume and Body Mist,Mascara,0.503656,0.036560494,,Mascara,image,blue
+product_032953,Perfume and Body Mist,Perfume and Body Mist,0.56122947,0.6122947,,Perfume and Body Mist,image,pink;orange;floral
+product_012660,Perfume and Body Mist,Perfume and Body Mist,0.5727461,0.7274608,,Perfume and Body Mist,image,white;red;floral
+product_010514,Perfume and Body Mist,Perfume and Body Mist,0.5611515,0.61151534,,Perfume and Body Mist,image,gold;floral
+product_035810,Rain Jacket,Rain Jacket,0.5032157,0.032156914,Rain Jacket,Rain Jacket,text_image,green
+product_002990,Ring,Ring,0.52336556,0.23365584,Ring,Ring,text_image,black;silver
+product_020511,Ring,Ring,0.5769889,0.76988864,Ring,Ring,text_image,white;gold;silver
+product_002951,Robe,Nightdress,0.51321304,0.13213053,Robe,Robe,text,pink
+product_035915,Rompers,Rompers,0.68316996,1.0,Rompers,Rompers,text_image,blue;yellow;patterned
+product_018092,Rompers,Rompers,0.67749906,1.0,Rompers,Rompers,text_image,blue;yellow;patterned
+product_032660,Rucksacks,Backpacks,0.51473397,0.14733969,Rucksacks,Rucksacks,text,green;grey
+product_000748,Salwar,Salwar,0.51013684,0.101368524,Waistcoat,Waistcoat,text,patterned
+product_040898,Salwar and Dupatta,Salwar and Dupatta,0.56599224,0.6599226,Salwar and Dupatta,Salwar and Dupatta,text_image,black;white;patterned
+product_015965,Sandals,Sandals,0.5591081,0.5910806,Sandals,Sandals,text_image,brown
+product_010677,Sandals,Flip Flops,0.5509581,0.5095811,Sandals,Sandals,text,pink
+product_021373,Sandals,Sandals,0.5401594,0.40159422,Sandals,Sandals,text_image,white;orange;patterned
+product_011829,Sandals,Heels,0.52322733,0.23227333,Sandals,Sandals,text,black;white;grey;patterned
+product_013427,Sandals,Sandals,0.53333336,0.33333385,Sandals,Sandals,text_image,grey
+product_022971,Sandals,Flip Flops,0.5845586,0.845586,Sandals,Sandals,text,blue;navy;patterned
+product_016688,Sandals,Flip Flops,0.5629076,0.629076,Sandals,Sandals,text,blue
+product_016817,Sandals,Sandals,0.54973394,0.49733925,Sandals,Sandals,text_image,brown
+product_013210,Sarees,Sarees,0.627042,1.0,Sarees,Sarees,text_image,blue;purple;striped
+product_021497,Sarees,Sarees,0.60222423,1.0,,Sarees,image,
+product_007189,Sarees,Sarees,0.64156103,1.0,,Sarees,image,green;orange
+product_032207,Sarees,Sarees,0.5556464,0.556464,,Sarees,image,beige;patterned
+product_013738,Scarves,Scarves,0.5161458,0.1614582,Tshirts,Tshirts,text,pink;patterned
+product_005043,Scarves,Scarves,0.5283385,0.28338474,Jackets,Jackets,text,black;white;checked
+product_033868,Shapewear,Shapewear,0.5349007,0.34900722,Shapewear,Shapewear,text_image,black;purple
+product_010713,Shirts,Shirts,0.63404334,1.0,Trousers,Trousers,text,white;red;checked
+product_004278,Shirts,Shirts,0.57932985,0.7932985,Shirts,Shirts,text_image,white;blue;green;yellow;grey;checked
+product_013045,Shirts,Shirts,0.6199669,1.0,Trousers,Trousers,text,black;white;blue;checked
+product_001251,Shirts,Shirts,0.6162417,1.0,Shirts,Shirts,text_image,black;yellow;brown;checked
+product_020520,Shirts,Shirts,0.6108958,1.0,Shirts,Shirts,text_image,
+product_041480,Shirts,Shirts,0.5745236,0.7452365,Shirts,Shirts,text_image,blue;navy;striped
+product_035340,Shirts,Shirts,0.58844006,0.8844004,Trousers,Trousers,text,white
+product_004422,Shirts,Shirts,0.56443197,0.6443194,Shirts,Shirts,text_image,white;blue;checked
+product_024731,Shirts,Shirts,0.61983746,1.0,Shirts,Shirts,text_image,black;blue;checked
+product_014245,Shirts,Shirts,0.5130339,0.1303391,Shirts,Shirts,text_image,green
+product_042681,Shirts,Shirts,0.62092215,1.0,Shirts,Shirts,text_image,white;red;blue;checked
+product_027520,Shirts,Shirts,0.60253346,1.0,Shirts,Shirts,text_image,black;striped
+product_037681,Shirts,Shirts,0.5326761,0.3267607,Skirts,Skirts,text,purple
+product_038936,Shirts,Shirts,0.607568,1.0,Shirts,Shirts,text_image,blue;purple;navy;striped
+product_010611,Shirts,Shirts,0.5914214,0.914214,Trousers,Trousers,text,purple
+product_035392,Shirts,Shirts,0.57197255,0.7197257,Shirts,Shirts,text_image,blue;grey;striped
+product_030098,Shirts,Shirts,0.7068,1.0,Shirts,Shirts,text_image,purple;grey;striped
+product_023307,Shirts,Shirts,0.59170794,0.9170797,Trousers,Trousers,text,black;patterned
+product_028732,Shirts,Shirts,0.6412412,1.0,Sports Shoes,Sports Shoes,text,blue;checked
+product_018326,Shirts,Shirts,0.6215608,1.0,Trousers,Trousers,text,blue;navy
+product_012999,Shirts,Shirts,0.5593466,0.59346604,Shirts,Shirts,text_image,red;checked
+product_011221,Shirts,Shirts,0.5618189,0.6181891,Trousers,Trousers,text,white
+product_020120,Shirts,Shirts,0.63514405,1.0,Shirts,Shirts,text_image,green;grey;checked
+product_028181,Shirts,Shirts,0.5936797,0.9367971,Shirts,Shirts,text_image,black;striped
+product_020795,Shirts,Shirts,0.5585454,0.5854539,Shirts,Shirts,text_image,black
+product_020357,Shirts,Shirts,0.5853702,0.8537016,Trousers,Trousers,text,black;white;blue;navy;checked
+product_008139,Shoe Accessories,Shoe Accessories,0.5510973,0.51097286,,Shoe Accessories,image,
+product_010325,Shorts,Lounge Shorts,0.503841,0.038409967,,Lounge Shorts,image,blue;navy
+product_008708,Shorts,Shorts,0.5935451,0.93545085,Shorts,Shorts,text_image,black;white;pink
+product_029095,Shorts,Shorts,0.53084636,0.3084634,Shorts,Shorts,text_image,white;patterned
+product_012060,Shorts,Shorts,0.55074054,0.50740534,Shorts,Shorts,text_image,blue;navy
+product_012447,Shorts,Track Pants,0.5113843,0.113843136,Trousers,Trousers,text,blue;grey;navy;gold
+product_016355,Shrug,Tops,0.5673666,0.67366594,Casual Shoes,Casual Shoes,text,grey
+product_038481,Skirts,Jeans,0.5229783,0.22978315,Tshirts,Tshirts,text,blue;navy
+product_004305,Socks,Socks,0.6786917,1.0,Socks,Socks,text_image,black;brown;grey
+product_005994,Socks,Socks,0.6021505,1.0,Socks,Socks,text_image,white;blue
+product_018224,Socks,Socks,0.70642793,1.0,Socks,Socks,text_image,black;white;red;blue;green;striped
+product_030644,Socks,Socks,0.61920387,1.0,Socks,Socks,text_image,black;white
+product_010650,Socks,Socks,0.654214,1.0,Sports Shoes,Sports Shoes,text,white
+product_044232,Socks,Socks,0.7409157,1.0,Socks,Socks,text_image,white;grey;navy
+product_034279,Sports Sandals,Sandals,0.5849064,0.84906423,Sports Sandals,Sandals,text_image,
+product_027722,Sports Shoes,Sports Shoes,0.59361964,0.9361963,Sports Shoes,Sports Shoes,text_image,white
+product_028228,Sports Shoes,Casual Shoes,0.5535473,0.535473,Sports Shoes,Sports Shoes,text,white
+product_041915,Sports Shoes,Sports Shoes,0.6606518,1.0,,Sports Shoes,image,black;red
+product_012577,Sports Shoes,Casual Shoes,0.50820553,0.08205551,Sports Shoes,Sports Shoes,text,grey;striped
+product_016413,Sports Shoes,Sports Shoes,0.5514056,0.5140563,Sports Shoes,Sports Shoes,text_image,white;silver
+product_036427,Sports Shoes,Casual Shoes,0.52600867,0.26008692,Sports Shoes,Sports Shoes,text,white
+product_015274,Sports Shoes,Sports Shoes,0.5816793,0.8167926,,Sports Shoes,image,white;blue;navy
+product_020488,Sports Shoes,Sports Shoes,0.5033675,0.033675093,Sports Shoes,Sports Shoes,text_image,blue
+product_022489,Sports Shoes,Sports Shoes,0.51967484,0.19674864,Sports Shoes,Sports Shoes,text_image,black;checked
+product_012099,Sports Shoes,Sports Shoes,0.5201264,0.20126382,Sports Shoes,Sports Shoes,text_image,blue;grey
+product_002931,Sports Shoes,Sports Shoes,0.5294385,0.29438472,Sports Shoes,Sports Shoes,text_image,white
+product_015336,Sports Shoes,Sports Shoes,0.57689625,0.76896274,Sports Shoes,Sports Shoes,text_image,white
+product_029827,Sports Shoes,Sandals,0.5026713,0.026713144,Sports Shoes,Sports Shoes,text,black
+product_041689,Sports Shoes,Sports Shoes,0.5922662,0.9226623,Heels,Heels,text,white;pink;grey
+product_027841,Sports Shoes,Sports Shoes,0.5888698,0.88869816,Sports Shoes,Sports Shoes,text_image,white
+product_023119,Sports Shoes,Sports Shoes,0.51796,0.17959994,Jeans,Jeans,text,white
+product_006163,Sports Shoes,Casual Shoes,0.51667833,0.16678348,,Casual Shoes,image,black;white
+product_021768,Sports Shoes,Sports Shoes,0.5515376,0.515376,Socks,Socks,text,blue
+product_043194,Sports Shoes,Sports Shoes,0.62991077,1.0,Sports Shoes,Sports Shoes,text_image,white;striped
+product_013616,Stockings,Stockings,0.5656828,0.65682846,Stockings,Stockings,text_image,black
+product_026457,Stoles,Stoles,0.517008,0.17007984,Stoles,Stoles,text_image,white;blue
+product_040989,Sunglasses,Sunglasses,0.5618553,0.618553,Sunglasses,Sunglasses,text_image,black;grey
+product_007011,Sunglasses,Sunglasses,0.57083505,0.7083508,Sunglasses,Sunglasses,text_image,brown
+product_015844,Sunglasses,Sunglasses,0.56017154,0.6017152,Sunglasses,Sunglasses,text_image,black;green
+product_036958,Sunglasses,Sunglasses,0.55440325,0.54403263,Sunglasses,Sunglasses,text_image,brown
+product_043540,Sunglasses,Sunglasses,0.54756653,0.47566524,Sunglasses,Sunglasses,text_image,black;brown;patterned
+product_035495,Sunglasses,Sunglasses,0.54900545,0.49005425,Sunglasses,Sunglasses,text_image,black
+product_032183,Sunglasses,Sunglasses,0.5801597,0.80159706,Sunglasses,Sunglasses,text_image,orange
+product_032925,Sunglasses,Sunglasses,0.55156296,0.5156295,Sunglasses,Sunglasses,text_image,gold
+product_027454,Sunglasses,Sunglasses,0.575956,0.7595599,Sunglasses,Sunglasses,text_image,
+product_029589,Sunglasses,Sunglasses,0.5465485,0.46548498,Sunglasses,Sunglasses,text_image,
+product_002342,Sunscreen,Sunscreen,0.5816005,0.81600493,,Sunscreen,image,
+product_000131,Suspenders,Suspenders,0.76740724,1.0,Suspenders,Suspenders,text_image,black;red
+product_015661,Sweaters,Sweaters,0.5187499,0.18749921,Tshirts,Tshirts,text,black;blue;striped
+product_003799,Sweaters,Kurtis,0.5002129,0.0021291103,Sweaters,Sweaters,text,pink;purple
+product_027354,Sweaters,Sweaters,0.521377,0.21377027,Tshirts,Tshirts,text,blue;green;navy;striped
+product_006782,Sweatshirts,Sweatshirts,0.51914096,0.19140951,Sports Shoes,Sports Shoes,text,grey
+product_009839,Sweatshirts,Sweatshirts,0.63130474,1.0,Sweatshirts,Sweatshirts,text_image,white
+product_015051,Sweatshirts,Jackets,0.51810217,0.18102185,Sweatshirts,Sweatshirts,text,blue
+product_005703,Swimwear,Swimwear,0.54472786,0.44727868,Bra,Bra,text,black
+product_025498,Tablet Sleeve,Handbags,0.5172648,0.1726478,Ipad,Ipad,text,brown
+product_027220,Ties,Ties,0.6804945,1.0,,Ties,image,purple;patterned
+product_026298,Ties,Ties,0.68495053,1.0,,Ties,image,white
+product_043266,Ties,Ties,0.671084,1.0,,Ties,image,black;white;purple;striped
+product_036417,Tights,Tights,0.53999954,0.39999518,Tights,Tights,text_image,black;blue;yellow;pink;orange;striped
+product_008910,Toner,Sunscreen,0.54440534,0.44405326,Toner,Toner,text,
+product_022993,Tops,Nightdress,0.50007087,0.0007087719,Heels,Heels,text,white;pink;patterned
+product_012388,Tops,Tops,0.5001089,0.0010891566,Tops,Tops,text_image,orange
+product_029397,Tops,Tops,0.5077725,0.077725105,Tshirts,Tshirts,text,white;blue;green;patterned;striped
+product_021304,Tops,Dresses,0.53665596,0.36655983,Blazers,Blazers,text,black
+product_038401,Tops,Tshirts,0.58254075,0.8254075,Tshirts,Tshirts,text_image,white;patterned
+product_006971,Tops,Tshirts,0.5210779,0.21077864,Skirts,Skirts,text,white;pink
+product_037925,Tops,Tops,0.50621724,0.062172394,Shorts,Shorts,text,pink
+product_034053,Tops,Tops,0.53688496,0.36884966,Leggings,Leggings,text,black;blue
+product_009005,Tops,Tops,0.5186751,0.18675104,Flats,Flats,text,white;patterned
+product_037439,Tops,Tshirts,0.51058596,0.105859675,Sandals,Sandals,text,
+product_018221,Tops,Tops,0.52283645,0.22836417,Sandals,Sandals,text,white;pink
+product_020392,Tops,Shirts,0.5116006,0.11600587,Tops,Tops,text,white;blue;patterned;checked
+product_028863,Tops,Skirts,0.5031279,0.03127872,Baby Dolls,Baby Dolls,text,white;purple;patterned;floral
+product_023211,Tops,Tshirts,0.5233834,0.23383401,Tshirts,Tshirts,text_image,white;patterned
+product_001886,Tops,Tops,0.5170796,0.17079589,Blazers,Blazers,text,white
+product_027907,Track Pants,Track Pants,0.55313164,0.5313165,Track Pants,Track Pants,text_image,grey
+product_032121,Track Pants,Track Pants,0.55522335,0.5522336,Track Pants,Track Pants,text_image,black
+product_004940,Track Pants,Track Pants,0.5314692,0.31469247,Sports Shoes,Sports Shoes,text,black
+product_006760,Tracksuits,Tracksuits,0.57012916,0.7012918,Track Pants,Track Pants,text,red;grey
+product_008849,Travel Accessory,Handbags,0.53072184,0.3072182,Tops,Tops,text,orange
+product_015334,Trolley Bag,Laptop Bag,0.5451302,0.45130217,Trolley Bag,Trolley Bag,text,black
+product_006541,Trousers,Trousers,0.6091041,1.0,Trousers,Trousers,text_image,grey
+product_043936,Trousers,Trousers,0.5378448,0.37844753,Trousers,Trousers,text_image,black
+product_017005,Trousers,Jeans,0.519886,0.19886039,Trousers,Trousers,text,brown
+product_024765,Trousers,Trousers,0.5723226,0.72322625,Trousers,Trousers,text_image,black;striped
+product_033812,Trousers,Trousers,0.56566715,0.65667146,Trousers,Trousers,text_image,
+product_022000,Trunk,Trunk,0.56022626,0.60226274,,Trunk,image,black;patterned
+product_041882,Trunk,Briefs,0.5776837,0.7768371,Briefs,Briefs,text_image,white
+product_020526,Tshirts,Tshirts,0.603851,1.0,Sports Shoes,Sports Shoes,text,white;patterned
+product_010991,Tshirts,Tshirts,0.59966195,0.9966194,Tshirts,Tshirts,text_image,orange;patterned
+product_005622,Tshirts,Tshirts,0.6661246,1.0,Tshirts,Tshirts,text_image,black;patterned
+product_003036,Tshirts,Tshirts,0.56776106,0.6776109,Sports Shoes,Sports Shoes,text,white;patterned
+product_025446,Tshirts,Tshirts,0.5795476,0.79547566,Tshirts,Tshirts,text_image,white;blue;purple;navy;striped
+product_008742,Tshirts,Tshirts,0.629449,1.0,Track Pants,Track Pants,text,white;red
+product_030454,Tshirts,Tshirts,0.66579217,1.0,Tshirts,Tshirts,text_image,black
+product_001471,Tshirts,Tshirts,0.51748616,0.17486149,Sports Shoes,Sports Shoes,text,red;blue;grey;navy;striped
+product_011870,Tshirts,Tshirts,0.5034886,0.034885783,Tshirts,Tshirts,text_image,white;patterned
+product_042028,Tshirts,Tops,0.5005105,0.0051052948,Tshirts,Tshirts,text,green;patterned
+product_004605,Tshirts,Sweatshirts,0.525833,0.25832987,Tshirts,Sweatshirts,text_image,black;patterned
+product_022963,Tshirts,Tshirts,0.5533841,0.5338414,Tshirts,Tshirts,text_image,yellow;patterned
+product_032791,Tshirts,Tshirts,0.6439864,1.0,Tshirts,Tshirts,text_image,blue;patterned
+product_021900,Tshirts,Tshirts,0.5786981,0.7869811,Tshirts,Tshirts,text_image,blue;navy
+product_030957,Tshirts,Tshirts,0.63702667,1.0,Tshirts,Tshirts,text_image,grey;patterned
+product_016711,Tshirts,Tshirts,0.53264457,0.3264458,Tshirts,Tshirts,text_image,black;patterned
+product_025604,Tshirts,Tshirts,0.6201965,1.0,Tshirts,Tshirts,text_image,red;patterned
+product_002516,Tshirts,Tshirts,0.55073875,0.50738764,Tshirts,Tshirts,text_image,black;white;patterned
+product_012530,Tshirts,Tshirts,0.6639114,1.0,Sweatshirts,Tshirts,text_image,black;patterned
+product_009007,Tshirts,Tshirts,0.5177565,0.17756514,Tshirts,Tshirts,text_image,red;patterned
+product_019595,Tshirts,Tshirts,0.59192014,0.9192013,Tshirts,Tshirts,text_image,maroon
+product_033918,Tshirts,Tshirts,0.5865538,0.8655382,Trousers,Trousers,text,black;patterned
+product_025635,Tshirts,Tshirts,0.56243575,0.6243577,Tshirts,Tshirts,text_image,blue;green;navy;striped
+product_017511,Tshirts,Tops,0.5036439,0.036438517,Tshirts,Tshirts,text,pink
+product_014612,Tshirts,Tshirts,0.6394569,1.0,Tshirts,Tshirts,text_image,blue;navy;patterned
+product_024786,Tshirts,Tshirts,0.66071695,1.0,Shorts,Shorts,text,blue
+product_038828,Tshirts,Tshirts,0.615608,1.0,Tshirts,Tshirts,text_image,purple
+product_025563,Tshirts,Tshirts,0.6269641,1.0,Casual Shoes,Casual Shoes,text,orange;patterned
+product_040523,Tshirts,Tshirts,0.5757335,0.7573347,Tshirts,Tshirts,text_image,blue;grey;striped
+product_023994,Tshirts,Tshirts,0.65100324,1.0,Tshirts,Tshirts,text_image,blue;navy;patterned
+product_024719,Tshirts,Tshirts,0.5752621,0.75262105,Sports Shoes,Sports Shoes,text,black;white;blue;patterned
+product_042464,Tshirts,Tshirts,0.53457975,0.34579766,Tshirts,Tshirts,text_image,white;patterned
+product_038264,Tshirts,Tshirts,0.56870264,0.6870265,Tshirts,Tshirts,text_image,black;red
+product_007651,Tshirts,Tshirts,0.54143333,0.4143334,Tshirts,Tshirts,text_image,white;green;striped
+product_005123,Tshirts,Tshirts,0.5260046,0.26004604,Tshirts,Tshirts,text_image,black
+product_004066,Tshirts,Tshirts,0.64983016,1.0,Shorts,Shorts,text,blue;gold;patterned
+product_028695,Tshirts,Tops,0.514836,0.14836031,Sports Shoes,Sports Shoes,text,white;patterned
+product_031090,Tshirts,Shirts,0.5071197,0.07119732,Tshirts,Shirts,text_image,grey
+product_002939,Tshirts,Tshirts,0.6139358,1.0,Tshirts,Tshirts,text_image,blue;striped
+product_040317,Tshirts,Tshirts,0.5964848,0.96484804,Tshirts,Tshirts,text_image,black
+product_030743,Tshirts,Tshirts,0.63988674,1.0,Sports Shoes,Sports Shoes,text,grey
+product_009169,Tshirts,Tshirts,0.5765866,0.76586634,Tshirts,Tshirts,text_image,black;white;grey;patterned;striped
+product_015502,Tshirts,Tshirts,0.6206928,1.0,Tshirts,Tshirts,text_image,blue;patterned
+product_008811,Tshirts,Tshirts,0.6250977,1.0,Tshirts,Tshirts,text_image,green;patterned
+product_005832,Tshirts,Tshirts,0.5824615,0.8246145,Tshirts,Tshirts,text_image,grey;patterned
+product_024455,Tshirts,Tshirts,0.67512894,1.0,,Tshirts,image,blue
+product_032285,Tshirts,Tshirts,0.5433557,0.43355715,Tshirts,Tshirts,text_image,
+product_009156,Tshirts,Tshirts,0.5607989,0.6079888,Tshirts,Tshirts,text_image,black;purple;striped
+product_029347,Tshirts,Tshirts,0.5177534,0.17753442,Tshirts,Tshirts,text_image,white;patterned
+product_002668,Tshirts,Tshirts,0.6287317,1.0,Tshirts,Tshirts,text_image,blue
+product_038810,Tshirts,Tshirts,0.56620467,0.66204643,Tshirts,Tshirts,text_image,white;striped
+product_021799,Tshirts,Tshirts,0.5850372,0.8503714,Tshirts,Tshirts,text_image,black;white;blue;grey;striped
+product_041975,Tshirts,Tshirts,0.58845466,0.8845467,Tshirts,Tshirts,text_image,grey;maroon;striped
+product_004131,Tshirts,Tshirts,0.5354367,0.3543668,Tshirts,Tshirts,text_image,black;red;green;grey
+product_029882,Tshirts,Tops,0.5147772,0.14777158,Tshirts,Tshirts,text,white;pink;brown
+product_008028,Tshirts,Tshirts,0.5376193,0.37619314,Flip Flops,Flip Flops,text,white;blue;navy;patterned;striped
+product_040480,Tshirts,Tshirts,0.6680165,1.0,Tshirts,Tshirts,text_image,red;patterned
+product_029185,Tshirts,Tshirts,0.5018138,0.018138045,Tshirts,Tshirts,text_image,white;patterned
+product_014408,Tshirts,Sweatshirts,0.51053303,0.105330385,Casual Shoes,Casual Shoes,text,red;grey;patterned
+product_019143,Tshirts,Tshirts,0.6416831,1.0,Shorts,Shorts,text,blue;grey
+product_001087,Tshirts,Tshirts,0.6738943,1.0,Sweatshirts,Tshirts,text_image,black;white;red;patterned
+product_019422,Tunics,Tops,0.54145086,0.4145087,Leggings,Leggings,text,blue;patterned;floral
+product_025112,Tunics,Kurtas,0.5059171,0.05917043,Tunics,Tunics,text,green;patterned;floral
+product_040375,Umbrellas,Umbrellas,0.7144412,1.0,Umbrellas,Umbrellas,text_image,black;green;patterned;striped
+product_013272,Waist Pouch,Waist Pouch,0.58407295,0.84072965,Waist Pouch,Waist Pouch,text_image,
+product_012140,Waistcoat,Tops,0.5564199,0.56419885,Waistcoat,Waistcoat,text,blue
+product_024960,Wallets,Wallets,0.5491359,0.49135938,,Wallets,image,blue;checked
+product_041999,Wallets,Wallets,0.58769625,0.87696236,Wallets,Wallets,text_image,black
+product_033695,Wallets,Wallets,0.60040146,1.0,Wallets,Wallets,text_image,orange
+product_000979,Wallets,Wallets,0.6979953,1.0,Wallets,Wallets,text_image,brown
+product_006424,Wallets,Wallets,0.5335464,0.3354638,Wallets,Wallets,text_image,green
+product_019636,Wallets,Wallets,0.5189036,0.18903597,Wallets,Wallets,text_image,pink;patterned
+product_033565,Wallets,Wallets,0.6684075,1.0,Wallets,Wallets,text_image,brown
+product_018039,Wallets,Wallets,0.6654313,1.0,Wallets,Wallets,text_image,brown
+product_024307,Wallets,Wallets,0.5712484,0.71248406,Wallets,Wallets,text_image,
+product_014955,Watches,Watches,0.55977,0.59769994,,Watches,image,white
+product_036405,Watches,Belts,0.5847852,0.84785235,,Belts,image,black;silver
+product_043422,Watches,Watches,0.5865675,0.8656753,Watches,Watches,text_image,gold
+product_006198,Watches,Watches,0.6554459,1.0,Sandals,Sandals,text,white;blue;silver
+product_005902,Watches,Watches,0.5172424,0.17242356,,Watches,image,black;silver;patterned
+product_022143,Watches,Watches,0.5401618,0.40161774,,Watches,image,white
+product_024071,Watches,Watches,0.53834397,0.38343942,,Watches,image,black
+product_010431,Watches,Watches,0.53927934,0.39279354,,Watches,image,black;white
+product_019907,Watches,Watches,0.5913549,0.91354877,,Watches,image,white
+product_030526,Watches,Watches,0.61992675,1.0,Watches,Watches,text_image,black;red
+product_014250,Watches,Watches,0.5314596,0.31459624,Bracelet,Bracelet,text,black
+product_002831,Watches,Watches,0.53748995,0.37489963,,Watches,image,black;white
+product_021844,Watches,Watches,0.60858804,1.0,,Watches,image,white;pink;silver
+product_021568,Watches,Watches,0.5373127,0.37312666,Watches,Watches,text_image,white;silver
+product_024116,Watches,Watches,0.54349107,0.4349105,,Watches,image,black;white
+product_025071,Watches,Watches,0.5723331,0.72333086,,Watches,image,white;gold
+product_004133,Watches,Watches,0.55758905,0.5758905,,Watches,image,black;silver
+product_029707,Watches,Watches,0.5616201,0.61620134,Bracelet,Bracelet,text,silver
+product_001715,Watches,Watches,0.5663011,0.6630112,Watches,Watches,text_image,black;white;silver
+product_019199,Watches,Watches,0.5832624,0.8326238,Watches,Watches,text_image,black;white;silver
+product_032694,Watches,Watches,0.5577906,0.5779057,,Watches,image,silver
+product_018653,Watches,Watches,0.5786399,0.7863991,,Watches,image,black
+product_041513,Watches,Watches,0.535254,0.35253978,Tops,Tops,text,black;white;silver
+product_034459,Water Bottle,Water Bottle,0.55831695,0.58316946,Water Bottle,Water Bottle,text_image,black;patterned
+product_039269,Wristbands,Headband,0.50018936,0.0018936528,Wristbands,Wristbands,text,white

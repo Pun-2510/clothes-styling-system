@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import os
 
@@ -30,6 +31,46 @@ PROCESSED_CSV = (
     PROCESSED_DIR /
     "products.csv"
 )
+
+# Offline validation can produce this artifact with
+# ``python -m experiments.model_comparison.tune_serving_weights``. When the
+# file is absent, the conservative built-in values below remain available.
+RETRIEVAL_WEIGHTS_PATH = Path(
+    os.environ.get(
+        "RETRIEVAL_WEIGHTS_PATH",
+        str(BASE_DIR / "retrieval_weights.json"),
+    )
+)
+
+
+def _load_retrieval_weights():
+    if not RETRIEVAL_WEIGHTS_PATH.is_file():
+        return {}
+    try:
+        payload = json.loads(RETRIEVAL_WEIGHTS_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError(
+            f"Cannot read retrieval weights: {RETRIEVAL_WEIGHTS_PATH}"
+        ) from error
+    weights = payload.get("weights", payload)
+    if not isinstance(weights, dict):
+        raise ValueError("retrieval_weights.json must contain a weights object.")
+    return weights
+
+
+RETRIEVAL_WEIGHTS = _load_retrieval_weights()
+
+
+def _configured_float(name, fallback):
+    # Explicit process environment values remain useful for controlled runs.
+    # Otherwise the validation-selected artifact is authoritative.
+    raw_value = os.environ.get(name)
+    if raw_value is None or not raw_value.strip():
+        raw_value = RETRIEVAL_WEIGHTS.get(name, fallback)
+    try:
+        return float(raw_value)
+    except (TypeError, ValueError) as error:
+        raise ValueError(f"{name} must be numeric.") from error
 
 
 # =========================================================
@@ -156,23 +197,21 @@ TOP_K = 5
 
 # Text search can compare a text query with both catalog images and catalog
 # descriptions. This value controls that internal text-retrieval mixture.
-TEXT_RETRIEVAL_IMAGE_WEIGHT = float(
-    os.environ.get("TEXT_RETRIEVAL_IMAGE_WEIGHT", "0.50")
+TEXT_RETRIEVAL_IMAGE_WEIGHT = _configured_float(
+    "TEXT_RETRIEVAL_IMAGE_WEIGHT", 0.50
 )
 
 # Default balance for a query that contains both an image and text. A value of
 # 0.50 gives the two query modalities equal influence on the final ranking.
-COMBINED_IMAGE_WEIGHT = float(
-    os.environ.get("COMBINED_IMAGE_WEIGHT", "0.50")
-)
+COMBINED_IMAGE_WEIGHT = _configured_float("COMBINED_IMAGE_WEIGHT", 0.50)
 
 # Combined search treats explicit text attributes as requested edits to the
 # reference image. These weights are applied after raw cosine fusion.
-COMBINED_CATEGORY_WEIGHT = float(
-    os.environ.get("COMBINED_CATEGORY_WEIGHT", "0.10")
+COMBINED_CATEGORY_WEIGHT = _configured_float(
+    "COMBINED_CATEGORY_WEIGHT", 0.10
 )
-COMBINED_ATTRIBUTE_WEIGHT = float(
-    os.environ.get("COMBINED_ATTRIBUTE_WEIGHT", "0.25")
+COMBINED_ATTRIBUTE_WEIGHT = _configured_float(
+    "COMBINED_ATTRIBUTE_WEIGHT", 0.25
 )
 
 for setting_name, setting_value in (
@@ -224,9 +263,7 @@ if not 0.0 <= CATEGORY_CONFIDENCE_FLOOR < CATEGORY_CONFIDENCE_THRESHOLD <= 1.0:
 # Nó chỉ cộng thêm điểm nếu category
 # của sản phẩm trùng với category dự đoán.
 
-CATEGORY_BONUS = float(
-    os.environ.get("CATEGORY_BONUS", "0.05")
-)
+CATEGORY_BONUS = _configured_float("CATEGORY_BONUS", 0.05)
 
 if CATEGORY_BONUS < 0.0:
     raise ValueError("CATEGORY_BONUS cannot be negative.")

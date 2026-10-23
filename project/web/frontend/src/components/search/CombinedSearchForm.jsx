@@ -8,7 +8,6 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
   const [query, setQuery] = useState('')
   const [language, setLanguage] = useState('vi')
   const [topK, setTopK] = useState(5)
-  const [imageWeight, setImageWeight] = useState(0.5)
   const [dragging, setDragging] = useState(false)
   const inputRef = useRef(null)
   const preview = useMemo(() => file ? URL.createObjectURL(file) : '', [file])
@@ -46,13 +45,13 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
     onSearchStart()
     try {
       if (hasImage && hasText) {
-        const result = await searchByCombined({ file, query, language, topK, imageWeight })
+        const result = await searchByCombined({ file, query, language, topK })
         onSearchSuccess(result, 'combined')
       } else if (hasImage) {
         const result = await searchByImage({ file, topK })
         onSearchSuccess(result, 'image')
       } else {
-        const result = await searchByText({ query, language, topK, imageWeight: 0.5 })
+        const result = await searchByText({ query, language, topK })
         onSearchSuccess(result, 'text')
       }
     } catch (error) {
@@ -135,12 +134,6 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
           </select>
         </label>
 
-        {hasImage && hasText && (
-          <label className="control-group range-control">
-            <span className="control-label">Ảnh {Math.round(imageWeight * 100)}% · mô tả {Math.round((1 - imageWeight) * 100)}%</span>
-            <input type="range" min="0" max="1" step="0.05" value={imageWeight} onChange={(event) => setImageWeight(Number(event.target.value))} />
-          </label>
-        )}
       </div>
 
       <button className="primary-button" type="submit" disabled={!canSearch || loading}>

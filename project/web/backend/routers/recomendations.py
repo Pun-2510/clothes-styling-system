@@ -31,7 +31,7 @@ from ..serializers import (
 )
 from src.logger import log_exception
 from src.recommend import FashionRecommender
-from src.config import COMBINED_IMAGE_WEIGHT
+from src.config import COMBINED_IMAGE_WEIGHT, TEXT_RETRIEVAL_IMAGE_WEIGHT
 
 
 router = APIRouter(
@@ -138,11 +138,17 @@ def recommend_by_text(
             translator = get_translator(request)
             query_used = translator.translate(query)
 
+        image_weight = (
+            TEXT_RETRIEVAL_IMAGE_WEIGHT
+            if payload.image_weight is None
+            else payload.image_weight
+        )
+
         results, elapsed, _ = (
             recommender.recommend_by_text(
                 text=query_used,
                 top_k=payload.top_k,
-                image_weight=payload.image_weight,
+                image_weight=image_weight,
             )
         )
 
@@ -153,7 +159,7 @@ def recommend_by_text(
             query_used=query_used,
             language=payload.language,
             top_k=len(items),
-            image_weight=payload.image_weight,
+            image_weight=image_weight,
             elapsed_seconds=float(elapsed),
             items=items,
         )

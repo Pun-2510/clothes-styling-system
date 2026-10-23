@@ -1,0 +1,85 @@
+{
+  "version": 2,
+  "created_utc": "2026-10-21T05:52:47.029237+00:00",
+  "selection_split": "validation",
+  "objective_k": 10,
+  "selection_policy": {
+    "text_and_image_only": "maximize category-macro F1, then query-macro F1",
+    "combined": "use attribute-only validation text, keep the image weight within [0.20, 0.80], and maximize attribute match among candidates within 0.0200 absolute category-macro F1 of the best"
+  },
+  "combined_query_policy": "attribute-only text; the image supplies product and category context",
+  "combined_image_weight_bounds": {
+    "minimum": 0.2,
+    "maximum": 0.8
+  },
+  "weights": {
+    "TEXT_RETRIEVAL_IMAGE_WEIGHT": 0.15,
+    "COMBINED_IMAGE_WEIGHT": 0.7,
+    "COMBINED_ATTRIBUTE_WEIGHT": 0.05,
+    "COMBINED_CATEGORY_WEIGHT": 0.25,
+    "CATEGORY_BONUS": 0.2
+  },
+  "selected_metrics": {
+    "text_only": {
+      "text_image_weight": 0.15000000000000002,
+      "precision": 0.7177215189873423,
+      "recall": 0.14430747532570834,
+      "f1": 0.18312523335526493,
+      "category_macro_precision": 0.4956971199871517,
+      "category_macro_recall": 0.31485631615448206,
+      "category_macro_f1": 0.31840105691893283,
+      "evaluated_queries": 474,
+      "skipped_queries": 0,
+      "selected": true
+    },
+    "image_only": {
+      "image_category_bonus": 0.2,
+      "precision": 0.7744725738396624,
+      "recall": 0.15736144498410667,
+      "f1": 0.20356764594732923,
+      "category_macro_precision": 0.5460868070103042,
+      "category_macro_recall": 0.3336805380420827,
+      "category_macro_f1": 0.3489089738585371,
+      "evaluated_queries": 474,
+      "skipped_queries": 0,
+      "selected": true
+    },
+    "combined": {
+      "stage": "refined",
+      "image_weight": 0.7,
+      "attribute_weight": 0.05,
+      "combined_category_weight": 0.25,
+      "eligible_for_selection": true,
+      "precision": 0.7739534883720932,
+      "recall": 0.13695646162538594,
+      "f1": 0.18328440658113185,
+      "category_macro_precision": 0.5423479067594864,
+      "category_macro_recall": 0.2995357859753959,
+      "category_macro_f1": 0.32147417870593337,
+      "evaluated_queries": 430,
+      "skipped_queries": 0,
+      "attribute_queries": 430,
+      "mean_attribute_match": 0.7265387589588415,
+      "all_attributes_match_rate": 0.5330232558139535,
+      "selected": true
+    }
+  },
+  "provenance": {
+    "run_dir": "D:\\dacntt\\project\\runs\\clip_finetune_3epochs",
+    "catalog_csv": "D:\\dacntt\\project\\data\\processed\\products.csv",
+    "dataset_sha256": "96801376518f5dbba1a505cfc43903e11365dac15635f6d33575a0860e5b951b",
+    "training_json_sha256": "e4c2a1c7b5acabf185f415027b9f6c9ed8bc85a4968cfb7d1748f42014b99982",
+    "catalog_sha256": "eba9c393f7ec7bddca2454ec48a061d36ab86fb267eb166283f9c9a5727a2113",
+    "validation_queries": 474,
+    "combined_validation_queries": 430,
+    "gallery_size": 5000,
+    "combined_query_text_embeddings": {
+      "architecture": "CLIP text encoder",
+      "source": "D:\\dacntt\\project\\runs\\clip_finetune_3epochs\\best",
+      "parameters": 151277313,
+      "embedding_dimension": 512,
+      "category_in_evaluation_text": false,
+      "encoding_seconds": 3.8101378999999724
+    }
+  }
+}

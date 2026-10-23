@@ -1,6 +1,7 @@
 # HƯỚNG DẪN CHẠY HỆ THỐNG GỢI Ý SẢN PHẨM THỜI TRANG
 
-Tất cả câu lệnh trong tài liệu này phải được chạy từ thư mục `project/`.
+Trừ các lệnh thí nghiệm ở mục 8 được ghi rõ là chạy từ thư mục gốc repository,
+các câu lệnh còn lại trong tài liệu này phải được chạy từ thư mục `project/`.
 
 ## 1. WORKFLOW TỔNG QUÁT
 
@@ -13,9 +14,11 @@ Prepare dataset + audit category tự động
    ↓
 Fine-tune CLIP và chọn checkpoint tốt nhất
    ↓
-So sánh pretrained CLIP với fine-tuned CLIP (tùy chọn)
-   ↓
 Sinh image/text embeddings bằng checkpoint fine-tuned
+   ↓
+Chọn trọng số retrieval trên validation set
+   ↓
+Đánh giá pipeline trên test set (tùy chọn)
    ↓
 Cấu hình .env
    ↓
@@ -29,11 +32,12 @@ data/processed/products.csv
 data/data/
 embeddings/
 runs/clip_finetune_3epochs/best/
+retrieval_weights.json
 ```
 
 ## 2. ĐIỀU KIỆN TIÊN QUYẾT
 
-- Python 3.12.
+- Python 3.12 hoặc 3.13.
 - Docker Desktop và Docker Compose.
 - Internet trong lần đầu tải thư viện, Docker image và model Hugging Face.
 - Dataset Mini Fashion Product Images and Text Dataset:
@@ -62,7 +66,7 @@ Cả hai lệnh phải trả về `True`.
 ## 3. TẠO MÔI TRƯỜNG PYTHON
 
 ```powershell
-py -3.12 -m venv .venv
+py -3 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
@@ -95,7 +99,12 @@ runs/clip_finetune_3epochs/
     ├── processor_config.json
     ├── tokenizer.json
     └── tokenizer_config.json
+retrieval_weights.json
 ```
+
+`retrieval_weights.json` chứa các trọng số text, image, attribute và category đã
+được chọn trên validation set. Repository có sẵn cấu hình an toàn; có thể thay
+file này bằng phiên bản đi kèm artifact để tái lập đúng kết quả thí nghiệm.
 
 Gói artifact không nhất thiết chứa ảnh catalog. Vẫn phải đặt ảnh trong
 `data/data/` để website hiển thị sản phẩm. Không chạy lại prepare nếu muốn sử
@@ -198,33 +207,7 @@ runs/clip_finetune_3epochs/
 Nếu GPU thiếu bộ nhớ, giảm `--batch-size` xuống `8`, `4` hoặc `2`. Khi không có
 CUDA, chương trình tự sử dụng CPU nhưng thời gian huấn luyện sẽ lâu hơn.
 
-## 7. SO SÁNH MODEL (TÙY CHỌN)
-
-Đây là bước đánh giá phục vụ báo cáo, không phải dữ liệu đầu vào của
-website. Pipeline so sánh thống nhất nằm ngoài `project/`, do đó hãy chạy lệnh sau
-từ thư mục gốc của repository:
-
-```powershell
-Set-Location ..
-.\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_full_gallery `
-  --run-dir .\project\runs\clip_finetune_3epochs `
-  --catalog-csv .\project\data\processed\products.csv `
-  --expected-gallery-size 5000 `
-  --resnet-source project-trained `
-  --device cpu `
-  --batch-size 16 `
-  --ks 1 5 10 `
-  --clip-image-weight 0.5 `
-  --clip-text-image-weight 0.5 `
-  --output-dir .\experiments\model_comparison\results\full_gallery_5000_v3
-Set-Location .\project
-```
-
-Kết quả được lưu trong `experiments/model_comparison/results/`. Pipeline dùng cùng
-catalog 5.000 sản phẩm, test query, giá trị K và checkpoint cho các nhóm so sánh.
-Xem chi tiết tại `experiments/model_comparison/README.md` ở cấp repository.
-
-## 8. SINH EMBEDDINGS CHO WEBSITE
+## 7. SINH EMBEDDINGS CHO WEBSITE
 
 Sau khi fine-tuning hoàn tất, sinh lại cả image và text embeddings bằng đúng
 checkpoint và đúng `products.csv`:
@@ -249,6 +232,92 @@ embeddings/text_embeddings.npy.json
 Không xóa các file `.npy.json`; backend dùng metadata này để phát hiện trường
 hợp model, catalog và embeddings không đồng bộ.
 
+## 8. CHỌN TRỌNG SỐ VÀ SO SÁNH MODEL (TÙY CHỌN)
+
+Các lệnh trong mục này phục vụ thí nghiệm và báo cáo. Chúng được chạy từ thư mục
+gốc repository, không phải từ `project/`. Mỗi `--output-dir` phải là một thư mục
+mới hoặc đang rỗng.
+
+Chuyển về thư mục gốc:
+
+```powershell
+Set-Location ..
+```
+
+Chọn trọng số phục vụ trên 474 validation queries. Combined tuning chỉ sử dụng
+phần mô tả màu sắc/họa tiết và giới hạn trọng số ảnh trong khoảng 0.20–0.80 để
+không biến truy vấn kết hợp thành text-only:
+
+```powershell
+.\project\.venv\Scripts\python.exe -m experiments.model_comparison.tune_serving_weights `
+  --run-dir .\project\runs\clip_finetune_3epochs `
+  --catalog-csv .\project\data\processed\products.csv `
+  --image-embeddings .\project\embeddings\image_embeddings.npy `
+  --text-embeddings .\project\embeddings\text_embeddings.npy `
+  --expected-gallery-size 5000 `
+  --device cpu `
+  --batch-size 16 `
+  --objective-k 10 `
+  --min-combined-image-weight 0.20 `
+  --max-combined-image-weight 0.80 `
+  --output-dir .\experiments\model_comparison\results\weight_tuning_5000_local
+```
+
+Lệnh tuning tự ghi cấu hình được chọn vào `project/retrieval_weights.json`.
+Backend đọc file này khi khởi động; frontend không hiển thị thanh chỉnh trọng số.
+Test set không tham gia chọn trọng số.
+
+Nếu Docker đang chạy trong lúc file trọng số thay đổi, nạp lại cấu hình bằng:
+
+```powershell
+Set-Location .\project
+docker compose restart backend backend_2
+Set-Location ..
+```
+
+Sau khi cố định trọng số, có thể chạy nhóm so sánh SBERT, ResNet18, pretrained
+CLIP và fine-tuned CLIP trên cùng 473 test queries và catalog 5.000 sản phẩm:
+
+```powershell
+.\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_full_gallery `
+  --run-dir .\project\runs\clip_finetune_3epochs `
+  --catalog-csv .\project\data\processed\products.csv `
+  --expected-gallery-size 5000 `
+  --resnet-source project-trained `
+  --device cpu `
+  --batch-size 16 `
+  --ks 1 5 10 `
+  --clip-image-weight 0.5 `
+  --clip-text-image-weight 0.5 `
+  --output-dir .\experiments\model_comparison\results\full_gallery_5000_local
+```
+
+Đánh giá pipeline cuối cùng trên test set bằng đúng trọng số website sử dụng:
+
+```powershell
+.\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_system_pipeline `
+  --run-dir .\project\runs\clip_finetune_3epochs `
+  --catalog-csv .\project\data\processed\products.csv `
+  --image-embeddings .\project\embeddings\image_embeddings.npy `
+  --text-embeddings .\project\embeddings\text_embeddings.npy `
+  --expected-gallery-size 5000 `
+  --device cpu `
+  --batch-size 16 `
+  --ks 1 5 10 `
+  --category-top-per-class 3 `
+  --category-confidence-floor 0.50 `
+  --category-confidence-threshold 0.60 `
+  --output-dir .\experiments\model_comparison\results\system_pipeline_5000_local
+```
+
+Kết quả được lưu trong `experiments/model_comparison/results/`. Xem giải thích
+chi tiết các nhóm so sánh tại `experiments/model_comparison/README.md`. Sau khi
+hoàn tất, quay lại thư mục project:
+
+```powershell
+Set-Location .\project
+```
+
 ## 9. CẤU HÌNH `.env`
 
 Tạo `.env` từ file mẫu nếu chưa có:
@@ -266,16 +335,13 @@ FASHION_EMBEDDINGS_DIR=./embeddings
 FASHION_CHECKPOINT_DIR=./runs/clip_finetune_3epochs/best
 CATEGORY_CONFIDENCE_FLOOR=0.50
 CATEGORY_CONFIDENCE_THRESHOLD=0.60
-CATEGORY_BONUS=0.05
 CATEGORY_TOP_PER_CLASS=3
-TEXT_RETRIEVAL_IMAGE_WEIGHT=0.50
-COMBINED_IMAGE_WEIGHT=0.50
-COMBINED_CATEGORY_WEIGHT=0.10
-COMBINED_ATTRIBUTE_WEIGHT=0.25
 ```
 
 `FASHION_CATALOG_DIR` và `FASHION_IMAGE_DIR` phải được giữ lại. Chúng lần lượt
-cung cấp catalog và ảnh sản phẩm cho backend.
+cung cấp catalog và ảnh sản phẩm cho backend. Các trọng số retrieval không đặt
+trong `.env`; chúng được đọc từ `retrieval_weights.json`. Biến môi trường chỉ nên
+được dùng để ghi đè trong một thí nghiệm có kiểm soát.
 
 ## 10. CHẠY WEBSITE BẰNG DOCKER
 
@@ -287,6 +353,7 @@ Test-Path .\data\data
 Test-Path .\embeddings\image_embeddings.npy
 Test-Path .\embeddings\text_embeddings.npy
 Test-Path .\runs\clip_finetune_3epochs\best\model.safetensors
+Test-Path .\retrieval_weights.json
 docker compose config --quiet
 ```
 
@@ -340,9 +407,10 @@ Backend hỗ trợ:
 - `no_category`: chỉ dùng độ tương đồng CLIP.
 - `hard_category`: giới hạn ứng viên theo category, chủ yếu dành cho thử nghiệm.
 
-Frontend không hiển thị nút chọn category mode và luôn gửi `soft_category`.
-Backend tự tính category strength từ confidence, không còn chỉ bật/tắt
-category tại một ngưỡng duy nhất.
+Frontend không hiển thị nút chọn category mode. Image-only search sử dụng
+`soft_category`, còn combined search tự xác định category từ văn bản và/hoặc
+ảnh. Backend tính category strength từ confidence, không chỉ bật/tắt category
+tại một ngưỡng duy nhất.
 Hai mode `no_category` và `hard_category` vẫn được giữ trong API để kiểm thử và
 thực hiện thí nghiệm, không dành cho thao tác thông thường trên giao diện.
 
@@ -350,18 +418,22 @@ thực hiện thí nghiệm, không dành cho thao tác thông thường trên g
 
 Frontend sử dụng một form duy nhất và tự chọn luồng xử lý theo input: chỉ có mô
 tả thì gọi text search, chỉ có ảnh thì gọi image search, còn có đủ cả hai thì
-gọi `POST /api/recommendations/combined`. Khi dùng cả ảnh và mô tả, người dùng
-có thể chọn tỷ trọng của hai nguồn thông tin và backend tính:
+gọi `POST /api/recommendations/combined`. Frontend không yêu cầu người dùng chọn
+mode hoặc tự đặt trọng số. Backend đọc trọng số đã chọn trên validation set từ
+`retrieval_weights.json` và tính:
 
 ```text
-final_score = image_weight * visual_score
-            + (1 - image_weight) * text_score
+text_score = text_image_weight * S_TI
+           + (1 - text_image_weight) * S_TT
+
+base_score = image_weight * S_II
+           + (1 - image_weight) * text_score
 ```
 
-`visual_score` là cosine similarity giữa ảnh truy vấn và ảnh catalog.
-`text_score` kết hợp cosine similarity text-to-image với text-to-text khi đã
-có `text_embeddings.npy`. Website kết hợp trực tiếp các raw cosine score sau
-khi nhân trọng số.
+Trong đó `S_II`, `S_TI` và `S_TT` lần lượt là image-to-image, text-to-image và
+text-to-text cosine similarity. Hệ thống kết hợp trực tiếp raw cosine score,
+không chuyển sang percentile. Sau raw fusion, attribute score và category bonus
+được áp dụng theo cấu hình đã chọn.
 
 Khi văn bản nêu category rõ ràng, hệ thống dùng category đó làm candidate pool.
 Nếu category trong ảnh và văn bản tương thích, hệ thống giữ subtype từ ảnh, ví

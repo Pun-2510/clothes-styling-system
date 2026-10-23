@@ -7,7 +7,6 @@ export default function TextSearchForm({ loading, onSearchStart, onSearchSuccess
   const [query, setQuery] = useState('')
   const [language, setLanguage] = useState('vi')
   const [topK, setTopK] = useState(5)
-  const [imageWeight, setImageWeight] = useState(0.5)
 
   async function submit(event) {
     event.preventDefault()
@@ -15,7 +14,7 @@ export default function TextSearchForm({ loading, onSearchStart, onSearchSuccess
 
     onSearchStart()
     try {
-      const result = await searchByText({ query, language, topK, imageWeight })
+      const result = await searchByText({ query, language, topK })
       onSearchSuccess(result)
     } catch (error) {
       onSearchError(error.message)
@@ -66,10 +65,6 @@ export default function TextSearchForm({ loading, onSearchStart, onSearchSuccess
           </select>
         </label>
 
-        <label className="control-group range-control">
-          <span className="control-label">Trọng số hình ảnh: {Math.round(imageWeight * 100)}%</span>
-          <input type="range" min="0" max="1" step="0.05" value={imageWeight} onChange={(event) => setImageWeight(Number(event.target.value))} />
-        </label>
       </div>
 
       <button className="primary-button" type="submit" disabled={!query.trim() || loading}>

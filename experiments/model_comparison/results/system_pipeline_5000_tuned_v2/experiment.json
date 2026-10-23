@@ -1,0 +1,37 @@
+{
+  "protocol": "deployed query modes over held-out queries and full catalog",
+  "run_dir": "D:\\dacntt\\project\\runs\\clip_finetune_3epochs",
+  "catalog_csv": "D:\\dacntt\\project\\data\\processed\\products.csv",
+  "dataset_sha256": "96801376518f5dbba1a505cfc43903e11365dac15635f6d33575a0860e5b951b",
+  "training_json_sha256": "e4c2a1c7b5acabf185f415027b9f6c9ed8bc85a4968cfb7d1748f42014b99982",
+  "catalog_sha256": "eba9c393f7ec7bddca2454ec48a061d36ab86fb267eb166283f9c9a5727a2113",
+  "query_split": "test",
+  "query_count": 473,
+  "gallery_size": 5000,
+  "ks": [
+    1,
+    5,
+    10
+  ],
+  "image_weight": 0.7,
+  "text_image_weight": 0.15,
+  "attribute_weight": 0.05,
+  "image_category_bonus": 0.2,
+  "combined_category_bonus": 0.25,
+  "category_top_per_class": 3,
+  "category_confidence_floor": 0.5,
+  "category_confidence_threshold": 0.6,
+  "query_text": "product name and description; category column omitted",
+  "gallery_text": "runtime product text including product, category and description",
+  "self_match": "excluded before category prediction and ranking",
+  "relevance": "same ground-truth category",
+  "diagnostics": {
+    "queries_with_attributes": 437,
+    "queries_with_explicit_text_category": 411,
+    "category_source_counts": {
+      "text_image": 230,
+      "text": 181,
+      "image": 62
+    }
+  }
+}

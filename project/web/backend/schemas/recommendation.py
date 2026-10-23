@@ -20,8 +20,8 @@ class TextRecommendationRequest(BaseModel):
         ge=1,
         le=10,
     )
-    image_weight: float = Field(
-        default=0.5,
+    image_weight: float | None = Field(
+        default=None,
         ge=0.0,
         le=1.0,
     )
