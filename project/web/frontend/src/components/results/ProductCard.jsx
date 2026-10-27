@@ -1,8 +1,10 @@
 import Icon from '../common/Icon'
 import { productUrl } from '../../services/catalogApi'
 import ProductImage from './ProductImage'
+import { useLanguage } from '../../i18n'
 
 export default function ProductCard({ item, index, mode }) {
+  const { t } = useLanguage()
   const hasScore = mode === 'text' || mode === 'image' || mode === 'combined'
   const finalScore = Number(item.final_score ?? 0)
   const detailScore = mode === 'text' ? item.text_to_image_score : item.visual_similarity
@@ -16,30 +18,30 @@ export default function ProductCard({ item, index, mode }) {
           {hasScore && <span className="score-pill">{finalScore.toFixed(3)}</span>}
         </div>
         <div className="product-copy">
-          <span className="category">{item.category || 'Thời trang'}</span>
-          <h3>{item.product_name || 'Sản phẩm không tên'}</h3>
+          <span className="category">{item.category || t('product.fashion')}</span>
+          <h3>{item.product_name || t('product.unnamed')}</h3>
           {hasScore && (
             <div className="score-row">
-              <span>{mode === 'text' ? 'Độ khớp hình ảnh' : mode === 'combined' ? 'Khớp với ảnh' : 'Độ tương đồng'}</span>
+              <span>{mode === 'text' ? t('product.imageMatch') : mode === 'combined' ? t('product.queryImageMatch') : t('product.similarity')}</span>
               <strong>{Number(detailScore ?? finalScore).toFixed(3)}</strong>
             </div>
           )}
           {mode === 'text' && item.text_to_text_score != null && (
             <div className="score-row score-row--secondary">
-              <span>Độ khớp mô tả</span>
+              <span>{t('product.textMatch')}</span>
               <strong>{Number(item.text_to_text_score).toFixed(3)}</strong>
             </div>
           )}
           {mode === 'combined' && (
             <div className="score-row score-row--secondary">
-              <span>Khớp với mô tả</span>
+              <span>{t('product.queryTextMatch')}</span>
               <strong>{Number(item.text_score).toFixed(3)}</strong>
             </div>
           )}
           {mode === 'image' && Number(item.category_bonus) > 0 && (
-            <div className="bonus"><Icon name="spark" size={14} />+{Number(item.category_bonus).toFixed(2)} cùng danh mục</div>
+            <div className="bonus"><Icon name="spark" size={14} />+{Number(item.category_bonus).toFixed(2)} {t('product.sameCategory')}</div>
           )}
-          {!hasScore && <span className="product-view">Xem chi tiết <Icon name="arrow" size={15} /></span>}
+          {!hasScore && <span className="product-view">{t('product.view')} <Icon name="arrow" size={15} /></span>}
         </div>
       </a>
     </article>

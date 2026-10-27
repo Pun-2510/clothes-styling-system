@@ -3,14 +3,17 @@ import Icon from '../common/Icon'
 import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_SIZE, RESULT_COUNTS } from '../../data/searchOptions'
 import { searchByCombined, searchByImage, searchByText } from '../../services/recommendationApi'
 import { clearSearchFile, loadSearchFile, loadSearchFormState, saveSearchFile, saveSearchFormState } from '../../services/searchPersistence'
+import { useLanguage } from '../../i18n'
 
-export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuccess, onSearchError, onClearResult, initialQuery = '' }) {
+export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuccess, onSearchError, onClearResult, initialQuery = '', restoreRequest = null }) {
+  const { t } = useLanguage()
   const [savedForm] = useState(loadSearchFormState)
   const [file, setFile] = useState(null)
   const [query, setQuery] = useState(initialQuery || savedForm.query || '')
   const [language, setLanguage] = useState(savedForm.language === 'en' ? 'en' : 'vi')
   const [topK, setTopK] = useState(RESULT_COUNTS.includes(savedForm.topK) ? savedForm.topK : 5)
   const inputRef = useRef(null)
+  const onClearResultRef = useRef(onClearResult)
   const preview = useMemo(() => file ? URL.createObjectURL(file) : '', [file])
   const hasImage = Boolean(file)
   const hasText = Boolean(query.trim())
@@ -19,6 +22,10 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
   useEffect(() => () => {
     if (preview) URL.revokeObjectURL(preview)
   }, [preview])
+
+  useEffect(() => {
+    onClearResultRef.current = onClearResult
+  }, [onClearResult])
 
   useEffect(() => {
     let active = true
@@ -34,15 +41,29 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
     saveSearchFormState({ query, language, topK })
   }, [query, language, topK])
 
+  useEffect(() => {
+    if (!restoreRequest) return
+
+    const restoredFile = restoreRequest.file || null
+    setQuery(restoreRequest.query || '')
+    setLanguage(restoreRequest.language === 'en' ? 'en' : 'vi')
+    setTopK(RESULT_COUNTS.includes(restoreRequest.topK) ? restoreRequest.topK : 5)
+    setFile(restoredFile)
+    if (restoredFile) saveSearchFile(restoredFile)
+    else clearSearchFile()
+    if (inputRef.current) inputRef.current.value = ''
+    onClearResultRef.current?.()
+  }, [restoreRequest])
+
   function acceptFile(candidate) {
     if (!candidate) return
     onClearResult()
     if (!ACCEPTED_IMAGE_TYPES.includes(candidate.type)) {
-      onSearchError('Chỉ hỗ trợ ảnh JPG, PNG hoặc WebP.')
+      onSearchError(t('search.invalidType'))
       return
     }
     if (candidate.size > MAX_IMAGE_SIZE) {
-      onSearchError('Ảnh không được vượt quá 5 MB.')
+      onSearchError(t('search.invalidSize'))
       return
     }
     setFile(candidate)
@@ -59,16 +80,22 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
     if (!canSearch || loading) return
 
     onSearchStart()
+    const requestContext = {
+      query: query.trim(),
+      language,
+      topK,
+      file,
+    }
     try {
       if (hasImage && hasText) {
         const result = await searchByCombined({ file, query, language, topK })
-        onSearchSuccess(result, 'combined')
+        onSearchSuccess(result, 'combined', requestContext)
       } else if (hasImage) {
         const result = await searchByImage({ file, topK })
-        onSearchSuccess(result, 'image')
+        onSearchSuccess(result, 'image', requestContext)
       } else {
         const result = await searchByText({ query, language, topK })
-        onSearchSuccess(result, 'text')
+        onSearchSuccess(result, 'text', requestContext)
       }
     } catch (error) {
       onSearchError(error.message)
@@ -76,10 +103,10 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
   }
 
   const submitLabel = hasImage && hasText
-    ? 'Tìm kết hợp'
+    ? t('search.combined')
     : hasImage
-      ? 'Tìm bằng ảnh'
-      : 'Tìm kiếm'
+      ? t('search.byImage')
+      : t('search.submit')
 
   return (
     <form className="search-panel compact-search-panel" onSubmit={submit}>
@@ -96,41 +123,41 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
           id="combined-fashion-query"
           value={query}
           onChange={(event) => updateQuery(event.target.value)}
-          placeholder={language === 'vi' ? 'Bạn đang tìm sản phẩm gì?' : 'What product are you looking for?'}
+          placeholder={t('search.placeholder')}
           maxLength={512}
         />
         <button className={`attach-image ${file ? 'has-file' : ''}`} type="button" onClick={() => inputRef.current?.click()}>
-          <Icon name="image" size={20} /><span>{file ? 'Đổi ảnh' : 'Thêm ảnh'}</span>
+          <Icon name="image" size={20} /><span>{file ? t('search.changeImage') : t('search.addImage')}</span>
         </button>
         <button className="compact-submit" type="submit" disabled={!canSearch || loading}>
           {loading ? <span className="spinner" /> : <Icon name="arrow" size={20} />}
-          <span>{loading ? 'Đang tìm...' : submitLabel}</span>
+          <span>{loading ? t('search.loading') : submitLabel}</span>
         </button>
       </div>
 
       {preview && (
         <div className="selected-image">
-          <img src={preview} alt="Ảnh truy vấn đã chọn" />
+          <img src={preview} alt={t('search.selectedImage')} />
           <span><strong>{file.name}</strong><small>{(file.size / 1024 / 1024).toFixed(2)} MB</small></span>
           <button type="button" onClick={() => { setFile(null); clearSearchFile(); onClearResult(); if (inputRef.current) inputRef.current.value = '' }}>
-            <Icon name="close" size={17} /> Bỏ ảnh
+            <Icon name="close" size={17} /> {t('search.removeImage')}
           </button>
         </div>
       )}
 
       <details className="search-options">
-        <summary><span>Tùy chọn tìm kiếm</span><Icon name="chevron" size={14} /></summary>
+        <summary><span>{t('search.options')}</span><Icon name="chevron" size={14} /></summary>
         <div className="search-options-content">
           {hasText && (
-            <label>Ngôn ngữ
+            <label>{t('search.queryLanguage')}
               <select value={language} onChange={(event) => setLanguage(event.target.value)}>
                 <option value="vi">Tiếng Việt</option><option value="en">English</option>
               </select>
             </label>
           )}
-          <label>Số kết quả
+          <label>{t('search.resultCount')}
             <select value={topK} onChange={(event) => setTopK(Number(event.target.value))}>
-              {RESULT_COUNTS.map((value) => <option key={value} value={value}>{value} sản phẩm</option>)}
+              {RESULT_COUNTS.map((value) => <option key={value} value={value}>{t('search.products', { count: value })}</option>)}
             </select>
           </label>
         </div>

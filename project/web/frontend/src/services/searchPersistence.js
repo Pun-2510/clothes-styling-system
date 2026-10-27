@@ -30,6 +30,11 @@ export function saveSearchFormState(state) {
   writeSessionValue(FORM_KEY, state)
 }
 
+export function clearSearchQueryState() {
+  const current = loadSearchFormState()
+  writeSessionValue(FORM_KEY, { ...current, query: '' })
+}
+
 export function loadSearchResult() {
   const saved = readSessionValue(RESULT_KEY)
   if (!saved?.data || !['text', 'image', 'combined'].includes(saved.mode)) return null

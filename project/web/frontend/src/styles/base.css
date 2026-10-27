@@ -13,11 +13,13 @@
   --primary: #285847;
   --primary-soft: #e7f1ec;
   --danger: #a33c32;
+  --shadow-sm: 0 8px 24px rgba(28, 28, 28, .07);
+  --shadow-md: 0 18px 52px rgba(28, 28, 28, .12);
 }
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body { margin: 0; min-width: 320px; min-height: 100vh; }
+body { margin: 0; min-width: 320px; min-height: 100vh; background: #fbfaf7; }
 button, textarea, select, input { font: inherit; }
 button { color: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }

@@ -6,8 +6,10 @@ import CategoriesPage from './pages/CategoriesPage'
 import CategoryPage from './pages/CategoryPage'
 import ProductPage from './pages/ProductPage'
 import StoreHomePage from './pages/StoreHomePage'
+import { useLanguage } from './i18n'
 
 function App() {
+  const { t } = useLanguage()
   const { status, checkStatus } = useServerStatus()
   const path = window.location.pathname
   let page
@@ -19,7 +21,7 @@ function App() {
   } else if (path.startsWith('/product/')) {
     page = <ProductPage key={path} productId={decodeURIComponent(path.slice(9))} />
   } else {
-    page = <div className="state-message"><h1>Không tìm thấy trang</h1><a href="/">Về trang chủ</a></div>
+    page = <div className="state-message"><h1>{t('notFound.title')}</h1><a href="/">{t('notFound.home')}</a></div>
   }
 
   return (

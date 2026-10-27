@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import ProductCard from '../components/results/ProductCard'
+import { ProductGridSkeleton } from '../components/results/CatalogSkeleton'
 import { getProducts } from '../services/catalogApi'
 
 export default function CategoryPage({ name }) {
@@ -7,12 +8,14 @@ export default function CategoryPage({ name }) {
   const page = Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let active = true
     getProducts({ category: name, page, pageSize: 24 })
       .then((response) => { if (active) setData(response) })
       .catch((failure) => { if (active) setError(failure.message) })
+      .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
   }, [name, page])
 
@@ -27,6 +30,7 @@ export default function CategoryPage({ name }) {
         <p>{data ? `${data.total.toLocaleString('vi-VN')} sản phẩm` : 'Đang tải sản phẩm...'}</p>
       </div>
       {error && <div className="state-message" role="alert">{error}</div>}
+      {loading && <ProductGridSkeleton count={8} className="category-product-grid" />}
       {data && <div className="product-grid category-product-grid">{data.items.map((item) => <ProductCard key={item.product_id} item={item} />)}</div>}
       {data?.total_pages > 1 && (
         <nav className="pagination" aria-label="Phân trang sản phẩm">

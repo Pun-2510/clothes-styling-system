@@ -8,6 +8,9 @@ const PATHS = {
   retry: <><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></>,
   close: <><path d="m6 6 12 12"/><path d="m18 6-12 12"/></>,
   chevron: <path d="m7 10 5 5 5-5"/>,
+  history: <><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7v5l3 2"/></>,
+  trash: <><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="m6 7 1 13h10l1-13"/><path d="M10 11v5M14 11v5"/></>,
+  lock: <><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></>,
 }
 
 export default function Icon({ name, size = 20 }) {

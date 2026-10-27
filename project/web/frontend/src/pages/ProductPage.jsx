@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import ProductCard from '../components/results/ProductCard'
 import ProductImage from '../components/results/ProductImage'
+import { ProductDetailSkeleton } from '../components/results/CatalogSkeleton'
 import { categoryUrl, getProduct } from '../services/catalogApi'
 
 export default function ProductPage({ productId }) {
@@ -15,7 +16,7 @@ export default function ProductPage({ productId }) {
   }, [productId])
 
   if (error) return <div className="state-message" role="alert">{error} <a href="/categories">Xem danh mục</a></div>
-  if (!data) return <div className="state-message">Đang tải chi tiết sản phẩm...</div>
+  if (!data) return <ProductDetailSkeleton />
 
   const { product, related } = data
   return (
@@ -37,7 +38,7 @@ export default function ProductPage({ productId }) {
       </section>
       {related.length > 0 && (
         <section className="catalog-section related-section">
-          <div className="section-heading"><div><span className="eyebrow">GỢI Ý THÊM</span><h2>Cùng danh mục</h2></div><a href={categoryUrl(product.category)}>Xem tất cả →</a></div>
+          <div className="section-heading"><div><span className="eyebrow">SẢN PHẨM LIÊN QUAN</span><h2>Cùng danh mục</h2></div><a href={categoryUrl(product.category)}>Xem tất cả →</a></div>
           <div className="product-grid product-grid--five">{related.map((item) => <ProductCard key={item.product_id} item={item} />)}</div>
         </section>
       )}

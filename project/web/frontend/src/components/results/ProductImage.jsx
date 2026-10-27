@@ -4,6 +4,7 @@ import { getCatalogImageUrl } from '../../services/recommendationApi'
 
 export default function ProductImage({ reference, name }) {
   const [failed, setFailed] = useState(false)
+  const [loaded, setLoaded] = useState(false)
   const source = getCatalogImageUrl(reference)
 
   if (!source || failed) {
@@ -16,8 +17,15 @@ export default function ProductImage({ reference, name }) {
   }
 
   return (
-    <div className="product-image">
-      <img src={source} alt={name || 'Sản phẩm thời trang'} loading="lazy" onError={() => setFailed(true)} />
+    <div className={`product-image ${loaded ? 'product-image--loaded' : 'product-image--loading'}`} aria-busy={!loaded}>
+      {!loaded && <span className="image-skeleton skeleton-shimmer" aria-hidden="true" />}
+      <img
+        src={source}
+        alt={name || 'Sản phẩm thời trang'}
+        loading="lazy"
+        onLoad={() => setLoaded(true)}
+        onError={() => setFailed(true)}
+      />
     </div>
   )
 }
