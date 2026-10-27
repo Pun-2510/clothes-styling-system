@@ -106,6 +106,17 @@ const messages = {
     'notFound.title': 'Không tìm thấy trang',
     'notFound.home': 'Về trang chủ',
     'footer.description': 'Truy xuất thời trang đa phương thức · Fine-tuned CLIP',
+    'image.unavailableLabel': 'Không có ảnh sản phẩm',
+    'image.unavailable': 'Không có ảnh',
+    'image.productAlt': 'Sản phẩm thời trang',
+    'loading.productDetail': 'Đang tải chi tiết sản phẩm',
+    'loading.catalog': 'Đang tải catalog',
+    'header.navigation': 'Điều hướng chính',
+    'api.catalogNotPrepared': 'Catalog chưa được chuẩn bị. Hãy chạy bước xử lý dữ liệu trước.',
+    'api.catalogLoad': 'Không tải được catalog ({status}).',
+    'api.connection': 'Không thể kết nối tới máy chủ. Hãy kiểm tra backend đang chạy.',
+    'api.generic': 'Đã có lỗi xảy ra. Vui lòng thử lại.',
+    'api.requestFailed': 'Yêu cầu thất bại ({status})',
   },
   en: {
     'site.title': 'Category-Aware Multimodal Fashion Retrieval System using CLIP',
@@ -210,12 +221,23 @@ const messages = {
     'notFound.title': 'Page not found',
     'notFound.home': 'Return home',
     'footer.description': 'Multimodal fashion retrieval · Fine-tuned CLIP',
+    'image.unavailableLabel': 'Product image unavailable',
+    'image.unavailable': 'No image',
+    'image.productAlt': 'Fashion product',
+    'loading.productDetail': 'Loading product details',
+    'loading.catalog': 'Loading catalog',
+    'header.navigation': 'Main navigation',
+    'api.catalogNotPrepared': 'The catalog is not prepared. Run the data preparation step first.',
+    'api.catalogLoad': 'Unable to load the catalog ({status}).',
+    'api.connection': 'Unable to connect to the server. Check that the backend is running.',
+    'api.generic': 'An error occurred. Please try again.',
+    'api.requestFailed': 'Request failed ({status})',
   },
 }
 
 const LanguageContext = createContext(null)
 
-function initialLanguage() {
+export function getInterfaceLanguage() {
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY)
     return stored === 'en' ? 'en' : 'vi'
@@ -231,13 +253,18 @@ function interpolate(template, variables = {}) {
   )
 }
 
+export function translateMessage(language, key, variables) {
+  const selectedLanguage = language === 'en' ? 'en' : 'vi'
+  return interpolate(messages[selectedLanguage][key] || messages.vi[key] || key, variables)
+}
+
 export function LanguageProvider({ children }) {
-  const [language, setLanguage] = useState(initialLanguage)
+  const [language, setLanguage] = useState(getInterfaceLanguage)
 
   const value = useMemo(() => ({
     language,
     setLanguage: (nextLanguage) => setLanguage(nextLanguage === 'en' ? 'en' : 'vi'),
-    t: (key, variables) => interpolate(messages[language][key] || messages.vi[key] || key, variables),
+    t: (key, variables) => translateMessage(language, key, variables),
   }), [language])
 
   useEffect(() => {

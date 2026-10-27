@@ -51,14 +51,14 @@ export default function StoreHomePage() {
     const restoreHistory = async () => {
       const entry = loadSearchHistoryEntry(historyId)
       if (!entry) {
-        if (active) setSearchError('Không tìm thấy lượt tìm kiếm đã lưu.')
+        if (active) setSearchError(t('history.notFound'))
         return
       }
 
       const file = entry.image ? await loadSearchHistoryFile(entry.id) : null
       if (!active) return
       if (entry.image && !file) {
-        setSearchError('Ảnh của lượt tìm kiếm này không còn trong bộ nhớ trình duyệt.')
+        setSearchError(t('history.imageUnavailable'))
         return
       }
 
@@ -77,7 +77,7 @@ export default function StoreHomePage() {
 
     restoreHistory()
     return () => { active = false }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     if (!searchResult || !resultsRef.current) return undefined

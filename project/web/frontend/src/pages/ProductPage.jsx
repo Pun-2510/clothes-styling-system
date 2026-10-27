@@ -3,8 +3,10 @@ import ProductCard from '../components/results/ProductCard'
 import ProductImage from '../components/results/ProductImage'
 import { ProductDetailSkeleton } from '../components/results/CatalogSkeleton'
 import { categoryUrl, getProduct } from '../services/catalogApi'
+import { useLanguage } from '../i18n'
 
 export default function ProductPage({ productId }) {
+  const { t } = useLanguage()
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
 
@@ -15,30 +17,30 @@ export default function ProductPage({ productId }) {
     return () => { active = false }
   }, [productId])
 
-  if (error) return <div className="state-message" role="alert">{error} <a href="/categories">Xem danh mục</a></div>
+  if (error) return <div className="state-message" role="alert">{error} <a href="/categories">{t('detail.viewCategories')}</a></div>
   if (!data) return <ProductDetailSkeleton />
 
   const { product, related } = data
   return (
     <>
       <nav className="breadcrumbs">
-        <a href="/">Trang chủ</a><span>/</span><a href={categoryUrl(product.category)}>{product.category}</a><span>/</span><span>{product.product_name}</span>
+        <a href="/">{t('categories.home')}</a><span>/</span><a href={categoryUrl(product.category)}>{product.category}</a><span>/</span><span>{product.product_name}</span>
       </nav>
       <section className="product-detail">
         <div className="detail-visual"><ProductImage reference={product.image_reference} name={product.product_name} /></div>
         <div className="detail-copy">
-          <span className="eyebrow">{product.category || 'SẢN PHẨM'}</span>
+          <span className="eyebrow">{product.category || t('detail.product')}</span>
           <h1>{product.product_name}</h1>
-          <span className="detail-id">Mã sản phẩm: {product.product_id}</span>
+          <span className="detail-id">{t('detail.id', { id: product.product_id })}</span>
           <div className="detail-divider" />
-          <h2>Thông tin sản phẩm</h2>
-          <p>{product.description || 'Sản phẩm chưa có mô tả chi tiết trong catalog.'}</p>
-          <a className="detail-category-link" href={categoryUrl(product.category)}>Xem thêm {product.category} →</a>
+          <h2>{t('detail.info')}</h2>
+          <p>{product.description || t('detail.noDescription')}</p>
+          <a className="detail-category-link" href={categoryUrl(product.category)}>{t('detail.moreCategory', { category: product.category })} →</a>
         </div>
       </section>
       {related.length > 0 && (
         <section className="catalog-section related-section">
-          <div className="section-heading"><div><span className="eyebrow">SẢN PHẨM LIÊN QUAN</span><h2>Cùng danh mục</h2></div><a href={categoryUrl(product.category)}>Xem tất cả →</a></div>
+          <div className="section-heading"><div><span className="eyebrow">{t('detail.related')}</span><h2>{t('detail.sameCategory')}</h2></div><a href={categoryUrl(product.category)}>{t('catalog.seeAll')} →</a></div>
           <div className="product-grid product-grid--five">{related.map((item) => <ProductCard key={item.product_id} item={item} />)}</div>
         </section>
       )}

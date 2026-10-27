@@ -68,7 +68,7 @@ export default function Header({ serverStatus, onRetry }) {
         <span className="brand-mark">TF</span>
         <span>THREAD/FIND</span>
       </a>
-      <nav className="main-nav" aria-label="Điều hướng chính">
+      <nav className="main-nav" aria-label={t('header.navigation')}>
         <a className={path === '/' ? 'active' : ''} href="/">{t('header.home')}</a>
         <div className="category-menu" ref={categoryMenuRef}>
           <button
@@ -86,6 +86,7 @@ export default function Header({ serverStatus, onRetry }) {
           {categoryMenuOpen && (
             <>
               <div className="category-menu-backdrop" aria-hidden="true" onClick={() => setCategoryMenuOpen(false)} />
+              <span className="category-popover-arrow" aria-hidden="true" />
               <div className="category-popover" role="menu">
                 <span className="category-popover-title">{t('header.categoryMenu')}</span>
                 <div className="category-popover-links">
@@ -105,6 +106,7 @@ export default function Header({ serverStatus, onRetry }) {
             </>
           )}
         </div>
+        <a className={path === '/developer' ? 'active' : ''} href="/developer">Developer</a>
       </nav>
       <div className="header-actions">
         <div className="language-switch" role="group" aria-label={t('language.label')}>

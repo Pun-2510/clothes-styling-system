@@ -20,8 +20,10 @@ export function ProductGridSkeleton({ count = 5, className = '' }) {
 }
 
 export function ProductDetailSkeleton() {
+  const { t } = useLanguage()
+
   return (
-    <section className="product-detail product-detail-skeleton" aria-label="Đang tải chi tiết sản phẩm" aria-busy="true">
+    <section className="product-detail product-detail-skeleton" aria-label={t('loading.productDetail')} aria-busy="true">
       <div className="detail-visual skeleton-shimmer" />
       <div className="detail-copy">
         <span className="skeleton-line skeleton-line--short skeleton-shimmer" />
@@ -36,8 +38,10 @@ export function ProductDetailSkeleton() {
 }
 
 export default function CatalogSkeleton() {
+  const { t } = useLanguage()
+
   return (
-    <section className="catalog-section catalog-loading-section" aria-label="Đang tải catalog" aria-busy="true">
+    <section className="catalog-section catalog-loading-section" aria-label={t('loading.catalog')} aria-busy="true">
       <div className="skeleton-section-heading">
         <span className="skeleton-line skeleton-line--short skeleton-shimmer" />
         <span className="skeleton-heading skeleton-shimmer" />
@@ -46,3 +50,5 @@ export default function CatalogSkeleton() {
     </section>
   )
 }
+import { useLanguage } from '../../i18n'
+

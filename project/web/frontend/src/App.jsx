@@ -6,6 +6,7 @@ import CategoriesPage from './pages/CategoriesPage'
 import CategoryPage from './pages/CategoryPage'
 import ProductPage from './pages/ProductPage'
 import StoreHomePage from './pages/StoreHomePage'
+import DeveloperPage from './pages/DeveloperPage'
 import { useLanguage } from './i18n'
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
 
   if (path === '/' || path === '/search') page = <StoreHomePage />
   else if (path === '/categories') page = <CategoriesPage />
+  else if (path === '/developer') page = <DeveloperPage />
   else if (path.startsWith('/category/')) {
     page = <CategoryPage key={path} name={decodeURIComponent(path.slice(10))} />
   } else if (path.startsWith('/product/')) {

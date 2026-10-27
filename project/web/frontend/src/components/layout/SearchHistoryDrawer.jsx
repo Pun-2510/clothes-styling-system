@@ -2,17 +2,12 @@ import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import Icon from '../common/Icon'
 import ProductImage from '../results/ProductImage'
+import { useLanguage } from '../../i18n'
 
-const MODE_LABELS = {
-  image: 'Tìm bằng ảnh',
-  text: 'Tìm bằng mô tả',
-  combined: 'Ảnh + mô tả',
-}
-
-function formatDate(value) {
+function formatDate(value, language) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return ''
-  return new Intl.DateTimeFormat('vi-VN', {
+  return new Intl.DateTimeFormat(language === 'en' ? 'en-US' : 'vi-VN', {
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',
@@ -20,12 +15,18 @@ function formatDate(value) {
   }).format(date)
 }
 
-function historyTitle(entry) {
+function historyTitle(entry, t) {
   if (entry.query) return entry.query
-  return entry.image?.name || 'Truy vấn bằng hình ảnh'
+  return entry.image?.name || t('history.imageQuery')
 }
 
 export default function SearchHistoryDrawer({ open, entries, onClose, onDelete, onClear }) {
+  const { language, t } = useLanguage()
+  const modeLabels = {
+    image: t('history.imageMode'),
+    text: t('history.textMode'),
+    combined: t('history.combinedMode'),
+  }
   useEffect(() => {
     if (!open) return undefined
 
@@ -46,14 +47,14 @@ export default function SearchHistoryDrawer({ open, entries, onClose, onDelete, 
 
   return createPortal(
     <div className="history-layer" role="presentation">
-      <button className="history-backdrop" type="button" onClick={onClose} aria-label="Đóng lịch sử tìm kiếm" />
-      <aside className="history-drawer" aria-label="Lịch sử tìm kiếm" aria-modal="true" role="dialog">
+      <button className="history-backdrop" type="button" onClick={onClose} aria-label={t('history.close')} />
+      <aside className="history-drawer" aria-label={t('header.history')} aria-modal="true" role="dialog">
         <div className="history-drawer-header">
           <div>
-            <span className="eyebrow">TÌM KIẾM GẦN ĐÂY</span>
-            <h2>Lịch sử của bạn</h2>
+            <span className="eyebrow">{t('history.recent')}</span>
+            <h2>{t('history.title')}</h2>
           </div>
-          <button className="icon-button" type="button" onClick={onClose} aria-label="Đóng">
+          <button className="icon-button" type="button" onClick={onClose} aria-label={t('history.close')}>
             <Icon name="close" size={19} />
           </button>
         </div>
@@ -61,8 +62,8 @@ export default function SearchHistoryDrawer({ open, entries, onClose, onDelete, 
         {entries.length === 0 ? (
           <div className="history-empty">
             <span><Icon name="history" size={24} /></span>
-            <h3>Chưa có lượt tìm kiếm</h3>
-            <p>Các truy vấn gần đây sẽ được lưu cục bộ trên trình duyệt này.</p>
+            <h3>{t('history.emptyTitle')}</h3>
+            <p>{t('history.emptyText')}</p>
           </div>
         ) : (
           <div className="history-list">
@@ -80,26 +81,26 @@ export default function SearchHistoryDrawer({ open, entries, onClose, onDelete, 
                   </div>
                   <div className="history-item-copy">
                     <div className="history-item-meta">
-                      <span>{MODE_LABELS[entry.mode]}</span>
-                      <time dateTime={entry.createdAt}>{formatDate(entry.createdAt)}</time>
+                      <span>{modeLabels[entry.mode]}</span>
+                      <time dateTime={entry.createdAt}>{formatDate(entry.createdAt, language)}</time>
                     </div>
-                    <h3>{historyTitle(entry)}</h3>
+                    <h3>{historyTitle(entry, t)}</h3>
                     <p>
                       {preview
-                        ? `${preview.product_name || 'Sản phẩm'} · ${entry.topK} kết quả`
-                        : `${entry.topK} kết quả`}
+                        ? t('history.resultSummary', { product: preview.product_name || t('product.unnamed'), count: entry.topK })
+                        : t('history.resultsOnly', { count: entry.topK })}
                     </p>
-                    {!canRestore && <small>Ảnh gốc không còn trong bộ nhớ trình duyệt.</small>}
+                    {!canRestore && <small>{t('history.missingImage')}</small>}
                   </div>
                   <div className="history-item-actions">
                     {canRestore ? (
                       <a href={`/?history=${encodeURIComponent(entry.id)}#search`} onClick={onClose}>
-                        Dùng lại <Icon name="arrow" size={15} />
+                        {t('history.reuse')} <Icon name="arrow" size={15} />
                       </a>
                     ) : (
-                      <span className="history-restore-disabled">Không thể dùng lại</span>
+                      <span className="history-restore-disabled">{t('history.cannotReuse')}</span>
                     )}
-                    <button type="button" onClick={() => onDelete(entry.id)} aria-label={`Xóa ${historyTitle(entry)}`}>
+                    <button type="button" onClick={() => onDelete(entry.id)} aria-label={t('history.delete', { title: historyTitle(entry, t) })}>
                       <Icon name="trash" size={15} />
                     </button>
                   </div>
@@ -110,9 +111,9 @@ export default function SearchHistoryDrawer({ open, entries, onClose, onDelete, 
         )}
 
         <div className="history-drawer-footer">
-          <p><Icon name="lock" size={14} /> Chỉ được lưu trên thiết bị này.</p>
+          <p><Icon name="lock" size={14} /> {t('history.localOnly')}</p>
           {entries.length > 0 && (
-            <button type="button" onClick={onClear}>Xóa toàn bộ lịch sử</button>
+            <button type="button" onClick={onClear}>{t('history.clear')}</button>
           )}
         </div>
       </aside>

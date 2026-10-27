@@ -1,4 +1,5 @@
 import { trackedFetch } from './networkActivity'
+import { getInterfaceLanguage, translateMessage } from '../i18n'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
 const requestCache = new Map()
@@ -8,9 +9,10 @@ function getJson(path) {
 
   const request = trackedFetch(`${API_BASE}${path}`).then(async (response) => {
     if (!response.ok) {
+      const language = getInterfaceLanguage()
       throw new Error(response.status === 503
-        ? 'Catalog chưa được chuẩn bị. Hãy chạy bước xử lý dữ liệu trước.'
-        : `Không tải được catalog (${response.status}).`)
+        ? translateMessage(language, 'api.catalogNotPrepared')
+        : translateMessage(language, 'api.catalogLoad', { status: response.status }))
     }
     return response.json()
   }).catch((error) => {

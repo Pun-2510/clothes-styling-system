@@ -1,20 +1,22 @@
 import { trackedFetch } from './networkActivity'
+import { getInterfaceLanguage, translateMessage } from '../i18n'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
 const AUTOMATIC_CATEGORY_MODE = 'soft_category'
 
 function getErrorMessage(error) {
+  const language = getInterfaceLanguage()
   if (error instanceof TypeError) {
-    return 'Không thể kết nối tới máy chủ. Hãy kiểm tra backend đang chạy.'
+    return translateMessage(language, 'api.connection')
   }
-  return error.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.'
+  return error.message || translateMessage(language, 'api.generic')
 }
 
 async function readResponse(response) {
   const data = await response.json().catch(() => null)
   if (!response.ok) {
     const detail = data?.detail
-    throw new Error(detail?.message || detail?.reason || `Yêu cầu thất bại (${response.status})`)
+    throw new Error(detail?.message || detail?.reason || translateMessage(getInterfaceLanguage(), 'api.requestFailed', { status: response.status }))
   }
   return data
 }

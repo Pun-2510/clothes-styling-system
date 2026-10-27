@@ -40,6 +40,7 @@ services:
       RETRIEVAL_WEIGHTS_PATH: /app/retrieval_weights.json
       HF_HOME: /cache/huggingface
       RECOMMENDATION_LOG_NAME: recommendation-backend.log
+      BACKEND_INSTANCE: backend
     volumes:
       - type: bind
         source: ./web/backend
@@ -96,6 +97,7 @@ services:
     environment:
       <<: *backend-environment
       RECOMMENDATION_LOG_NAME: recommendation-backend_2.log
+      BACKEND_INSTANCE: backend_2
 
   nginx:
     # Dynamic upstream DNS requires Nginx >= 1.27.3.
