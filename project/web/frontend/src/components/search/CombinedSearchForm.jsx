@@ -4,11 +4,13 @@ import { ACCEPTED_IMAGE_TYPES, MAX_IMAGE_SIZE, RESULT_COUNTS } from '../../data/
 import { searchByCombined, searchByImage, searchByText } from '../../services/recommendationApi'
 import { clearSearchFile, loadSearchFile, loadSearchFormState, saveSearchFile, saveSearchFormState } from '../../services/searchPersistence'
 import { useLanguage } from '../../i18n'
+import ImageCropDialog from './ImageCropDialog'
 
 export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuccess, onSearchError, onClearResult, initialQuery = '', restoreRequest = null, querySuggestion = null }) {
   const { t } = useLanguage()
   const [savedForm] = useState(loadSearchFormState)
   const [file, setFile] = useState(null)
+  const [pendingCropFile, setPendingCropFile] = useState(null)
   const [query, setQuery] = useState(initialQuery || savedForm.query || '')
   const [language, setLanguage] = useState(savedForm.language === 'en' ? 'en' : 'vi')
   const [topK, setTopK] = useState(RESULT_COUNTS.includes(savedForm.topK) ? savedForm.topK : 5)
@@ -76,8 +78,14 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
       onSearchError(t('search.invalidSize'))
       return
     }
+    setPendingCropFile(candidate)
+  }
+
+  function commitImage(candidate) {
+    setPendingCropFile(null)
     setFile(candidate)
     saveSearchFile(candidate)
+    onClearResult()
   }
 
   function updateQuery(value) {
@@ -127,6 +135,17 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
         accept="image/jpeg,image/png,image/webp"
         onChange={(event) => acceptFile(event.target.files?.[0])}
       />
+      {pendingCropFile && (
+        <ImageCropDialog
+          file={pendingCropFile}
+          onApply={commitImage}
+          onUseOriginal={() => commitImage(pendingCropFile)}
+          onCancel={() => {
+            setPendingCropFile(null)
+            if (inputRef.current) inputRef.current.value = ''
+          }}
+        />
+      )}
       <div className="compact-search-bar">
         <Icon name="search" size={20} />
         <input
