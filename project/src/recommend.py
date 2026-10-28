@@ -353,7 +353,13 @@ class FashionRecommender:
         top_k=TOP_K,
         image_weight=TEXT_RETRIEVAL_IMAGE_WEIGHT,
     ):
-        """Search with combined text-to-image and text-to-text scores."""
+        """Search with text scores and honor an explicitly named category.
+
+        Category matching is conservative: it only restricts the candidate
+        pool when a catalog category (or its singular alias) is present in the
+        query.  Queries without an explicit category keep using the complete
+        catalog.
+        """
         start_time = time.perf_counter()
         query_embedding = self.encode_text(text)
         cross_modal_scores = cosine_similarity(query_embedding, self.embeddings)
@@ -369,8 +375,29 @@ class FashionRecommender:
             text_scores = None
             final_scores = cross_modal_scores
 
-        actual_k = min(int(top_k), len(final_scores))
-        top_indices = top_k_indices(final_scores, k=actual_k)
+        applied_category = self.infer_category_from_text(text)
+        eligible_indices = np.arange(len(final_scores))
+        if applied_category is not None:
+            category_matches = (
+                self.products["category"]
+                .astype(str)
+                .eq(applied_category)
+                .to_numpy()
+            )
+            category_indices = np.flatnonzero(category_matches)
+            # A stale or externally supplied category list must never produce
+            # an empty response; fall back to unrestricted retrieval instead.
+            if len(category_indices) > 0:
+                eligible_indices = category_indices
+            else:
+                applied_category = None
+
+        actual_k = min(int(top_k), len(eligible_indices))
+        local_indices = top_k_indices(
+            final_scores[eligible_indices],
+            k=actual_k,
+        )
+        top_indices = eligible_indices[local_indices]
         results = self.products.iloc[top_indices].copy().reset_index(drop=True)
         results["cross_modal_similarity"] = cross_modal_scores[top_indices]
         if text_scores is not None:
@@ -380,6 +407,8 @@ class FashionRecommender:
         elapsed = time.perf_counter() - start_time
         log_info(
             f"TEXT_SEARCH | query={str(text)[:80]!r} | top_k={actual_k} | "
+            f"category={applied_category or 'not_used'} | "
+            f"candidate_count={len(eligible_indices)} | "
             f"image_weight={image_weight:.2f} | elapsed={elapsed:.4f}s"
         )
         return results, elapsed, query_embedding

@@ -57,6 +57,64 @@ class RecallTests(unittest.TestCase):
 
 
 class CombinedRecommendationTests(unittest.TestCase):
+    def test_text_search_filters_only_an_explicit_category(self):
+        from src.recommend import FashionRecommender
+
+        recommender = FashionRecommender.__new__(FashionRecommender)
+        recommender.products = pd.DataFrame({
+            "product_id": ["perfume", "red-dress", "blue-dress"],
+            "product_name": ["Perfume", "Red Dress", "Blue Dress"],
+            "category": ["Perfume and Body Mist", "Dresses", "Dresses"],
+            "description": ["", "", ""],
+            "image_reference": ["perfume.jpg", "red.jpg", "blue.jpg"],
+        })
+        recommender.categories = ["Dresses", "Perfume and Body Mist"]
+        recommender.embeddings = np.eye(3, dtype=np.float32)
+        recommender.text_embeddings = np.eye(3, dtype=np.float32)
+        recommender.encode_text = lambda text: np.ones(3, dtype=np.float32)
+
+        # The unrelated perfume deliberately has the highest score.  The
+        # explicit word "dress" must still restrict candidates to Dresses.
+        with patch(
+            "src.recommend.cosine_similarity",
+            side_effect=[
+                np.array([0.95, 0.60, 0.55], dtype=np.float32),
+                np.array([0.98, 0.70, 0.65], dtype=np.float32),
+            ],
+        ):
+            results, _, _ = recommender.recommend_by_text("dress", top_k=3)
+
+        self.assertEqual(len(results), 2)
+        self.assertEqual(set(results.category), {"Dresses"})
+        self.assertNotIn("perfume", set(results.product_id))
+
+    def test_text_search_without_category_keeps_full_catalog(self):
+        from src.recommend import FashionRecommender
+
+        recommender = FashionRecommender.__new__(FashionRecommender)
+        recommender.products = pd.DataFrame({
+            "product_id": ["first", "second"],
+            "product_name": ["First", "Second"],
+            "category": ["Dresses", "Handbags"],
+            "description": ["", ""],
+            "image_reference": ["first.jpg", "second.jpg"],
+        })
+        recommender.categories = ["Dresses", "Handbags"]
+        recommender.embeddings = np.eye(2, dtype=np.float32)
+        recommender.text_embeddings = None
+        recommender.encode_text = lambda text: np.ones(2, dtype=np.float32)
+
+        with patch(
+            "src.recommend.cosine_similarity",
+            return_value=np.array([0.20, 0.90], dtype=np.float32),
+        ):
+            results, _, _ = recommender.recommend_by_text(
+                "something suitable for an office meeting",
+                top_k=2,
+            )
+
+        self.assertEqual(list(results.product_id), ["second", "first"])
+
     def test_category_confidence_strength_and_bonus_are_gradual(self):
         from src.category_ranking import (
             apply_confidence_weighted_category_bonus,
