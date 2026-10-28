@@ -2,7 +2,43 @@ import Icon from '../common/Icon'
 import ProductCard from './ProductCard'
 import { useLanguage } from '../../i18n'
 
-export default function ResultsSection({ data, mode, sectionRef, onNewSearch }) {
+function QueryGuidance({ guidance, onUseSuggestion, t }) {
+  if (!guidance || guidance.status === 'unrestricted') return null
+
+  if (guidance.status === 'category_applied') {
+    return (
+      <div className="query-guidance query-guidance--applied">
+        <Icon name="spark" size={17} />
+        <p>{t('results.categoryApplied', { category: guidance.applied_category })}</p>
+      </div>
+    )
+  }
+
+  const isSpelling = guidance.status === 'spelling_suggestion'
+  return (
+    <div className={`query-guidance query-guidance--${isSpelling ? 'spelling' : 'broad'}`}>
+      <Icon name={isSpelling ? 'search' : 'spark'} size={18} />
+      <div>
+        <strong>{t(isSpelling ? 'results.spellingSuggestion' : 'results.broadQuery')}</strong>
+        <div className="query-guidance-options">
+          {(guidance.suggestions || []).map((suggestion) => (
+            <button
+              key={`${suggestion.category}-${suggestion.corrected_query}`}
+              type="button"
+              onClick={() => onUseSuggestion?.(suggestion.corrected_query)}
+            >
+              {suggestion.category}
+              {suggestion.confidence != null && <small>{Math.round(suggestion.confidence * 100)}%</small>}
+            </button>
+          ))}
+        </div>
+        <span>{t('results.suggestionHint')}</span>
+      </div>
+    </div>
+  )
+}
+
+export default function ResultsSection({ data, mode, sectionRef, onNewSearch, onUseSuggestion }) {
   const { t } = useLanguage()
   if (!data) return null
 
@@ -44,6 +80,10 @@ export default function ResultsSection({ data, mode, sectionRef, onNewSearch }) 
           )}
         </div>
       </div>
+
+      {mode === 'text' && (
+        <QueryGuidance guidance={data.guidance} onUseSuggestion={onUseSuggestion} t={t} />
+      )}
 
       {items.length > 0 ? (
         <div className="product-grid">

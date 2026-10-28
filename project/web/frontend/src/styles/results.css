@@ -18,6 +18,19 @@
 .new-search-button { min-height: 36px; padding: 0 14px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid var(--ink); border-radius: 999px; color: var(--ink); background: #fff; cursor: pointer; font-size: 11px; font-weight: 700; transition: color .18s ease, background .18s ease, transform .18s ease; }
 .new-search-button:hover { color: #fff; background: var(--ink); transform: translateY(-1px); }
 
+.query-guidance { margin: -4px 0 24px; padding: 16px 18px; display: flex; align-items: flex-start; gap: 12px; border: 1px solid #e5ddd5; border-radius: 12px; color: #443c38; background: #faf7f2; }
+.query-guidance > .icon { flex: 0 0 auto; margin-top: 2px; color: var(--primary); }
+.query-guidance p { margin: 0; font-size: 13px; line-height: 1.6; }
+.query-guidance strong { display: block; font-size: 13px; line-height: 1.5; }
+.query-guidance > div > span { display: block; margin-top: 8px; color: var(--muted); font-size: 10px; }
+.query-guidance--applied { border-color: #cfe8d9; color: #17633f; background: #eff9f3; }
+.query-guidance--applied > .icon { color: #17814f; }
+.query-guidance--spelling { border-color: #e9c7ca; background: #fff5f5; }
+.query-guidance-options { margin-top: 11px; display: flex; flex-wrap: wrap; gap: 8px; }
+.query-guidance-options button { min-height: 34px; padding: 0 12px; display: inline-flex; align-items: center; gap: 7px; border: 1px solid #cfc6bd; border-radius: 999px; color: var(--ink); background: #fff; cursor: pointer; font-size: 11px; font-weight: 700; transition: color .18s ease, border-color .18s ease, transform .18s ease; }
+.query-guidance-options button:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); }
+.query-guidance-options small { color: var(--muted); font-size: 9px; font-weight: 600; }
+
 .product-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 .results .product-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
 .results .product-visual { aspect-ratio: .88; }

@@ -24,6 +24,7 @@ export default function StoreHomePage() {
   const [searching, setSearching] = useState(false)
   const [formResetVersion, setFormResetVersion] = useState(0)
   const [historyRestore, setHistoryRestore] = useState(null)
+  const [querySuggestion, setQuerySuggestion] = useState(null)
   const resultsRef = useRef(null)
 
   useEffect(() => {
@@ -124,6 +125,18 @@ export default function StoreHomePage() {
     })
   }
 
+  function useQuerySuggestion(query) {
+    setQuerySuggestion({ query, language: 'en', id: Date.now() })
+    clearSearchState()
+    window.requestAnimationFrame(() => {
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      document.getElementById('search')?.scrollIntoView({
+        behavior: reduceMotion ? 'auto' : 'smooth',
+        block: 'center',
+      })
+    })
+  }
+
   const searchHandlers = {
     loading: searching,
     onSearchStart: () => { setSearching(true); clearSearchState() },
@@ -155,6 +168,7 @@ export default function StoreHomePage() {
             {...searchHandlers}
             initialQuery={initialQuery}
             restoreRequest={historyRestore}
+            querySuggestion={querySuggestion}
             onClearResult={clearSearchState}
           />
           <ErrorBanner message={searchError} />
@@ -168,6 +182,7 @@ export default function StoreHomePage() {
         mode={searchMode}
         sectionRef={resultsRef}
         onNewSearch={startNewSearch}
+        onUseSuggestion={useQuerySuggestion}
       />
 
       {catalogError && <div className="state-message" role="alert">{catalogError}</div>}

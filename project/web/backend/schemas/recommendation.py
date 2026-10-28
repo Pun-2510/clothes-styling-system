@@ -38,6 +38,23 @@ class ProductRecommendation(BaseModel):
     final_score: float
 
 
+class CategorySuggestion(BaseModel):
+    category: str
+    corrected_query: str
+    confidence: float | None = None
+
+
+class TextQueryGuidance(BaseModel):
+    status: Literal[
+        "category_applied",
+        "spelling_suggestion",
+        "broad_query",
+        "unrestricted",
+    ]
+    applied_category: str | None = None
+    suggestions: list[CategorySuggestion] = Field(default_factory=list)
+
+
 class TextRecommendationResponse(BaseModel):
     query: str
     query_used: str
@@ -45,6 +62,7 @@ class TextRecommendationResponse(BaseModel):
     top_k: int
     image_weight: float
     elapsed_seconds: float
+    guidance: TextQueryGuidance
     items: list[ProductRecommendation]
 
 

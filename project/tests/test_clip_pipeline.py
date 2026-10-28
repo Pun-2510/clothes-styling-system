@@ -82,11 +82,82 @@ class CombinedRecommendationTests(unittest.TestCase):
                 np.array([0.98, 0.70, 0.65], dtype=np.float32),
             ],
         ):
-            results, _, _ = recommender.recommend_by_text("dress", top_k=3)
+            results, _, _, guidance = recommender.recommend_by_text(
+                "dress",
+                top_k=3,
+                return_guidance=True,
+            )
 
         self.assertEqual(len(results), 2)
         self.assertEqual(set(results.category), {"Dresses"})
         self.assertNotIn("perfume", set(results.product_id))
+        self.assertEqual(guidance["status"], "category_applied")
+        self.assertEqual(guidance["applied_category"], "Dresses")
+
+    def test_text_search_suggests_typo_without_forcing_category(self):
+        from src.recommend import FashionRecommender
+
+        recommender = FashionRecommender.__new__(FashionRecommender)
+        recommender.products = pd.DataFrame({
+            "product_id": ["perfume", "dress"],
+            "product_name": ["Perfume", "Red Dress"],
+            "category": ["Perfume and Body Mist", "Dresses"],
+            "description": ["", ""],
+            "image_reference": ["perfume.jpg", "dress.jpg"],
+        })
+        recommender.categories = ["Dresses", "Perfume and Body Mist"]
+        recommender.embeddings = np.eye(2, dtype=np.float32)
+        recommender.text_embeddings = None
+        recommender.encode_text = lambda text: np.ones(2, dtype=np.float32)
+
+        with patch(
+            "src.recommend.cosine_similarity",
+            return_value=np.array([0.90, 0.50], dtype=np.float32),
+        ):
+            results, _, _, guidance = recommender.recommend_by_text(
+                "red dres",
+                top_k=2,
+                return_guidance=True,
+            )
+
+        # The typo is suggested, but no hard filter is applied without user
+        # confirmation, so the full-catalog winner remains visible.
+        self.assertEqual(results.iloc[0].product_id, "perfume")
+        self.assertEqual(guidance["status"], "spelling_suggestion")
+        self.assertEqual(guidance["suggestions"][0]["category"], "Dresses")
+        self.assertEqual(guidance["suggestions"][0]["corrected_query"], "red Dresses")
+
+    def test_text_search_marks_a_broad_query_and_returns_category_choices(self):
+        from src.recommend import FashionRecommender
+
+        recommender = FashionRecommender.__new__(FashionRecommender)
+        recommender.products = pd.DataFrame({
+            "product_id": ["dress", "shirt", "shoe"],
+            "product_name": ["Dress", "Shirt", "Shoe"],
+            "category": ["Dresses", "Shirts", "Casual Shoes"],
+            "description": ["", "", ""],
+            "image_reference": ["dress.jpg", "shirt.jpg", "shoe.jpg"],
+        })
+        recommender.categories = ["Dresses", "Shirts", "Casual Shoes"]
+        recommender.embeddings = np.eye(3, dtype=np.float32)
+        recommender.text_embeddings = None
+        recommender.encode_text = lambda text: np.ones(3, dtype=np.float32)
+
+        with patch(
+            "src.recommend.cosine_similarity",
+            return_value=np.array([0.80, 0.70, 0.60], dtype=np.float32),
+        ):
+            _, _, _, guidance = recommender.recommend_by_text(
+                "fashion clothes",
+                top_k=3,
+                return_guidance=True,
+            )
+
+        self.assertEqual(guidance["status"], "broad_query")
+        self.assertEqual(
+            [item["category"] for item in guidance["suggestions"]],
+            ["Dresses", "Shirts", "Casual Shoes"],
+        )
 
     def test_text_search_without_category_keeps_full_catalog(self):
         from src.recommend import FashionRecommender

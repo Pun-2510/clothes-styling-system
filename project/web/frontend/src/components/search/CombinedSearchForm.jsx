@@ -5,7 +5,7 @@ import { searchByCombined, searchByImage, searchByText } from '../../services/re
 import { clearSearchFile, loadSearchFile, loadSearchFormState, saveSearchFile, saveSearchFormState } from '../../services/searchPersistence'
 import { useLanguage } from '../../i18n'
 
-export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuccess, onSearchError, onClearResult, initialQuery = '', restoreRequest = null }) {
+export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuccess, onSearchError, onClearResult, initialQuery = '', restoreRequest = null, querySuggestion = null }) {
   const { t } = useLanguage()
   const [savedForm] = useState(loadSearchFormState)
   const [file, setFile] = useState(null)
@@ -54,6 +54,16 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
     if (inputRef.current) inputRef.current.value = ''
     onClearResultRef.current?.()
   }, [restoreRequest])
+
+  useEffect(() => {
+    if (!querySuggestion?.query) return
+    setQuery(querySuggestion.query)
+    setLanguage(querySuggestion.language === 'vi' ? 'vi' : 'en')
+    setFile(null)
+    clearSearchFile()
+    if (inputRef.current) inputRef.current.value = ''
+    onClearResultRef.current?.()
+  }, [querySuggestion])
 
   function acceptFile(candidate) {
     if (!candidate) return

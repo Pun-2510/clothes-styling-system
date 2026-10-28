@@ -57,7 +57,9 @@ from src.query_signals import (
     categories_are_related,
     category_aliases,
     extract_query_attributes,
+    fuzzy_category_suggestions,
     infer_category_from_text,
+    is_broad_query,
     normalize_words,
 )
 
@@ -203,6 +205,18 @@ class FashionRecommender:
             .dropna()
             .astype(str)
             .unique()
+            .tolist()
+        )
+
+        # Used only as user-facing guidance for intentionally broad queries.
+        # Ranking still runs against the complete catalog.
+        self.popular_categories = (
+            self.products["category"]
+            .dropna()
+            .astype(str)
+            .value_counts()
+            .head(5)
+            .index
             .tolist()
         )
 
@@ -352,6 +366,7 @@ class FashionRecommender:
         text,
         top_k=TOP_K,
         image_weight=TEXT_RETRIEVAL_IMAGE_WEIGHT,
+        return_guidance=False,
     ):
         """Search with text scores and honor an explicitly named category.
 
@@ -376,6 +391,11 @@ class FashionRecommender:
             final_scores = cross_modal_scores
 
         applied_category = self.infer_category_from_text(text)
+        spelling_suggestions = (
+            []
+            if applied_category is not None
+            else fuzzy_category_suggestions(text, self.categories)
+        )
         eligible_indices = np.arange(len(final_scores))
         if applied_category is not None:
             category_matches = (
@@ -404,6 +424,36 @@ class FashionRecommender:
             results["text_similarity"] = text_scores[top_indices]
         results["similarity"] = final_scores[top_indices]
 
+        if applied_category is not None:
+            guidance_status = "category_applied"
+            suggestions = []
+        elif spelling_suggestions:
+            guidance_status = "spelling_suggestion"
+            suggestions = spelling_suggestions
+        elif is_broad_query(text):
+            guidance_status = "broad_query"
+            suggestions = [
+                {
+                    "category": category,
+                    "corrected_query": category,
+                    "confidence": None,
+                }
+                for category in getattr(
+                    self,
+                    "popular_categories",
+                    list(self.categories)[:5],
+                )
+            ]
+        else:
+            guidance_status = "unrestricted"
+            suggestions = []
+
+        guidance = {
+            "status": guidance_status,
+            "applied_category": applied_category,
+            "suggestions": suggestions,
+        }
+
         elapsed = time.perf_counter() - start_time
         log_info(
             f"TEXT_SEARCH | query={str(text)[:80]!r} | top_k={actual_k} | "
@@ -411,6 +461,8 @@ class FashionRecommender:
             f"candidate_count={len(eligible_indices)} | "
             f"image_weight={image_weight:.2f} | elapsed={elapsed:.4f}s"
         )
+        if return_guidance:
+            return results, elapsed, query_embedding, guidance
         return results, elapsed, query_embedding
 
     @staticmethod

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from difflib import SequenceMatcher
 import re
 
 
@@ -46,6 +47,26 @@ ATTRIBUTE_RULES = (
         (r"\b(?:floral|flower|flowers)\b",),
     ),
 )
+
+
+BROAD_QUERY_TERMS = {
+    "apparel",
+    "clothes",
+    "clothing",
+    "fashion",
+    "item",
+    "items",
+    "outfit",
+    "outfits",
+    "product",
+    "products",
+    "something",
+    "style",
+    "styles",
+    "thing",
+    "things",
+    "wear",
+}
 
 
 def extract_query_attributes(text):
@@ -99,6 +120,89 @@ def infer_category_from_text(text, categories):
             if re.search(rf"\b{re.escape(alias)}\b", normalized_query):
                 matches.append((len(alias), str(category)))
     return max(matches)[1] if matches else None
+
+
+def fuzzy_category_suggestions(text, categories, threshold=0.78, limit=3):
+    """Suggest likely categories for misspelled query fragments.
+
+    Suggestions never imply that the category should be applied automatically.
+    The caller must ask the user to confirm a corrected query.
+    """
+    normalized_query = normalize_words(text)
+    query_words = normalized_query.split()
+    if not query_words:
+        return []
+
+    ranked = []
+    for category in categories:
+        best = None
+        comparison_aliases = set(category_aliases(category))
+        # A final noun such as "shoe" is useful for typo suggestions even
+        # when it would be too ambiguous for exact hard filtering.
+        comparison_aliases.update(
+            alias.split()[-1]
+            for alias in tuple(comparison_aliases)
+            if len(alias.split()[-1]) >= 4
+        )
+
+        for alias in comparison_aliases:
+            alias_words = alias.split()
+            width = len(alias_words)
+            if not alias or len(alias.replace(" ", "")) < 4:
+                continue
+            if width > len(query_words):
+                windows = [(0, len(query_words), " ".join(query_words))]
+            else:
+                windows = [
+                    (start, start + width, " ".join(query_words[start:start + width]))
+                    for start in range(len(query_words) - width + 1)
+                ]
+
+            for start, end, fragment in windows:
+                if fragment == alias:
+                    continue
+                # Generic words such as "clothes" and "fashion" describe the
+                # search domain, not a misspelled category.  Comparing them to
+                # catalog labels can otherwise produce false corrections such
+                # as clothes -> Clutches.
+                if all(
+                    word in BROAD_QUERY_TERMS
+                    for word in fragment.split()
+                ):
+                    continue
+                score = SequenceMatcher(None, fragment, alias).ratio()
+                candidate = (score, start, end)
+                if best is None or candidate > best:
+                    best = candidate
+
+        if best is None or best[0] < float(threshold):
+            continue
+
+        score, start, end = best
+        corrected_words = query_words[:start] + [str(category)] + query_words[end:]
+        ranked.append({
+            "category": str(category),
+            "corrected_query": " ".join(corrected_words),
+            "confidence": float(score),
+        })
+
+    ranked.sort(key=lambda item: (-item["confidence"], item["category"]))
+    if not ranked:
+        return []
+
+    # Keep close alternatives for ambiguous nouns such as "shose", which can
+    # reasonably refer to several shoe categories.
+    best_score = ranked[0]["confidence"]
+    return [
+        item for item in ranked
+        if item["confidence"] >= best_score - 0.03
+    ][:int(limit)]
+
+
+def is_broad_query(text):
+    """Return whether a query asks for fashion items without a product type."""
+    words = set(normalize_words(text).split())
+    return bool(words & BROAD_QUERY_TERMS)
 
 
 def categories_are_related(first, second):

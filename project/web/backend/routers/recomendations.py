@@ -144,11 +144,12 @@ def recommend_by_text(
             else payload.image_weight
         )
 
-        results, elapsed, _ = (
+        results, elapsed, _, guidance = (
             recommender.recommend_by_text(
                 text=query_used,
                 top_k=payload.top_k,
                 image_weight=image_weight,
+                return_guidance=True,
             )
         )
 
@@ -161,6 +162,7 @@ def recommend_by_text(
             top_k=len(items),
             image_weight=image_weight,
             elapsed_seconds=float(elapsed),
+            guidance=guidance,
             items=items,
         )
 
