@@ -1,4 +1,4 @@
-"""Compare category-free, thresholded and confidence-weighted image ranking."""
+"""Compare category-free, hard-filtered and soft category-aware image ranking."""
 
 from __future__ import annotations
 
@@ -75,6 +75,31 @@ def _descending_rankings(scores):
     return np.argsort(-scores, axis=1, kind="stable")
 
 
+def _hard_category_rankings(
+    scores,
+    predicted_categories,
+    category_indices,
+    excluded_positions,
+):
+    """Rank only products belonging to each query's predicted category."""
+    values = np.asarray(scores, dtype=np.float32)
+    predicted = np.asarray(predicted_categories, dtype=str)
+    excluded = np.asarray(excluded_positions, dtype=np.int64)
+    if values.ndim != 2 or len(values) != len(predicted) or len(values) != len(excluded):
+        raise ValueError("Scores, predicted categories and exclusions must align.")
+
+    rankings = []
+    for query_index, category in enumerate(predicted):
+        candidates = np.asarray(
+            category_indices.get(str(category), np.empty(0, dtype=np.int64)),
+            dtype=np.int64,
+        )
+        candidates = candidates[candidates != excluded[query_index]]
+        order = np.argsort(-values[query_index, candidates], kind="stable")
+        rankings.append(candidates[order])
+    return rankings
+
+
 def _classification_diagnostics(actual, predicted):
     actual = np.asarray(actual, dtype=str)
     predicted = np.asarray(predicted, dtype=str)
@@ -135,7 +160,18 @@ def self_test():
     )
     assert np.allclose(adjusted, [0.725, 0.69])
     assert np.isclose(strength, 0.5) and np.isclose(effective, 0.025)
-    print("PASS: confidence-weighted category ranking")
+    hard = _hard_category_rankings(
+        np.asarray([[0.95, 0.80, 0.70], [0.60, 0.90, 0.75]], dtype=np.float32),
+        np.asarray(["shirt", "shoe"]),
+        {
+            "shirt": np.asarray([0, 1], dtype=np.int64),
+            "shoe": np.asarray([2], dtype=np.int64),
+        },
+        np.asarray([0, 1], dtype=np.int64),
+    )
+    assert hard[0].tolist() == [1]
+    assert hard[1].tolist() == [2]
+    print("PASS: hard-filtered and confidence-weighted category ranking")
 
 
 def main():
@@ -243,6 +279,12 @@ def main():
     strengths = np.asarray(strengths, dtype=np.float32)
     rankings = {
         "no_category": _descending_rankings(visual_scores),
+        "hard_category_filter": _hard_category_rankings(
+            visual_scores,
+            predicted_categories,
+            category_indices,
+            query_positions,
+        ),
         "threshold_soft_category": _descending_rankings(threshold_scores),
         "confidence_weighted_category": _descending_rankings(weighted_scores),
     }
@@ -253,6 +295,13 @@ def main():
             "deployed": False,
             "input": "image",
             "formula": "S_II",
+        },
+        "hard_category_filter": {
+            "comparison_group": "category_aware_ablation",
+            "role": "hard predicted-category filter",
+            "deployed": False,
+            "input": "image",
+            "formula": "rank only c_i=c_hat",
         },
         "threshold_soft_category": {
             "comparison_group": "category_aware_ablation",

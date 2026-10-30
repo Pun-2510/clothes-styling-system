@@ -64,8 +64,27 @@ def _f1(precision, recall):
     return 0.0 if precision + recall == 0 else 2.0 * precision * recall / (precision + recall)
 
 
+def _ndcg(ranking, relevant, k):
+    """Calculate binary NDCG@K for one ranked query."""
+    relevant_set = set(int(value) for value in relevant)
+    top = np.asarray(ranking, dtype=int)[:k]
+    dcg = sum(
+        1.0 / np.log2(rank + 1.0)
+        for rank, candidate in enumerate(top, start=1)
+        if int(candidate) in relevant_set
+    )
+    ideal_hits = min(k, len(relevant_set))
+    if ideal_hits == 0:
+        return 0.0
+    idcg = sum(
+        1.0 / np.log2(rank + 1.0)
+        for rank in range(1, ideal_hits + 1)
+    )
+    return float(dcg / idcg)
+
+
 def evaluate_category_rankings(rankings, product_ids, categories, ks=(1, 5, 10)):
-    """Calculate query-macro and category-macro Precision, Recall and F1.
+    """Calculate query/category-macro Precision, Recall, F1 and NDCG.
 
     A relevant result has the same ground-truth category as the query. The query
     product itself is excluded. Categories with no other positive item are
@@ -102,7 +121,7 @@ def evaluate_query_gallery_category_rankings(
     if len(gallery_ids) != len(gallery_labels) or len(gallery_ids) < 2:
         raise ValueError("Gallery IDs and categories must align and contain at least two rows.")
 
-    metric_names = ("precision", "recall", "f1")
+    metric_names = ("precision", "recall", "f1", "ndcg")
     totals = {metric: {k: 0.0 for k in ks} for metric in metric_names}
     category_totals = defaultdict(
         lambda: {metric: {k: 0.0 for k in ks} for metric in metric_names}
@@ -137,10 +156,12 @@ def evaluate_query_gallery_category_rankings(
             precision = hits / len(top) if len(top) else 0.0
             recall = hits / len(relevant)
             f1 = _f1(precision, recall)
+            ndcg = _ndcg(ranking, relevant, k)
             for accumulator in (totals, category_totals[category]):
                 accumulator["precision"][k] += precision
                 accumulator["recall"][k] += recall
                 accumulator["f1"][k] += f1
+                accumulator["ndcg"][k] += ndcg
         evaluated += 1
         category_evaluated[category] += 1
 
@@ -206,7 +227,7 @@ def evaluate_query_gallery_identity_rankings(
     if not len(gallery_ids):
         raise ValueError("Gallery IDs must contain at least one row.")
 
-    metric_names = ("precision", "recall", "f1")
+    metric_names = ("precision", "recall", "f1", "ndcg")
     totals = {metric: {k: 0.0 for k in ks} for metric in metric_names}
     category_totals = defaultdict(
         lambda: {metric: {k: 0.0 for k in ks} for metric in metric_names}
@@ -237,10 +258,12 @@ def evaluate_query_gallery_identity_rankings(
             precision = hits / len(top) if len(top) else 0.0
             recall = hits / len(relevant)
             f1 = _f1(precision, recall)
+            ndcg = _ndcg(ranking, relevant, k)
             for accumulator in (totals, category_totals[category]):
                 accumulator["precision"][k] += precision
                 accumulator["recall"][k] += recall
                 accumulator["f1"][k] += f1
+                accumulator["ndcg"][k] += ndcg
         evaluated += 1
         category_evaluated[category] += 1
 

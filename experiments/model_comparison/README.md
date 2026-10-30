@@ -26,6 +26,9 @@ and combines cosine scores directly. It intentionally does not apply category
 filtering or attribute overrides; those belong to a separate system-level
 ablation.
 
+Every ranking table reports Precision@K, Recall@K, F1@K and NDCG@K. NDCG
+rewards relevant products that appear near the beginning of the ranked list.
+
 ## Setup
 
 Run these commands from the repository root (`dacntt/`):
@@ -132,14 +135,17 @@ weights set to `0.5`, the latter becomes
 
 Do not merge the full-gallery numbers with the 473 x 473 numbers without
 stating the protocol. The larger gallery is expected to change Precision,
-Recall and F1 even though the 473 test queries are unchanged.
+Recall, F1 and NDCG even though the 473 test queries are unchanged.
 
 ## Run the category-aware ranking comparison
 
 This system-level ablation reuses the verified fine-tuned image embeddings. It
 does not train CLIP or regenerate the catalog. It compares unrestricted image
-ranking, the previous binary threshold, and the deployed confidence-weighted
-category bonus on the same 473 queries and 5,000-product gallery.
+ranking, a hard predicted-category filter, the previous binary threshold, and
+the deployed confidence-weighted category bonus on the same held-out queries
+and 5,000-product gallery. The hard filter is an analysis baseline rather than
+the deployed policy because an incorrect category prediction removes every
+otherwise relevant product outside that category.
 
 ```powershell
 .\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_category_aware `
@@ -239,6 +245,6 @@ validation data and reserves the 473-product test split for final reporting.
 
 The main outputs are `comparison.csv`, `attribute_comparison.csv`,
 `query_diagnostics.csv`, `summary.md`, and the separate `query_modes/` and
-`combined_ablation/` tables. Category-based Precision, Recall and F1 evaluate
-general retrieval relevance. The attribute table separately measures whether
+`combined_ablation/` tables. Category-based Precision, Recall, F1 and NDCG
+evaluate general retrieval relevance. The attribute table separately measures whether
 retrieved products satisfy explicit color or pattern terms in the query.

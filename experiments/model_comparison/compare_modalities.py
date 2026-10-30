@@ -158,9 +158,11 @@ def _metric_rows(
                 "precision": metrics[f"precision@{k}"],
                 "recall": metrics[f"recall@{k}"],
                 "f1": metrics[f"f1@{k}"],
+                "ndcg": metrics[f"ndcg@{k}"],
                 "category_macro_precision": metrics["category_macro"][f"precision@{k}"],
                 "category_macro_recall": metrics["category_macro"][f"recall@{k}"],
                 "category_macro_f1": metrics["category_macro"][f"f1@{k}"],
+                "category_macro_ndcg": metrics["category_macro"][f"ndcg@{k}"],
                 "evaluated_queries": metrics["evaluated_queries"],
                 "skipped_queries": metrics["skipped_queries"],
                 "gallery_size": metrics["gallery_size"],
@@ -181,6 +183,7 @@ def _category_rows(system, metrics, ks):
                     "precision": values[f"precision@{k}"],
                     "recall": values[f"recall@{k}"],
                     "f1": values[f"f1@{k}"],
+                    "ndcg": values[f"ndcg@{k}"],
                     "query_count": values["query_count"],
                     "evaluated_queries": values["evaluated_queries"],
                     "skipped_queries": values["skipped_queries"],
@@ -196,13 +199,14 @@ def _summary(rows, products, settings):
         f"The benchmark used {len(products)} held-out products and {products.category.nunique()} categories.",
         "The query product was excluded, and category labels were not included in any text-encoder input.",
         "",
-        "| System | Input | K | Precision | Recall | F1 | Evaluated | Skipped |",
-        "|---|---|---:|---:|---:|---:|---:|---:|",
+        "| System | Input | K | Precision | Recall | F1 | NDCG | Evaluated | Skipped |",
+        "|---|---|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for row in rows:
         lines.append(
             f"| {row['system']} | {row['input']} | {row['k']} | "
             f"{row['precision']:.4f} | {row['recall']:.4f} | {row['f1']:.4f} | "
+            f"{row['ndcg']:.4f} | "
             f"{row['evaluated_queries']} | {row['skipped_queries']} |"
         )
     lines += [
@@ -232,6 +236,7 @@ def self_test():
     assert result["skipped_queries"] == 1
     assert result["precision@1"] == 1.0
     assert result["recall@2"] == 1.0
+    assert result["ndcg@2"] == 1.0
     fused = reciprocal_rank_fusion([rankings, rankings], len(ids), 60)
     assert all(np.array_equal(left, right) for left, right in zip(fused, rankings))
     clip_images = np.eye(4, dtype=np.float32)

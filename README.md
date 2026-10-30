@@ -60,7 +60,7 @@ có sẵn hoặc tự prepare/fine-tune — nằm trong
 [project/README.txt](project/README.txt).
 
 Có thể đọc trực tiếp trong PowerShell:
-
+ 
 ```powershell
 Get-Content .\README.txt
 ```
