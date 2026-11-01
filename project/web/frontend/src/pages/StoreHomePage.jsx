@@ -156,10 +156,29 @@ export default function StoreHomePage() {
   return (
     <>
       <section className="store-hero">
-        <div className="store-hero-intro">
-          <span className="eyebrow">{t('hero.eyebrow')}</span>
-          <h1>{t('hero.titlePrefix')} <em>CLIP</em></h1>
-          <p>{t('hero.description')}</p>
+        <div className="store-hero-grid">
+          <div className="store-hero-intro">
+            <span className="hero-release">FASHION RETRIEVAL SYSTEM · 2026</span>
+            <span className="eyebrow">{t('hero.eyebrow')}</span>
+            <h1>{t('hero.titlePrefix')} <em>CLIP</em></h1>
+            <p>{t('hero.description')}</p>
+          </div>
+          <div className="hero-pipeline-visual" aria-label="Online retrieval pipeline">
+            <div className="pipeline-visual-head"><span>ONLINE RETRIEVAL PIPELINE</span><small>01 — 04</small></div>
+            <div className="pipeline-query-inputs">
+              <span>IMAGE<small>visual query</small></span><i>+</i><span>TEXT<small>semantic query</small></span>
+            </div>
+            <div className="pipeline-flow">
+              <span className="pipeline-stage"><b>01</b><strong>FINE-TUNED CLIP</strong><small>Encode query</small></span>
+              <i>→</i>
+              <span className="pipeline-stage"><b>02</b><strong>COSINE SCORES</strong><small>Image + text</small></span>
+              <i>→</i>
+              <span className="pipeline-stage"><b>03</b><strong>CATEGORY-AWARE</strong><small>Confidence signal</small></span>
+              <i>→</i>
+              <span className="pipeline-stage pipeline-stage--result"><b>04</b><strong>TOP-K</strong><small>Ranked products</small></span>
+            </div>
+            <div className="pipeline-serving"><span>REACT</span><i>→</i><span>NGINX</span><i>→</i><span>BACKEND ×2</span><i>→</i><span>CLIP + CATALOG</span></div>
+          </div>
         </div>
 
         <div className="hero-model-search" id="search">
@@ -175,6 +194,17 @@ export default function StoreHomePage() {
           <p className="search-hint"><Icon name="image" size={15} /> {t('search.hint')}</p>
         </div>
 
+      </section>
+
+      <section className="feature-banners" aria-label="Retrieval features">
+        <a className="feature-banner feature-banner--search" href="#search">
+          <div><span>01 · MULTIMODAL SEARCH</span><strong>{t('hero.titlePrefix')} CLIP</strong><small>{t('hero.description')}</small></div>
+          <Icon name="arrow" size={22} />
+        </a>
+        <a className="feature-banner feature-banner--catalog" href="/categories">
+          <div><span>02 · CATEGORY-AWARE</span><strong>{t('catalog.exploreCategories')}</strong><small>{t('catalog.chooseEyebrow')}</small></div>
+          <Icon name="arrow" size={22} />
+        </a>
       </section>
 
       <ResultsSection
@@ -196,7 +226,7 @@ export default function StoreHomePage() {
             <a href="/categories">{t('catalog.allCategories')} <Icon name="arrow" size={17} /></a>
           </div>
           <div className="category-showcase-grid">
-            {featured.slice(0, 4).map((category) => (
+            {featured.slice(0, 5).map((category) => (
               <a className="showcase-tile" key={category.name} href={categoryUrl(category.name)}>
                 <div><ProductImage reference={category.image_reference} name={category.name} /></div>
                 <span>{category.name}<Icon name="arrow" size={17} /></span>

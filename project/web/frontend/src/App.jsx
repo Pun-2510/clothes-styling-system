@@ -1,6 +1,5 @@
 import Footer from './components/layout/Footer'
 import Header from './components/layout/Header'
-import LoadingBar from './components/common/LoadingBar'
 import useServerStatus from './hooks/useServerStatus'
 import CategoriesPage from './pages/CategoriesPage'
 import CategoryPage from './pages/CategoryPage'
@@ -29,7 +28,6 @@ function App() {
   return (
     <div className="app-shell">
       <Header serverStatus={status} onRetry={checkStatus} />
-      <LoadingBar />
       <main id="top">{page}</main>
       <Footer />
     </div>

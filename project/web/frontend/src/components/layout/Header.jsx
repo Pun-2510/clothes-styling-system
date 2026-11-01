@@ -47,11 +47,9 @@ export default function Header({ serverStatus, onRetry }) {
     function closeMenu(event) {
       if (!categoryMenuRef.current?.contains(event.target)) setCategoryMenuOpen(false)
     }
-
     function closeOnEscape(event) {
       if (event.key === 'Escape') setCategoryMenuOpen(false)
     }
-
     document.addEventListener('pointerdown', closeMenu)
     document.addEventListener('keydown', closeOnEscape)
     return () => {
@@ -64,78 +62,90 @@ export default function Header({ serverStatus, onRetry }) {
 
   return (
     <header className="site-header">
-      <a className="brand" href="/" aria-label={`THREAD/FIND · ${t('header.home')}`}>
-        <span className="brand-mark">TF</span>
-        <span>THREAD/FIND</span>
-      </a>
-      <nav className="main-nav" aria-label={t('header.navigation')}>
-        <a className={path === '/' ? 'active' : ''} href="/">{t('header.home')}</a>
-        <div className="category-menu" ref={categoryMenuRef}>
+      <div className="announcement-strip">
+        <span>THREAD/FIND SYSTEM</span>
+        <strong>Category-aware multimodal fashion retrieval with fine-tuned CLIP</strong>
+        <a href="/#search">OPEN SEARCH →</a>
+      </div>
+      <div className="header-primary">
+        <a className="brand" href="/" aria-label={`THREAD/FIND · ${t('header.home')}`}>
+          <span className="brand-mark">TF</span>
+          <span className="brand-copy"><strong>THREAD/FIND</strong><small>FASHION RETRIEVAL LAB</small></span>
+        </a>
+        <div className="header-actions">
+          <div className="language-switch" role="group" aria-label={t('language.label')}>
+            <button className={language === 'vi' ? 'active' : ''} type="button" onClick={() => setLanguage('vi')} aria-pressed={language === 'vi'}>VI</button>
+            <button className={language === 'en' ? 'active' : ''} type="button" onClick={() => setLanguage('en')} aria-pressed={language === 'en'}>EN</button>
+          </div>
           <button
-            className={categoryActive || categoryMenuOpen ? 'active' : ''}
+            className={`history-trigger ${historyOpen ? 'active' : ''}`}
             type="button"
-            aria-haspopup="menu"
-            aria-expanded={categoryMenuOpen}
+            aria-expanded={historyOpen}
             onClick={() => {
-              setHistoryOpen(false)
-              setCategoryMenuOpen((open) => !open)
+              setCategoryMenuOpen(false)
+              setHistoryOpen((open) => !open)
             }}
           >
-            {t('header.categories')} <Icon name="chevron" size={15} />
+            <Icon name="history" size={17} />
+            <span className="history-trigger-label">{t('header.history')}</span>
+            {historyEntries.length > 0 && <span className="history-count">{historyEntries.length}</span>}
           </button>
-          {categoryMenuOpen && (
-            <>
-              <div className="category-menu-backdrop" aria-hidden="true" onClick={() => setCategoryMenuOpen(false)} />
-              <span className="category-popover-arrow" aria-hidden="true" />
-              <div className="category-popover" role="menu">
-                <span className="category-popover-title">{t('header.categoryMenu')}</span>
-                <div className="category-popover-links">
-                  {categories.map((category) => (
-                    <a key={category.name} href={categoryUrl(category.name)} role="menuitem">
-                      <span className="category-popover-image">
-                        <ProductImage reference={category.image_reference} name={category.name} />
-                      </span>
-                      <span>{category.name}</span>
-                    </a>
-                  ))}
-                </div>
-                <a className="category-more-link" href="/categories" role="menuitem">
-                  {t('header.allCategories')} <Icon name="arrow" size={17} />
-                </a>
-              </div>
-            </>
-          )}
-        </div>
-        <a className={path === '/developer' ? 'active' : ''} href="/developer">Developer</a>
-      </nav>
-      <div className="header-actions">
-        <div className="language-switch" role="group" aria-label={t('language.label')}>
-          <button className={language === 'vi' ? 'active' : ''} type="button" onClick={() => setLanguage('vi')} aria-pressed={language === 'vi'}>VI</button>
-          <button className={language === 'en' ? 'active' : ''} type="button" onClick={() => setLanguage('en')} aria-pressed={language === 'en'}>EN</button>
-        </div>
-        <button
-          className={`history-trigger ${historyOpen ? 'active' : ''}`}
-          type="button"
-          aria-expanded={historyOpen}
-          onClick={() => {
-            setCategoryMenuOpen(false)
-            setHistoryOpen((open) => !open)
-          }}
-        >
-          <Icon name="history" size={17} />
-          <span className="history-trigger-label">{t('header.history')}</span>
-          {historyEntries.length > 0 && <span className="history-count">{historyEntries.length}</span>}
-        </button>
-        <div className={`status status--${serverStatus}`} title={t(`status.${serverStatus}`)}>
-          <span className="status-dot" />
-          <span className="status-label">{t(`status.${serverStatus}`)}</span>
-          {serverStatus === 'offline' && (
-            <button type="button" onClick={onRetry} aria-label={t('status.retry')}>
-              <Icon name="retry" size={15} />
-            </button>
-          )}
+          <div className={`status status--${serverStatus}`} title={t(`status.${serverStatus}`)}>
+            <span className="status-dot" />
+            <span className="status-label">{t(`status.${serverStatus}`)}</span>
+            {serverStatus === 'offline' && (
+              <button type="button" onClick={onRetry} aria-label={t('status.retry')}>
+                <Icon name="retry" size={15} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
+
+      <div className="header-navigation-row">
+        <nav className="main-nav" aria-label={t('header.navigation')}>
+          <a className={path === '/' ? 'active' : ''} href="/">{t('header.home')}</a>
+          <div className="category-menu" ref={categoryMenuRef}>
+            <button
+              className={categoryActive || categoryMenuOpen ? 'active' : ''}
+              type="button"
+              aria-haspopup="menu"
+              aria-expanded={categoryMenuOpen}
+              onClick={() => {
+                setHistoryOpen(false)
+                setCategoryMenuOpen((open) => !open)
+              }}
+            >
+              {t('header.categories')} <Icon name="chevron" size={15} />
+            </button>
+            {categoryMenuOpen && (
+              <>
+                <div className="category-menu-backdrop" aria-hidden="true" onClick={() => setCategoryMenuOpen(false)} />
+                <span className="category-popover-arrow" aria-hidden="true" />
+                <div className="category-popover" role="menu">
+                  <span className="category-popover-title">{t('header.categoryMenu')}</span>
+                  <div className="category-popover-links">
+                    {categories.map((category) => (
+                      <a key={category.name} href={categoryUrl(category.name)} role="menuitem">
+                        <span className="category-popover-image">
+                          <ProductImage reference={category.image_reference} name={category.name} />
+                        </span>
+                        <span>{category.name}</span>
+                      </a>
+                    ))}
+                  </div>
+                  <a className="category-more-link" href="/categories" role="menuitem">
+                    {t('header.allCategories')} <Icon name="arrow" size={17} />
+                  </a>
+                </div>
+              </>
+            )}
+          </div>
+          <a className={path === '/developer' ? 'active' : ''} href="/developer">Developer</a>
+        </nav>
+        <a className="header-model-link" href="/#search"><span>AI</span> Fine-tuned CLIP · Category-aware</a>
+      </div>
+
       <SearchHistoryDrawer
         open={historyOpen}
         entries={historyEntries}

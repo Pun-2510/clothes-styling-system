@@ -158,9 +158,9 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
         <button className={`attach-image ${file ? 'has-file' : ''}`} type="button" onClick={() => inputRef.current?.click()}>
           <Icon name="image" size={20} /><span>{file ? t('search.changeImage') : t('search.addImage')}</span>
         </button>
-        <button className="compact-submit" type="submit" disabled={!canSearch || loading}>
-          {loading ? <span className="spinner" /> : <Icon name="arrow" size={20} />}
-          <span>{loading ? t('search.loading') : submitLabel}</span>
+        <button className="compact-submit" type="submit" disabled={!canSearch || loading} aria-busy={loading}>
+          <Icon name="arrow" size={20} />
+          <span>{submitLabel}</span>
         </button>
       </div>
 

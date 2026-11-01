@@ -1,4 +1,5 @@
 const HISTORY_KEY = 'thread-find.search-history.v1'
+const HISTORY_GENERATION_KEY = 'thread-find.search-history.generation.v1'
 const MAX_HISTORY_ITEMS = 15
 const DATABASE_NAME = 'thread-find-history'
 const DATABASE_VERSION = 1
@@ -26,6 +27,24 @@ function writeHistory(entries) {
   } catch {
     return false
   }
+}
+
+function readHistoryGeneration() {
+  try {
+    return Number(window.localStorage.getItem(HISTORY_GENERATION_KEY)) || 0
+  } catch {
+    return 0
+  }
+}
+
+function advanceHistoryGeneration() {
+  const next = readHistoryGeneration() + 1
+  try {
+    window.localStorage.setItem(HISTORY_GENERATION_KEY, String(next))
+  } catch {
+    // The in-memory UI can still be cleared when persistent storage is unavailable.
+  }
+  return next
 }
 
 function openHistoryDatabase() {
@@ -87,6 +106,22 @@ async function removeHistoryFile(id) {
   }
 }
 
+async function clearHistoryFiles() {
+  try {
+    const database = await openHistoryDatabase()
+    await new Promise((resolve, reject) => {
+      const transaction = database.transaction(FILE_STORE, 'readwrite')
+      transaction.objectStore(FILE_STORE).clear()
+      transaction.oncomplete = resolve
+      transaction.onerror = () => reject(transaction.error)
+      transaction.onabort = () => reject(transaction.error)
+    })
+    database.close()
+  } catch {
+    // LocalStorage history is still cleared when IndexedDB is unavailable.
+  }
+}
+
 function createHistoryId() {
   if (window.crypto?.randomUUID) return window.crypto.randomUUID()
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`
@@ -142,9 +177,14 @@ export async function loadSearchHistoryFile(id) {
 export async function addSearchHistory({ mode, query, language, topK, file, data }) {
   if (!['text', 'image', 'combined'].includes(mode)) return null
 
+  const historyGeneration = readHistoryGeneration()
   const id = createHistoryId()
   const fingerprint = requestFingerprint(mode, query, file)
   const imageStored = file ? await saveHistoryFile(id, file) : false
+  if (readHistoryGeneration() !== historyGeneration) {
+    if (imageStored) await removeHistoryFile(id)
+    return null
+  }
   const previous = readHistory()
   const duplicates = previous.filter((entry) => entry.fingerprint === fingerprint)
   const retained = previous.filter((entry) => entry.fingerprint !== fingerprint)
@@ -168,6 +208,10 @@ export async function addSearchHistory({ mode, query, language, topK, file, data
   }
 
   const next = [entry, ...retained].slice(0, MAX_HISTORY_ITEMS)
+  if (readHistoryGeneration() !== historyGeneration) {
+    if (imageStored) await removeHistoryFile(id)
+    return null
+  }
   if (!writeHistory(next)) {
     if (imageStored) await removeHistoryFile(id)
     return null
@@ -188,12 +232,12 @@ export async function deleteSearchHistoryEntry(id) {
 }
 
 export async function clearSearchHistory() {
-  const entries = readHistory()
+  advanceHistoryGeneration()
   try {
-    window.localStorage.removeItem(HISTORY_KEY)
+    window.localStorage.setItem(HISTORY_KEY, '[]')
     notifyHistoryChanged()
   } catch {
     // Ignore unavailable local storage.
   }
-  await Promise.all(entries.map((entry) => removeHistoryFile(entry.id)))
+  await clearHistoryFiles()
 }
