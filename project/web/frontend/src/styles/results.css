@@ -31,6 +31,46 @@
 .query-guidance-options button:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); }
 .query-guidance-options small { color: var(--muted); font-size: 9px; font-weight: 600; }
 
+.image-refinement-prompt {
+  margin: -4px 0 24px;
+  padding: 17px 18px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid #d6dce2;
+  border-left: 4px solid var(--primary);
+  border-radius: 4px;
+  background: linear-gradient(100deg, #f7f9fb, #fff);
+}
+.image-refinement-icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  background: var(--primary);
+}
+.image-refinement-prompt strong { display: block; font-size: 13px; line-height: 1.4; }
+.image-refinement-prompt p { margin: 4px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.image-refinement-prompt button {
+  min-height: 38px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--ink);
+  border-radius: 3px;
+  color: var(--ink);
+  background: #fff;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 750;
+  transition: color .18s ease, background .18s ease, transform .18s ease;
+}
+.image-refinement-prompt button:hover { color: #fff; background: var(--ink); transform: translateY(-1px); }
+
 .product-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 .results .product-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
 .results .product-visual { aspect-ratio: .88; }
@@ -106,6 +146,8 @@
   .results-header { align-items: start; flex-direction: column; }
   .result-actions { align-items: start; }
   .result-meta { align-items: start; }
+  .image-refinement-prompt { grid-template-columns: auto minmax(0, 1fr); }
+  .image-refinement-prompt button { grid-column: 1 / -1; width: 100%; }
   .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .results .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

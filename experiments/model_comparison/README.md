@@ -1,250 +1,306 @@
-# Model comparison experiment
+# Model comparison experiments
 
-This folder contains the controlled evaluation used to compare three input
-settings on the same held-out product set:
+Thư mục này chứa protocol đánh giá hiện tại cho catalog diverse 5.000 sản phẩm
+trên ba seed độc lập: `42`, `123` và `2026`.
 
-- **Text-only:** multilingual SBERT, pretrained CLIP text encoder, and
-  fine-tuned CLIP text encoder.
-- **Image-only:** ResNet18 and fine-tuned CLIP vision encoder.
-- **Image + text:** late fusion of the SBERT and ResNet18 rankings using
-  Reciprocal Rank Fusion (RRF), plus weighted raw-cosine fusion using the
-  fine-tuned CLIP image/text encoders.
+Tất cả lệnh trong tài liệu này chạy từ thư mục gốc `dacntt/`.
 
-The experiment loads the `test` rows saved by
-`project/runs/clip_finetune_3epochs`. It does not create a new split. The query
-product is removed from the gallery, and products with the same ground-truth
-category are treated as relevant. Product category is deliberately omitted
-from every text encoder's input to avoid leaking the evaluation label.
+## 1. Ba nhóm so sánh
 
-The project ResNet checkpoint is a **ResNet18** classifier trained on six
-categories. The experiment uses its penultimate 512-dimensional feature vector;
-it does not claim that the checkpoint is a 142-category classifier. Use
-`--resnet-source imagenet` to evaluate standard ImageNet ResNet18 instead.
+### Core model and modality comparison
 
-The CLIP fusion row uses the same fine-tuned checkpoint and held-out queries
-and combines cosine scores directly. It intentionally does not apply category
-filtering or attribute overrides; those belong to a separate system-level
-ablation.
+`compare_full_gallery.py` tạo ba nhóm:
 
-Every ranking table reports Precision@K, Recall@K, F1@K and NDCG@K. NDCG
-rewards relevant products that appear near the beginning of the ranked list.
+- `controlled_baselines`: ResNet18 image-only, SBERT text-only, pretrained
+  CLIP, fine-tuned CLIP và ResNet18 + SBERT RRF.
+- `clip_finetuning`: pretrained và fine-tuned CLIP trong paired image→text và
+  text→image retrieval.
+- `serving_ablation`: các score component và pretrained/fine-tuned multimodal
+  raw fusion dưới cùng trọng số.
 
-## Setup
+### Category-aware comparison
 
-Run these commands from the repository root (`dacntt/`):
+`compare_category_aware.py` giữ nguyên fine-tuned image cosine score và so sánh:
 
-```powershell
-.\project\.venv\Scripts\python.exe -m pip install -r .\experiments\model_comparison\requirements.txt
+- Không sử dụng category.
+- Hard predicted-category filter.
+- Threshold soft category.
+- Confidence-weighted soft category đang dùng khi serving.
+
+### System pipeline comparison
+
+`compare_system_pipeline.py` kiểm tra ba query mode và combined ablation:
+
+- Image-only deployed.
+- Text-only deployed.
+- Combined deployed.
+- Raw fusion, attribute contribution, category contribution và full ranking.
+
+Mọi bảng báo cáo Precision@K, Recall@K, F1@K và NDCG@K tại
+`K = 1, 5, 10`.
+
+## 2. Kết quả đã hoàn tất
+
+```text
+results/diverse_seed_42/
+results/diverse_seed_123/
+results/diverse_seed_2026/
 ```
 
-Run the small metric test without loading any model:
+Trong mỗi seed:
 
-```powershell
-.\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_modalities --self-test
+```text
+core_pretrained_multimodal_v1/
+category_aware_v1/
+system_pipeline_v1/
+retrieval_weights.json
 ```
 
-Validate the dataset and configuration:
+Tổng hợp ba seed:
 
-```powershell
-.\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_modalities `
-  --run-dir .\project\runs\clip_finetune_3epochs `
-  --dry-run
+```text
+results/aggregate_diverse_3_seeds_v1/
+├── core_pretrained_multimodal/
+├── category_aware/
+└── system_pipeline/
 ```
 
-## Run the modality comparison
+Mỗi thư mục tổng hợp có:
+
+- `mean_std_summary.csv`: mean và sample standard deviation.
+- `per_seed_results.csv`: toàn bộ số liệu từng seed.
+- `aggregation.json`: provenance, catalog hash, query count và gallery size.
+
+Không gộp bộ `aggregate_3_seeds/` dùng random sampling với bộ diverse vì hai
+protocol có category quota, catalog và test queries khác nhau.
+
+## 3. Kiểm tra nhanh code
 
 ```powershell
-.\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_modalities `
-  --run-dir .\project\runs\clip_finetune_3epochs `
+.\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_full_gallery --self-test
+.\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_category_aware --self-test
+.\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_system_pipeline --self-test
+```
+
+## 4. Chạy lại seed 42
+
+Các output dưới đây dùng hậu tố `rerun_v1` để không ghi đè kết quả báo cáo.
+
+### 4.1. Core comparison
+
+```powershell
+.\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_full_gallery `
+  --run-dir .\project\runs\clip_finetune_diverse_seed_42 `
+  --catalog-csv .\project\data\processed_diverse\products.csv `
+  --expected-gallery-size 5000 `
+  --finetuned-image-embeddings .\project\embeddings_diverse_seed_42\image_embeddings.npy `
+  --cache-dir .\experiments\model_comparison\cache\diverse_seed_42 `
   --resnet-source project-trained `
   --device cpu `
   --batch-size 16 `
   --ks 1 5 10 `
   --clip-image-weight 0.5 `
   --clip-text-image-weight 0.5 `
-  --output-dir .\experiments\model_comparison\results\modalities_5000
+  --output-dir .\experiments\model_comparison\results\diverse_seed_42\core_pretrained_multimodal_rerun_v1
 ```
 
-The first run downloads SBERT and pretrained CLIP if they are not already in
-the Hugging Face cache. Embeddings are cached under `cache/`; later runs reuse
-them only when the model identity and evaluation rows match. The fine-tuned
-CLIP category-free result is an inference ablation because the checkpoint was
-originally trained with category-bearing prompts.
-
-## Run the unified 5,000-product comparisons
-
-`compare_full_gallery` is the canonical comparison entry point. The older
-`run_all` module remains only as a compatibility alias and accepts the same
-arguments; it no longer depends on code inside `project/`.
-
-Use this protocol for the report so every comparison uses the same 473
-held-out test queries, the same complete 5,000-product catalog, the same K
-values and the same saved model checkpoints. One command now produces three
-separate result groups:
-
-- `controlled_baselines/`: category-retrieval baselines for SBERT, ResNet18,
-  pretrained CLIP, fine-tuned CLIP and SBERT + ResNet18 RRF. The query product
-  is excluded and relevance means the same ground-truth category.
-- `clip_finetuning/`: pretrained versus fine-tuned CLIP on text-to-image and
-  image-to-text paired retrieval. The paired product remains in the catalog
-  because exact `product_id` is the retrieval target.
-- `serving_ablation/`: the image-only, text-to-image, text-to-text, website
-  text fusion, and raw multimodal fusion configurations. Category relevance is
-  applied only after unrestricted ranking.
-
-Run:
-
-```powershell
-.\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_full_gallery `
-  --run-dir .\project\runs\clip_finetune_3epochs `
-  --catalog-csv .\project\data\processed\products.csv `
-  --expected-gallery-size 5000 `
-  --resnet-source project-trained `
-  --device cpu `
-  --batch-size 16 `
-  --ks 1 5 10 `
-  --clip-image-weight 0.5 `
-  --clip-text-image-weight 0.5 `
-  --output-dir .\experiments\model_comparison\results\full_gallery_5000_raw_v1
-```
-
-Run configuration validation first without loading any model:
-
-```powershell
-.\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_full_gallery `
-  --run-dir .\project\runs\clip_finetune_3epochs `
-  --catalog-csv .\project\data\processed\products.csv `
-  --expected-gallery-size 5000 `
-  --dry-run
-```
-
-The long command caches every newly generated embedding under
-`cache/full_gallery_5000/` and reuses the verified fine-tuned CLIP image
-embeddings in `project/embeddings/`. If the run is interrupted, rerunning the
-same command with a new empty output directory reuses completed cache stages.
-The output contains a consolidated `comparison.csv`, provenance files and the
-three folders listed above. Every CSV records `comparison_group`, `role`,
-`deployed`, `formula`, `task`, query counts and gallery size so controlled
-baselines cannot be confused with website-serving configurations.
-
-The website-aligned text row uses
-`w_t * S_TI + (1 - w_t) * S_TT`. The multimodal row uses
-`w_i * S_II + (1 - w_i) * (w_t * S_TI + (1 - w_t) * S_TT)`. With both command
-weights set to `0.5`, the latter becomes
-`0.5 * S_II + 0.25 * S_TI + 0.25 * S_TT`.
-
-Do not merge the full-gallery numbers with the 473 x 473 numbers without
-stating the protocol. The larger gallery is expected to change Precision,
-Recall, F1 and NDCG even though the 473 test queries are unchanged.
-
-## Run the category-aware ranking comparison
-
-This system-level ablation reuses the verified fine-tuned image embeddings. It
-does not train CLIP or regenerate the catalog. It compares unrestricted image
-ranking, a hard predicted-category filter, the previous binary threshold, and
-the deployed confidence-weighted category bonus on the same held-out queries
-and 5,000-product gallery. The hard filter is an analysis baseline rather than
-the deployed policy because an incorrect category prediction removes every
-otherwise relevant product outside that category.
+### 4.2. Category-aware comparison
 
 ```powershell
 .\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_category_aware `
-  --run-dir .\project\runs\clip_finetune_3epochs `
-  --catalog-csv .\project\data\processed\products.csv `
-  --image-embeddings .\project\embeddings\image_embeddings.npy `
+  --run-dir .\project\runs\clip_finetune_diverse_seed_42 `
+  --catalog-csv .\project\data\processed_diverse\products.csv `
+  --image-embeddings .\project\embeddings_diverse_seed_42\image_embeddings.npy `
   --expected-gallery-size 5000 `
   --ks 1 5 10 `
   --category-top-per-class 3 `
   --category-confidence-floor 0.50 `
   --category-confidence-threshold 0.60 `
-  --category-bonus 0.05 `
-  --output-dir .\experiments\model_comparison\results\category_aware_5000_v2
+  --category-bonus 0.20 `
+  --output-dir .\experiments\model_comparison\results\diverse_seed_42\category_aware_rerun_v1
 ```
 
-The output includes ranking metrics, per-category metrics, query-level category
-predictions, category prediction Accuracy and Macro-F1, binary-threshold
-coverage, confidence-weighted coverage, and mean category strength.
-
-## Run the deployed query-mode and combined-search comparison
-
-This experiment follows the website pipeline rather than evaluating only one
-encoder. It compares image-only, text-only and combined image-text queries, and
-then performs the combined-search ablation below:
-
-- raw three-score fusion;
-- raw fusion plus text attributes;
-- raw fusion plus the category policy;
-- the full deployed ranking with both attributes and category handling.
-
-The experiment reuses `project/embeddings/` and the verified category-free
-query-text cache. It does not fine-tune CLIP or regenerate the catalog.
-
-### Select serving weights on validation data
-
-Run this step after the catalog, split and fine-tuned checkpoint are fixed. It
-uses only the 474 validation products as queries, reuses the 5,000-product
-gallery and writes the selected defaults to
-`project/retrieval_weights.json`. The website loads this file
-automatically; the test split is not used during selection.
+### 4.3. System pipeline comparison
 
 ```powershell
-.\project\.venv\Scripts\python.exe -m experiments.model_comparison.tune_serving_weights `
-  --run-dir .\project\runs\clip_finetune_3epochs `
-  --catalog-csv .\project\data\processed\products.csv `
-  --image-embeddings .\project\embeddings\image_embeddings.npy `
-  --text-embeddings .\project\embeddings\text_embeddings.npy `
-  --expected-gallery-size 5000 `
-  --device cpu `
-  --batch-size 16 `
-  --objective-k 10 `
-  --min-combined-image-weight 0.20 `
-  --max-combined-image-weight 0.80 `
-  --output-dir .\experiments\model_comparison\results\weight_tuning_5000_v2
-```
+$weights42 = (Get-Content .\experiments\model_comparison\results\diverse_seed_42\retrieval_weights.json -Raw | ConvertFrom-Json).weights
 
-Text-only and image-only settings maximize category-macro F1 on validation.
-For combined search, validation text contains only explicit refinements such as
-colour, pattern, or style; the image supplies the product context. The image
-weight is constrained to `0.20-0.80`, so a multimodal setting cannot silently
-become text-only. The selector first protects category-macro F1, then picks the
-candidate with the best explicit-attribute match within the configured F1
-tolerance. The former default (`0.50 / 0.25 / 0.10`) is also evaluated directly.
-Trial tables and the final choice are retained for reproducibility.
-
-Validate the configuration first:
-
-```powershell
 .\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_system_pipeline `
-  --run-dir .\project\runs\clip_finetune_3epochs `
-  --catalog-csv .\project\data\processed\products.csv `
-  --expected-gallery-size 5000 `
-  --dry-run
-```
-
-Run the comparison:
-
-```powershell
-.\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_system_pipeline `
-  --run-dir .\project\runs\clip_finetune_3epochs `
-  --catalog-csv .\project\data\processed\products.csv `
-  --image-embeddings .\project\embeddings\image_embeddings.npy `
-  --text-embeddings .\project\embeddings\text_embeddings.npy `
+  --run-dir .\project\runs\clip_finetune_diverse_seed_42 `
+  --catalog-csv .\project\data\processed_diverse\products.csv `
+  --image-embeddings .\project\embeddings_diverse_seed_42\image_embeddings.npy `
+  --text-embeddings .\project\embeddings_diverse_seed_42\text_embeddings.npy `
   --expected-gallery-size 5000 `
   --device cpu `
   --batch-size 16 `
   --ks 1 5 10 `
+  --image-weight $weights42.COMBINED_IMAGE_WEIGHT `
+  --text-image-weight $weights42.TEXT_RETRIEVAL_IMAGE_WEIGHT `
+  --attribute-weight $weights42.COMBINED_ATTRIBUTE_WEIGHT `
+  --image-category-bonus $weights42.CATEGORY_BONUS `
+  --combined-category-bonus $weights42.COMBINED_CATEGORY_WEIGHT `
   --category-top-per-class 3 `
   --category-confidence-floor 0.50 `
   --category-confidence-threshold 0.60 `
-  --output-dir .\experiments\model_comparison\results\system_pipeline_5000_tuned_v2
+  --output-dir .\experiments\model_comparison\results\diverse_seed_42\system_pipeline_rerun_v1
 ```
 
-Unless explicitly overridden on the command line, this final test comparison
-reads the same generated weights as the website. This keeps model selection on
-validation data and reserves the 473-product test split for final reporting.
+## 5. Chạy lại seed 123
 
-The main outputs are `comparison.csv`, `attribute_comparison.csv`,
-`query_diagnostics.csv`, `summary.md`, and the separate `query_modes/` and
-`combined_ablation/` tables. Category-based Precision, Recall, F1 and NDCG
-evaluate general retrieval relevance. The attribute table separately measures whether
-retrieved products satisfy explicit color or pattern terms in the query.
+### 5.1. Core comparison
+
+```powershell
+.\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_full_gallery `
+  --run-dir .\project\runs\clip_finetune_diverse_seed_123 `
+  --catalog-csv .\project\data\processed_diverse_seed_123\products.csv `
+  --expected-gallery-size 5000 `
+  --finetuned-image-embeddings .\project\embeddings_diverse_seed_123\image_embeddings.npy `
+  --cache-dir .\experiments\model_comparison\cache\diverse_seed_123 `
+  --resnet-source project-trained `
+  --device cpu `
+  --batch-size 16 `
+  --ks 1 5 10 `
+  --clip-image-weight 0.5 `
+  --clip-text-image-weight 0.5 `
+  --output-dir .\experiments\model_comparison\results\diverse_seed_123\core_pretrained_multimodal_rerun_v1
+```
+
+### 5.2. Category-aware comparison
+
+```powershell
+.\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_category_aware `
+  --run-dir .\project\runs\clip_finetune_diverse_seed_123 `
+  --catalog-csv .\project\data\processed_diverse_seed_123\products.csv `
+  --image-embeddings .\project\embeddings_diverse_seed_123\image_embeddings.npy `
+  --expected-gallery-size 5000 `
+  --ks 1 5 10 `
+  --category-top-per-class 3 `
+  --category-confidence-floor 0.50 `
+  --category-confidence-threshold 0.60 `
+  --category-bonus 0.20 `
+  --output-dir .\experiments\model_comparison\results\diverse_seed_123\category_aware_rerun_v1
+```
+
+### 5.3. System pipeline comparison
+
+```powershell
+$weights123 = (Get-Content .\experiments\model_comparison\results\diverse_seed_123\retrieval_weights.json -Raw | ConvertFrom-Json).weights
+
+.\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_system_pipeline `
+  --run-dir .\project\runs\clip_finetune_diverse_seed_123 `
+  --catalog-csv .\project\data\processed_diverse_seed_123\products.csv `
+  --image-embeddings .\project\embeddings_diverse_seed_123\image_embeddings.npy `
+  --text-embeddings .\project\embeddings_diverse_seed_123\text_embeddings.npy `
+  --expected-gallery-size 5000 `
+  --device cpu `
+  --batch-size 16 `
+  --ks 1 5 10 `
+  --image-weight $weights123.COMBINED_IMAGE_WEIGHT `
+  --text-image-weight $weights123.TEXT_RETRIEVAL_IMAGE_WEIGHT `
+  --attribute-weight $weights123.COMBINED_ATTRIBUTE_WEIGHT `
+  --image-category-bonus $weights123.CATEGORY_BONUS `
+  --combined-category-bonus $weights123.COMBINED_CATEGORY_WEIGHT `
+  --category-top-per-class 3 `
+  --category-confidence-floor 0.50 `
+  --category-confidence-threshold 0.60 `
+  --output-dir .\experiments\model_comparison\results\diverse_seed_123\system_pipeline_rerun_v1
+```
+
+## 6. Chạy lại seed 2026
+
+### 6.1. Core comparison
+
+```powershell
+.\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_full_gallery `
+  --run-dir .\project\runs\clip_finetune_diverse_seed_2026 `
+  --catalog-csv .\project\data\processed_diverse_seed_2026\products.csv `
+  --expected-gallery-size 5000 `
+  --finetuned-image-embeddings .\project\embeddings_diverse_seed_2026\image_embeddings.npy `
+  --cache-dir .\experiments\model_comparison\cache\diverse_seed_2026 `
+  --resnet-source project-trained `
+  --device cpu `
+  --batch-size 16 `
+  --ks 1 5 10 `
+  --clip-image-weight 0.5 `
+  --clip-text-image-weight 0.5 `
+  --output-dir .\experiments\model_comparison\results\diverse_seed_2026\core_pretrained_multimodal_rerun_v1
+```
+
+### 6.2. Category-aware comparison
+
+```powershell
+.\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_category_aware `
+  --run-dir .\project\runs\clip_finetune_diverse_seed_2026 `
+  --catalog-csv .\project\data\processed_diverse_seed_2026\products.csv `
+  --image-embeddings .\project\embeddings_diverse_seed_2026\image_embeddings.npy `
+  --expected-gallery-size 5000 `
+  --ks 1 5 10 `
+  --category-top-per-class 3 `
+  --category-confidence-floor 0.50 `
+  --category-confidence-threshold 0.60 `
+  --category-bonus 0.20 `
+  --output-dir .\experiments\model_comparison\results\diverse_seed_2026\category_aware_rerun_v1
+```
+
+### 6.3. System pipeline comparison
+
+```powershell
+$weights2026 = (Get-Content .\experiments\model_comparison\results\diverse_seed_2026\retrieval_weights.json -Raw | ConvertFrom-Json).weights
+
+.\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_system_pipeline `
+  --run-dir .\project\runs\clip_finetune_diverse_seed_2026 `
+  --catalog-csv .\project\data\processed_diverse_seed_2026\products.csv `
+  --image-embeddings .\project\embeddings_diverse_seed_2026\image_embeddings.npy `
+  --text-embeddings .\project\embeddings_diverse_seed_2026\text_embeddings.npy `
+  --expected-gallery-size 5000 `
+  --device cpu `
+  --batch-size 16 `
+  --ks 1 5 10 `
+  --image-weight $weights2026.COMBINED_IMAGE_WEIGHT `
+  --text-image-weight $weights2026.TEXT_RETRIEVAL_IMAGE_WEIGHT `
+  --attribute-weight $weights2026.COMBINED_ATTRIBUTE_WEIGHT `
+  --image-category-bonus $weights2026.CATEGORY_BONUS `
+  --combined-category-bonus $weights2026.COMBINED_CATEGORY_WEIGHT `
+  --category-top-per-class 3 `
+  --category-confidence-floor 0.50 `
+  --category-confidence-threshold 0.60 `
+  --output-dir .\experiments\model_comparison\results\diverse_seed_2026\system_pipeline_rerun_v1
+```
+
+## 7. Tổng hợp ba seed vừa chạy lại
+
+### 7.1. Core comparison
+
+```powershell
+.\project\.venv\Scripts\python.exe -m experiments.model_comparison.aggregate_seeds `
+  --inputs `
+    .\experiments\model_comparison\results\diverse_seed_42\core_pretrained_multimodal_rerun_v1 `
+    .\experiments\model_comparison\results\diverse_seed_123\core_pretrained_multimodal_rerun_v1 `
+    .\experiments\model_comparison\results\diverse_seed_2026\core_pretrained_multimodal_rerun_v1 `
+  --output-dir .\experiments\model_comparison\results\aggregate_diverse_3_seeds_rerun_v1\core_pretrained_multimodal
+```
+
+### 7.2. Category-aware comparison
+
+```powershell
+.\project\.venv\Scripts\python.exe -m experiments.model_comparison.aggregate_seeds `
+  --inputs `
+    .\experiments\model_comparison\results\diverse_seed_42\category_aware_rerun_v1 `
+    .\experiments\model_comparison\results\diverse_seed_123\category_aware_rerun_v1 `
+    .\experiments\model_comparison\results\diverse_seed_2026\category_aware_rerun_v1 `
+  --output-dir .\experiments\model_comparison\results\aggregate_diverse_3_seeds_rerun_v1\category_aware
+```
+
+### 7.3. System pipeline comparison
+
+```powershell
+.\project\.venv\Scripts\python.exe -m experiments.model_comparison.aggregate_seeds `
+  --inputs `
+    .\experiments\model_comparison\results\diverse_seed_42\system_pipeline_rerun_v1 `
+    .\experiments\model_comparison\results\diverse_seed_123\system_pipeline_rerun_v1 `
+    .\experiments\model_comparison\results\diverse_seed_2026\system_pipeline_rerun_v1 `
+  --output-dir .\experiments\model_comparison\results\aggregate_diverse_3_seeds_rerun_v1\system_pipeline
+```
+
+`aggregate_seeds.py` chỉ đọc kết quả có sẵn; nó không prepare dataset, fine-tune,
+sinh embeddings hoặc chạy lại comparison.

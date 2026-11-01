@@ -6,7 +6,7 @@ import { clearSearchFile, loadSearchFile, loadSearchFormState, saveSearchFile, s
 import { useLanguage } from '../../i18n'
 import ImageCropDialog from './ImageCropDialog'
 
-export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuccess, onSearchError, onClearResult, initialQuery = '', restoreRequest = null, querySuggestion = null }) {
+export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuccess, onSearchError, onClearResult, initialQuery = '', restoreRequest = null, querySuggestion = null, refinementRequest = null }) {
   const { t } = useLanguage()
   const [savedForm] = useState(loadSearchFormState)
   const [file, setFile] = useState(null)
@@ -15,6 +15,7 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
   const [language, setLanguage] = useState(savedForm.language === 'en' ? 'en' : 'vi')
   const [topK, setTopK] = useState(RESULT_COUNTS.includes(savedForm.topK) ? savedForm.topK : 5)
   const inputRef = useRef(null)
+  const queryInputRef = useRef(null)
   const onClearResultRef = useRef(onClearResult)
   const preview = useMemo(() => file ? URL.createObjectURL(file) : '', [file])
   const hasImage = Boolean(file)
@@ -66,6 +67,16 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
     if (inputRef.current) inputRef.current.value = ''
     onClearResultRef.current?.()
   }, [querySuggestion])
+
+  useEffect(() => {
+    if (!refinementRequest?.id) return undefined
+    const frame = window.requestAnimationFrame(() => {
+      queryInputRef.current?.focus({ preventScroll: true })
+      const cursorPosition = queryInputRef.current?.value.length || 0
+      queryInputRef.current?.setSelectionRange(cursorPosition, cursorPosition)
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [refinementRequest])
 
   function acceptFile(candidate) {
     if (!candidate) return
@@ -149,10 +160,11 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
       <div className="compact-search-bar">
         <Icon name="search" size={20} />
         <input
+          ref={queryInputRef}
           id="combined-fashion-query"
           value={query}
           onChange={(event) => updateQuery(event.target.value)}
-          placeholder={t('search.placeholder')}
+          placeholder={refinementRequest && hasImage && !hasText ? t('search.refinePlaceholder') : t('search.placeholder')}
           maxLength={512}
         />
         <button className={`attach-image ${file ? 'has-file' : ''}`} type="button" onClick={() => inputRef.current?.click()}>

@@ -25,6 +25,7 @@ export default function StoreHomePage() {
   const [formResetVersion, setFormResetVersion] = useState(0)
   const [historyRestore, setHistoryRestore] = useState(null)
   const [querySuggestion, setQuerySuggestion] = useState(null)
+  const [refinementRequest, setRefinementRequest] = useState(null)
   const resultsRef = useRef(null)
 
   useEffect(() => {
@@ -110,6 +111,7 @@ export default function StoreHomePage() {
     clearSearchState()
     setSearching(false)
     setHistoryRestore(null)
+    setRefinementRequest(null)
 
     const url = new URL(window.location.href)
     url.searchParams.delete('q')
@@ -137,6 +139,18 @@ export default function StoreHomePage() {
     })
   }
 
+  function refineImageWithText() {
+    setSearchError('')
+    setRefinementRequest({ id: Date.now() })
+    window.requestAnimationFrame(() => {
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      document.getElementById('search')?.scrollIntoView({
+        behavior: reduceMotion ? 'auto' : 'smooth',
+        block: 'center',
+      })
+    })
+  }
+
   const searchHandlers = {
     loading: searching,
     onSearchStart: () => { setSearching(true); clearSearchState() },
@@ -146,6 +160,7 @@ export default function StoreHomePage() {
       setSearchResult(data)
       setSearchMode(mode)
       setSearching(false)
+      setRefinementRequest(null)
     },
     onSearchError: (message) => {
       setSearchError(message)
@@ -188,6 +203,7 @@ export default function StoreHomePage() {
             initialQuery={initialQuery}
             restoreRequest={historyRestore}
             querySuggestion={querySuggestion}
+            refinementRequest={refinementRequest}
             onClearResult={clearSearchState}
           />
           <ErrorBanner message={searchError} />
@@ -213,6 +229,7 @@ export default function StoreHomePage() {
         sectionRef={resultsRef}
         onNewSearch={startNewSearch}
         onUseSuggestion={useQuerySuggestion}
+        onRefineWithText={refineImageWithText}
       />
 
       {catalogError && <div className="state-message" role="alert">{catalogError}</div>}

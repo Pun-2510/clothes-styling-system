@@ -49,7 +49,7 @@ services:
         source: ./src
         target: /app/src
       - type: bind
-        source: ./retrieval_weights.json
+        source: ${FASHION_RETRIEVAL_WEIGHTS_FILE:-./retrieval_weights.json}
         target: /app/retrieval_weights.json
         read_only: true
       - type: bind

@@ -126,7 +126,7 @@ RANDOM_SEED = 42
 # catalog is too small to reach the floor for every category, the sampler
 # distributes the available budget as evenly as possible and reports warnings.
 MIN_PRODUCTS_PER_CATEGORY = int(
-    os.environ.get("MIN_PRODUCTS_PER_CATEGORY", "10")
+    os.environ.get("MIN_PRODUCTS_PER_CATEGORY", "25")
 )
 
 if MIN_PRODUCTS_PER_CATEGORY < 1:

@@ -48,6 +48,46 @@ class DataPreparationTests(unittest.TestCase):
             sample_products(self.catalog, 13)
         self.assertEqual(len(sample_products(self.catalog, None)), 12)
 
+    def test_diverse_sampling_keeps_distinct_metadata_styles(self):
+        base_image = str(self.root / "0.png")
+        rows = []
+        styles = [
+            "basic short skirt",
+            "basic short skirt",
+            "basic short skirt",
+            "basic short skirt",
+            "pleated midi skirt",
+            "flowing maxi long skirt",
+        ]
+        for index, style in enumerate(styles):
+            rows.append(
+                {
+                    "product_id": f"skirt-{index}",
+                    "product_name": style,
+                    "description": style,
+                    "category": "skirts",
+                    "image_path": base_image,
+                }
+            )
+        products = pd.DataFrame(rows)
+        selected = sample_products(
+            products,
+            3,
+            seed=42,
+            sampling_strategy="diverse",
+        )
+        selected_text = " ".join(selected.product_name.tolist())
+        self.assertIn("midi", selected_text)
+        self.assertIn("maxi", selected_text)
+
+        repeated = sample_products(
+            products,
+            3,
+            seed=42,
+            sampling_strategy="diverse",
+        )
+        pd.testing.assert_frame_equal(selected, repeated)
+
     def test_prepare_exact_after_invalid_and_duplicate_images(self):
         duplicate = self.catalog.iloc[0].copy()
         duplicate_path = self.root / "duplicate.png"
@@ -84,6 +124,7 @@ class DataPreparationTests(unittest.TestCase):
         self.assertEqual(summary["eligible_products"], 8)
         self.assertEqual(summary["invalid_images"], 1)
         self.assertEqual(summary["duplicate_images_removed"], 1)
+        self.assertEqual(summary["sampling_strategy"], "diverse")
 
         with contextlib.redirect_stdout(io.StringIO()), self.assertRaises(
             ValueError

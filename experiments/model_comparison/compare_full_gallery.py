@@ -495,6 +495,11 @@ def main():
             args.clip_text_image_weight,
         )
     )
+    serving_rankings["clip_pretrained_multimodal_raw"] = clip_query_gallery_score_fusion(
+        query_rows(clip_pretrained_images), query_rows(clip_pretrained_text),
+        clip_pretrained_images, clip_pretrained_text, query_ids, gallery_ids,
+        args.clip_image_weight, args.clip_text_image_weight,
+    )
     serving_rankings["clip_finetuned_multimodal_raw"] = clip_query_gallery_score_fusion(
         query_rows(clip_finetuned_images), query_rows(clip_finetuned_text),
         clip_finetuned_images, clip_finetuned_text, query_ids, gallery_ids,
@@ -579,6 +584,11 @@ def main():
             "comparison_group": "serving_ablation", "role": "text serving",
             "deployed": True, "input": "text",
             "formula": "w_t*S_TI + (1-w_t)*S_TT",
+        },
+        "clip_pretrained_multimodal_raw": {
+            "comparison_group": "serving_ablation", "role": "multimodal baseline",
+            "deployed": False, "input": "image + text",
+            "formula": "w_i*S_II + (1-w_i)*(w_t*S_TI + (1-w_t)*S_TT)",
         },
         "clip_finetuned_multimodal_raw": {
             "comparison_group": "serving_ablation", "role": "multimodal serving",

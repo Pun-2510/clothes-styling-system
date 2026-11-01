@@ -38,7 +38,7 @@ function QueryGuidance({ guidance, onUseSuggestion, t }) {
   )
 }
 
-export default function ResultsSection({ data, mode, sectionRef, onNewSearch, onUseSuggestion }) {
+export default function ResultsSection({ data, mode, sectionRef, onNewSearch, onUseSuggestion, onRefineWithText }) {
   const { t } = useLanguage()
   if (!data) return null
 
@@ -80,6 +80,19 @@ export default function ResultsSection({ data, mode, sectionRef, onNewSearch, on
           )}
         </div>
       </div>
+
+      {mode === 'image' && items.length > 0 && onRefineWithText && (
+        <div className="image-refinement-prompt">
+          <span className="image-refinement-icon"><Icon name="spark" size={19} /></span>
+          <div>
+            <strong>{t('results.refineTitle')}</strong>
+            <p>{t('results.refineDescription')}</p>
+          </div>
+          <button type="button" onClick={onRefineWithText}>
+            {t('results.refineAction')} <Icon name="arrow" size={16} />
+          </button>
+        </div>
+      )}
 
       {mode === 'text' && (
         <QueryGuidance guidance={data.guidance} onUseSuggestion={onUseSuggestion} t={t} />

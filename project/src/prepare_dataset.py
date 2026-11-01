@@ -1,12 +1,13 @@
 from pathlib import Path
 import argparse
+import hashlib
 import json
 import sys
 import re
 
 import pandas as pd
 import numpy as np
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 
 # =========================================================
@@ -214,12 +215,171 @@ def find_image(
 # MAIN
 # =========================================================
 
-def sample_products(products, count, seed=RANDOM_SEED, min_per_category=1):
-    """Exact-size sampling with a category floor before proportional fill.
+_DIVERSITY_IMAGE_SIZE = 8
+_DIVERSITY_TEXT_DIMENSIONS = 96
+_DIVERSITY_IMAGE_WEIGHT = 0.75
+
+
+def _unit_vector(values):
+    """Return a finite, L2-normalized float32 vector."""
+    values = np.asarray(values, dtype=np.float32)
+    values = np.nan_to_num(values, nan=0.0, posinf=0.0, neginf=0.0)
+    norm = float(np.linalg.norm(values))
+    return values / norm if norm > 0.0 else values
+
+
+def _image_diversity_descriptor(image_path):
+    """Describe colour and silhouette without loading a neural model.
+
+    Images are padded rather than centre-cropped so long garments keep their
+    overall shape. The descriptor is used only to choose a diverse catalog;
+    it is not an embedding consumed by the website.
+    """
+    size = _DIVERSITY_IMAGE_SIZE
+    try:
+        with Image.open(image_path) as source:
+            source = source.convert("RGB")
+            width, height = source.size
+            thumbnail = ImageOps.pad(
+                source,
+                (size, size),
+                method=Image.Resampling.BILINEAR,
+                color=(255, 255, 255),
+                centering=(0.5, 0.5),
+            )
+            pixels = np.asarray(thumbnail, dtype=np.float32) / 255.0
+    except (OSError, ValueError, UnidentifiedImageError):
+        return np.zeros(size * size * 3 + 24 + size * 2 + 2, dtype=np.float32)
+
+    # Coarse pixels retain the garment silhouette and dominant colour.
+    coarse_pixels = pixels.reshape(-1)
+
+    # Histograms make colour diversity less sensitive to product position.
+    histograms = []
+    for channel in range(3):
+        histogram, _ = np.histogram(
+            pixels[:, :, channel],
+            bins=8,
+            range=(0.0, 1.0),
+        )
+        histograms.append(histogram.astype(np.float32))
+
+    # Row/column foreground occupancy distinguishes short and long shapes on
+    # the mostly light catalog backgrounds.
+    foreground = np.any(pixels < 0.94, axis=2).astype(np.float32)
+    occupancy = np.concatenate(
+        [foreground.mean(axis=1), foreground.mean(axis=0)]
+    )
+    shape = np.asarray(
+        [
+            np.tanh(np.log(max(width, 1) / max(height, 1))),
+            foreground.mean(),
+        ],
+        dtype=np.float32,
+    )
+
+    # Normalize each signal separately so histogram counts cannot overwhelm
+    # silhouette information. Square-root scales preserve the declared share
+    # when Euclidean distance is calculated later.
+    return _unit_vector(
+        np.concatenate(
+            [
+                np.sqrt(0.45) * _unit_vector(coarse_pixels),
+                np.sqrt(0.25) * _unit_vector(np.concatenate(histograms)),
+                np.sqrt(0.25) * _unit_vector(occupancy),
+                np.sqrt(0.05) * _unit_vector(shape),
+            ]
+        )
+    )
+
+
+def _text_diversity_descriptor(row):
+    """Create a deterministic feature-hashed metadata descriptor."""
+    text = " ".join(
+        str(row.get(column, ""))
+        for column in ("product_name", "description")
+    ).lower()
+    words = re.findall(r"[a-z0-9]+", text)
+    features = np.zeros(_DIVERSITY_TEXT_DIMENSIONS, dtype=np.float32)
+    terms = words + [
+        f"{first}_{second}"
+        for first, second in zip(words, words[1:])
+    ]
+    for term in terms:
+        digest = hashlib.blake2b(term.encode("utf-8"), digest_size=8).digest()
+        value = int.from_bytes(digest, byteorder="little", signed=False)
+        index = value % _DIVERSITY_TEXT_DIMENSIONS
+        features[index] += 1.0 if (value >> 8) & 1 else -1.0
+    return _unit_vector(features)
+
+
+def _diversity_features(group, image_weight=_DIVERSITY_IMAGE_WEIGHT):
+    """Combine lightweight visual and metadata descriptors for one category."""
+    image_weight = float(np.clip(image_weight, 0.0, 1.0))
+    text_weight = 1.0 - image_weight
+    image_scale = np.sqrt(image_weight)
+    text_scale = np.sqrt(text_weight)
+    features = []
+    for _, row in group.iterrows():
+        image_features = _image_diversity_descriptor(row.get("image_path", ""))
+        text_features = _text_diversity_descriptor(row)
+        features.append(
+            np.concatenate(
+                [image_scale * image_features, text_scale * text_features]
+            )
+        )
+    return np.asarray(features, dtype=np.float32)
+
+
+def _sample_diverse_group(group, amount, seed):
+    """Select category representatives with deterministic max-min sampling."""
+    amount = int(amount)
+    if amount >= len(group):
+        return group.copy()
+
+    features = _diversity_features(group)
+    rng = np.random.default_rng(seed)
+
+    # Start near the category centre to avoid making a corrupt/outlier image
+    # the anchor. Seeded choice among central candidates preserves run variety.
+    centroid = features.mean(axis=0)
+    centre_distance = np.sum((features - centroid) ** 2, axis=1)
+    central_pool_size = min(max(1, len(group) // 10), 8)
+    central_pool = np.argsort(centre_distance, kind="stable")[:central_pool_size]
+    first = int(rng.choice(central_pool))
+
+    selected = [first]
+    selected_mask = np.zeros(len(group), dtype=bool)
+    selected_mask[first] = True
+    minimum_distance = np.sum((features - features[first]) ** 2, axis=1)
+
+    while len(selected) < amount:
+        # Tiny seeded jitter only resolves equal-distance candidates.
+        candidate_score = minimum_distance + rng.random(len(group)) * 1e-12
+        candidate_score[selected_mask] = -np.inf
+        next_index = int(np.argmax(candidate_score))
+        selected.append(next_index)
+        selected_mask[next_index] = True
+        distance = np.sum((features - features[next_index]) ** 2, axis=1)
+        minimum_distance = np.minimum(minimum_distance, distance)
+
+    return group.iloc[selected].copy()
+
+
+def sample_products(
+    products,
+    count,
+    seed=RANDOM_SEED,
+    min_per_category=1,
+    sampling_strategy="diverse",
+):
+    """Exact-size sampling with category balance and within-category diversity.
 
     The floor is reached for every category when the requested size permits.
     If the budget is smaller, rows are distributed as evenly as possible. A
     category with fewer source rows than the floor contributes all its rows.
+    ``diverse`` uses lightweight image and metadata descriptors; ``random``
+    retains the previous seeded random selection for controlled comparisons.
     """
     if count is None:
         return products.reset_index(drop=True)
@@ -227,6 +387,8 @@ def sample_products(products, count, seed=RANDOM_SEED, min_per_category=1):
         raise ValueError(f"Requested {count} products, but {len(products)} are available after filtering.")
     if min_per_category < 1:
         raise ValueError("min_per_category must be at least 1.")
+    if sampling_strategy not in {"diverse", "random"}:
+        raise ValueError("sampling_strategy must be 'diverse' or 'random'.")
     groups = list(products.groupby("category", sort=True))
     sizes = np.array([len(group) for _, group in groups])
     allocation = np.zeros(len(groups), dtype=int)
@@ -272,18 +434,28 @@ def sample_products(products, count, seed=RANDOM_SEED, min_per_category=1):
     group_seeds = rng.integers(0, np.iinfo(np.int32).max, size=len(groups))
     for (_, group), amount, group_seed in zip(groups, allocation, group_seeds):
         if amount:
-            selected.append(group.sample(n=int(amount), random_state=int(group_seed)))
+            if sampling_strategy == "diverse":
+                chosen = _sample_diverse_group(group, amount, int(group_seed))
+            else:
+                chosen = group.sample(
+                    n=int(amount),
+                    random_state=int(group_seed),
+                )
+            selected.append(chosen)
     return pd.concat(selected).reset_index(drop=True)
 
 
 def prepare_catalog(csv_path=CSV_FILE, image_dir=IMAGE_DIR, output_path=PROCESSED_CSV,
                     num_products=MAX_PRODUCTS, seed=RANDOM_SEED, categories=None,
-                    min_per_category=MIN_PRODUCTS_PER_CATEGORY):
+                    min_per_category=MIN_PRODUCTS_PER_CATEGORY,
+                    sampling_strategy="diverse"):
     csv_path, image_dir, output_path = Path(csv_path), Path(image_dir), Path(output_path)
     if num_products is not None and num_products < 1:
         raise ValueError("num_products must be positive, or None for all products.")
     if min_per_category < 1:
         raise ValueError("min_per_category must be positive.")
+    if sampling_strategy not in {"diverse", "random"}:
+        raise ValueError("sampling_strategy must be 'diverse' or 'random'.")
 
     print("=" * 60)
     print("PREPARE MINI FASHION DATASET")
@@ -605,6 +777,7 @@ def prepare_catalog(csv_path=CSV_FILE, image_dir=IMAGE_DIR, output_path=PROCESSE
         num_products,
         seed,
         min_per_category=min_per_category,
+        sampling_strategy=sampling_strategy,
     )
 
 
@@ -651,6 +824,13 @@ def prepare_catalog(csv_path=CSV_FILE, image_dir=IMAGE_DIR, output_path=PROCESSE
                "invalid_images": invalid_images, "duplicate_images_removed": duplicates,
                "seed": seed, "categories": categories,
                "min_per_category": min_per_category,
+               "sampling_strategy": sampling_strategy,
+               "diversity_descriptor": (
+                   "padded 8x8 RGB, colour histograms, foreground shape, "
+                   "and feature-hashed product metadata"
+                   if sampling_strategy == "diverse"
+                   else None
+               ),
                "category_counts": output.category.value_counts().to_dict(),
                "category_audit_csv": str(audit_path.resolve()),
                "category_audit": audit_metadata,
@@ -717,6 +897,12 @@ def main():
         default=MIN_PRODUCTS_PER_CATEGORY,
         help="Target minimum per category when the requested catalog size permits",
     )
+    parser.add_argument(
+        "--sampling-strategy",
+        choices=("diverse", "random"),
+        default="diverse",
+        help="Select random rows or visually/textually diverse representatives within each category",
+    )
     parser.add_argument("--seed", type=int, default=RANDOM_SEED)
     args = parser.parse_args()
     if not args.all and args.num_products is not None and args.num_products < 1:
@@ -725,7 +911,7 @@ def main():
         parser.error("min-per-category must be positive")
     prepare_catalog(args.csv, args.image_dir, args.output,
                     None if args.all else args.num_products, args.seed, args.categories,
-                    args.min_per_category)
+                    args.min_per_category, args.sampling_strategy)
 
 
 # =========================================================
