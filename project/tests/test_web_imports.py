@@ -98,6 +98,11 @@ class WebPackageTests(unittest.TestCase):
             "image_weight": 0.5,
             "text_weight": 0.5,
             "elapsed": 0.03,
+            "guidance": {
+                "status": "category_applied",
+                "applied_category": "Dresses",
+                "suggestions": [],
+            },
         })
         recommender = SimpleNamespace(
             device="cpu",
@@ -129,6 +134,7 @@ class WebPackageTests(unittest.TestCase):
         payload = response.json()
         self.assertEqual(payload["query_used"], "black office dress")
         self.assertEqual(payload["items"][0]["text_score"], 0.75)
+        self.assertEqual(payload["guidance"]["status"], "category_applied")
         self.assertEqual(
             recommend_combined.call_args.kwargs["text"],
             "black office dress",

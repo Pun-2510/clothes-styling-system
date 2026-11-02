@@ -339,8 +339,10 @@ S_base = w_i * S_II + (1 - w_i) * S_T
 
 Hệ thống dùng raw cosine fusion, không dùng percentile. Sau fusion, attribute
 signal và category policy được áp dụng theo weight JSON. Image-only sử dụng
-soft category bonus; hard category filter chỉ là baseline thí nghiệm. Khi text
-nêu category rõ ràng, backend có thể giới hạn candidate pool theo category đó.
+soft category bonus; hard category filter chỉ là baseline thí nghiệm. Với text,
+backend chỉ giới hạn candidate pool khi truy vấn nêu đúng một category rõ ràng.
+Nếu không có category hoặc có nhiều category độc lập, hệ thống giữ toàn catalog
+và giao diện yêu cầu người dùng chọn một loại sản phẩm cụ thể.
 
 ## 12. KẾT QUẢ THÍ NGHIỆM HIỆN TẠI
 

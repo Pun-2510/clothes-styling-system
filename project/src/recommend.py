@@ -56,6 +56,7 @@ from src.query_signals import (
     ATTRIBUTE_RULES,
     categories_are_related,
     category_aliases,
+    explicit_categories_from_text,
     extract_query_attributes,
     fuzzy_category_suggestions,
     infer_category_from_text,
@@ -390,10 +391,18 @@ class FashionRecommender:
             text_scores = None
             final_scores = cross_modal_scores
 
-        applied_category = self.infer_category_from_text(text)
+        explicit_categories = explicit_categories_from_text(
+            text,
+            self.categories,
+        )
+        applied_category = (
+            explicit_categories[0]
+            if len(explicit_categories) == 1
+            else None
+        )
         spelling_suggestions = (
             []
-            if applied_category is not None
+            if explicit_categories
             else fuzzy_category_suggestions(text, self.categories)
         )
         eligible_indices = np.arange(len(final_scores))
@@ -427,6 +436,16 @@ class FashionRecommender:
         if applied_category is not None:
             guidance_status = "category_applied"
             suggestions = []
+        elif len(explicit_categories) > 1:
+            guidance_status = "multiple_categories"
+            suggestions = [
+                {
+                    "category": category,
+                    "corrected_query": category,
+                    "confidence": None,
+                }
+                for category in explicit_categories
+            ]
         elif spelling_suggestions:
             guidance_status = "spelling_suggestion"
             suggestions = spelling_suggestions
@@ -548,7 +567,15 @@ class FashionRecommender:
             CATEGORY_CONFIDENCE_THRESHOLD,
         )
 
-        text_category = self.infer_category_from_text(text)
+        explicit_text_categories = explicit_categories_from_text(
+            text,
+            self.categories,
+        )
+        text_category = (
+            explicit_text_categories[0]
+            if len(explicit_text_categories) == 1
+            else None
+        )
         if text_category is not None:
             if (
                 image_category_strength > 0.0
@@ -658,6 +685,32 @@ class FashionRecommender:
         results["category_match"] = category_scores[top_indices]
         results["similarity"] = final_scores[top_indices]
 
+        if len(explicit_text_categories) > 1:
+            guidance = {
+                "status": "multiple_categories",
+                "applied_category": None,
+                "suggestions": [
+                    {
+                        "category": category,
+                        "corrected_query": category,
+                        "confidence": None,
+                    }
+                    for category in explicit_text_categories
+                ],
+            }
+        elif category_source in {"text", "text_image"}:
+            guidance = {
+                "status": "category_applied",
+                "applied_category": applied_category,
+                "suggestions": [],
+            }
+        else:
+            guidance = {
+                "status": "unrestricted",
+                "applied_category": None,
+                "suggestions": [],
+            }
+
         elapsed = time.perf_counter() - total_start
         log_info(
             f"request={request_id} | COMBINED_SEARCH_COMPLETE | "
@@ -680,6 +733,7 @@ class FashionRecommender:
             "category_source": category_source,
             "category_strength": category_strength,
             "detected_attributes": attributes,
+            "guidance": guidance,
             "elapsed": elapsed,
         }
 

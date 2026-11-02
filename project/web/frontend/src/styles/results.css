@@ -26,6 +26,7 @@
 .query-guidance--applied { border-color: #cfe8d9; color: #17633f; background: #eff9f3; }
 .query-guidance--applied > .icon { color: #17814f; }
 .query-guidance--spelling { border-color: #e9c7ca; background: #fff5f5; }
+.query-guidance--multiple { border-color: #ead7aa; background: #fffaf0; }
 .query-guidance-options { margin-top: 11px; display: flex; flex-wrap: wrap; gap: 8px; }
 .query-guidance-options button { min-height: 34px; padding: 0 12px; display: inline-flex; align-items: center; gap: 7px; border: 1px solid #cfc6bd; border-radius: 999px; color: var(--ink); background: #fff; cursor: pointer; font-size: 11px; font-weight: 700; transition: color .18s ease, border-color .18s ease, transform .18s ease; }
 .query-guidance-options button:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); }

@@ -339,6 +339,14 @@ def recommend_by_image_and_text(
             image_weight=float(recommendation["image_weight"]),
             text_weight=float(recommendation["text_weight"]),
             elapsed_seconds=float(recommendation["elapsed"]),
+            guidance=recommendation.get(
+                "guidance",
+                {
+                    "status": "unrestricted",
+                    "applied_category": None,
+                    "suggestions": [],
+                },
+            ),
             items=items,
         )
 

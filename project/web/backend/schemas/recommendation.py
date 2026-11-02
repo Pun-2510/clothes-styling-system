@@ -49,6 +49,7 @@ class TextQueryGuidance(BaseModel):
         "category_applied",
         "spelling_suggestion",
         "broad_query",
+        "multiple_categories",
         "unrestricted",
     ]
     applied_category: str | None = None
@@ -112,4 +113,5 @@ class CombinedRecommendationResponse(BaseModel):
     image_weight: float
     text_weight: float
     elapsed_seconds: float
+    guidance: TextQueryGuidance
     items: list[CombinedProductRecommendation]

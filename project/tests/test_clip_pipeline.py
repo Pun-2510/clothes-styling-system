@@ -127,6 +127,51 @@ class CombinedRecommendationTests(unittest.TestCase):
         self.assertEqual(guidance["suggestions"][0]["category"], "Dresses")
         self.assertEqual(guidance["suggestions"][0]["corrected_query"], "red Dresses")
 
+    def test_text_search_does_not_hard_filter_multiple_categories(self):
+        from src.recommend import FashionRecommender
+
+        recommender = FashionRecommender.__new__(FashionRecommender)
+        recommender.products = pd.DataFrame({
+            "product_id": ["perfume", "dress", "shoe"],
+            "product_name": ["Perfume", "Red Dress", "Casual Shoe"],
+            "category": ["Perfume and Body Mist", "Dresses", "Casual Shoes"],
+            "description": ["", "", ""],
+            "image_reference": ["perfume.jpg", "dress.jpg", "shoe.jpg"],
+        })
+        recommender.categories = ["Dresses", "Casual Shoes", "Shoes"]
+        recommender.embeddings = np.eye(3, dtype=np.float32)
+        recommender.text_embeddings = None
+        recommender.encode_text = lambda text: np.ones(3, dtype=np.float32)
+
+        with patch(
+            "src.recommend.cosine_similarity",
+            return_value=np.array([0.95, 0.70, 0.60], dtype=np.float32),
+        ):
+            results, _, _, guidance = recommender.recommend_by_text(
+                "dress and casual shoes",
+                top_k=3,
+                return_guidance=True,
+            )
+
+        self.assertEqual(results.iloc[0].product_id, "perfume")
+        self.assertEqual(guidance["status"], "multiple_categories")
+        self.assertIsNone(guidance["applied_category"])
+        self.assertEqual(
+            [item["category"] for item in guidance["suggestions"]],
+            ["Dresses", "Casual Shoes"],
+        )
+
+    def test_overlapping_category_name_is_one_explicit_category(self):
+        from src.query_signals import explicit_categories_from_text
+
+        self.assertEqual(
+            explicit_categories_from_text(
+                "black casual shoes",
+                ["Casual Shoes", "Shoes"],
+            ),
+            ["Casual Shoes"],
+        )
+
     def test_text_search_marks_a_broad_query_and_returns_category_choices(self):
         from src.recommend import FashionRecommender
 
@@ -324,6 +369,45 @@ class CombinedRecommendationTests(unittest.TestCase):
 
         self.assertTrue(
             recommender.categories_are_related("Tshirts", "Shirts")
+        )
+
+    def test_combined_search_keeps_multiple_text_categories_unrestricted(self):
+        from src.recommend import FashionRecommender
+
+        recommender = FashionRecommender.__new__(FashionRecommender)
+        recommender.products = pd.DataFrame({
+            "product_id": ["other", "dress", "shoe"],
+            "product_name": ["Other", "Dress", "Shoe"],
+            "description": ["", "", ""],
+            "category": ["Handbags", "Dresses", "Casual Shoes"],
+            "image_reference": ["other.jpg", "dress.jpg", "shoe.jpg"],
+        })
+        recommender.categories = ["Dresses", "Casual Shoes"]
+        recommender.embeddings = np.eye(3, dtype=np.float32)
+        recommender.text_embeddings = None
+        recommender.encode_image = lambda image: np.ones(3, dtype=np.float32)
+        recommender.encode_text = lambda text: np.ones(3, dtype=np.float32)
+        recommender.predict_category = lambda query, request: (
+            "Dresses", 0.0, np.array([0.95, 0.60, 0.55], dtype=np.float32)
+        )
+
+        with patch(
+            "src.recommend.cosine_similarity",
+            return_value=np.array([0.95, 0.50, 0.45], dtype=np.float32),
+        ):
+            recommendation = recommender.recommend_combined(
+                image=object(),
+                text="dress and casual shoes",
+                top_k=3,
+                image_weight=0.5,
+            )
+
+        self.assertEqual(recommendation["results"].iloc[0].product_id, "other")
+        self.assertIsNone(recommendation["applied_category"])
+        self.assertIsNone(recommendation["category_source"])
+        self.assertEqual(
+            recommendation["guidance"]["status"],
+            "multiple_categories",
         )
 
     def test_fashion_translation_rewrites_literal_texture_term(self):

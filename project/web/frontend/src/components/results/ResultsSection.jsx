@@ -15,11 +15,12 @@ function QueryGuidance({ guidance, onUseSuggestion, t }) {
   }
 
   const isSpelling = guidance.status === 'spelling_suggestion'
+  const isMultiple = guidance.status === 'multiple_categories'
   return (
-    <div className={`query-guidance query-guidance--${isSpelling ? 'spelling' : 'broad'}`}>
+    <div className={`query-guidance query-guidance--${isSpelling ? 'spelling' : isMultiple ? 'multiple' : 'broad'}`}>
       <Icon name={isSpelling ? 'search' : 'spark'} size={18} />
       <div>
-        <strong>{t(isSpelling ? 'results.spellingSuggestion' : 'results.broadQuery')}</strong>
+        <strong>{t(isSpelling ? 'results.spellingSuggestion' : isMultiple ? 'results.multipleCategories' : 'results.broadQuery')}</strong>
         <div className="query-guidance-options">
           {(guidance.suggestions || []).map((suggestion) => (
             <button
@@ -94,7 +95,7 @@ export default function ResultsSection({ data, mode, sectionRef, onNewSearch, on
         </div>
       )}
 
-      {mode === 'text' && (
+      {(mode === 'text' || mode === 'combined') && (
         <QueryGuidance guidance={data.guidance} onUseSuggestion={onUseSuggestion} t={t} />
       )}
 

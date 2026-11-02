@@ -111,15 +111,59 @@ def category_aliases(category):
     return {alias for alias in aliases if alias}
 
 
-def infer_category_from_text(text, categories):
-    """Find the longest explicitly named catalog category in a query."""
+def explicit_categories_from_text(text, categories):
+    """Return non-overlapping catalog categories explicitly named in a query.
+
+    A longer category suppresses a category matched inside the same phrase.  For
+    example, ``casual shoes`` is one explicit category even when the catalog
+    also contains ``Shoes``.  Separate phrases such as ``dress and shoes`` stay
+    as two matches so callers can avoid applying an arbitrary hard filter.
+    """
     normalized_query = normalize_words(text)
     matches = []
     for category in categories:
         for alias in category_aliases(category):
-            if re.search(rf"\b{re.escape(alias)}\b", normalized_query):
-                matches.append((len(alias), str(category)))
-    return max(matches)[1] if matches else None
+            for match in re.finditer(
+                rf"\b{re.escape(alias)}\b",
+                normalized_query,
+            ):
+                matches.append({
+                    "start": match.start(),
+                    "end": match.end(),
+                    "category": str(category),
+                })
+
+    maximal_matches = []
+    for candidate in matches:
+        contained_by_longer = any(
+            other["start"] <= candidate["start"]
+            and other["end"] >= candidate["end"]
+            and (other["end"] - other["start"])
+            > (candidate["end"] - candidate["start"])
+            for other in matches
+        )
+        if not contained_by_longer:
+            maximal_matches.append(candidate)
+
+    ordered = sorted(
+        maximal_matches,
+        key=lambda item: (
+            item["start"],
+            -(item["end"] - item["start"]),
+            item["category"].casefold(),
+        ),
+    )
+    categories_found = []
+    for match in ordered:
+        if match["category"] not in categories_found:
+            categories_found.append(match["category"])
+    return categories_found
+
+
+def infer_category_from_text(text, categories):
+    """Return an explicit category only when the query names exactly one."""
+    matches = explicit_categories_from_text(text, categories)
+    return matches[0] if len(matches) == 1 else None
 
 
 def fuzzy_category_suggestions(text, categories, threshold=0.78, limit=3):

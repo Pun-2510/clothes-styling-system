@@ -6,6 +6,7 @@ import CatalogSkeleton from '../components/results/CatalogSkeleton'
 import ProductImage from '../components/results/ProductImage'
 import ResultsSection from '../components/results/ResultsSection'
 import CombinedSearchForm from '../components/search/CombinedSearchForm'
+import RetrievalPipelinePanel from '../components/home/RetrievalPipelinePanel'
 import { categoryUrl, featuredCategories, getCategories, getProducts } from '../services/catalogApi'
 import { addSearchHistory, loadSearchHistoryEntry, loadSearchHistoryFile } from '../services/searchHistory'
 import { clearSearchFile, clearSearchQueryState, clearSearchResult, loadSearchResult, saveSearchResult } from '../services/searchPersistence'
@@ -178,22 +179,7 @@ export default function StoreHomePage() {
             <h1>{t('hero.titlePrefix')} <em>CLIP</em></h1>
             <p>{t('hero.description')}</p>
           </div>
-          <div className="hero-pipeline-visual" aria-label="Online retrieval pipeline">
-            <div className="pipeline-visual-head"><span>ONLINE RETRIEVAL PIPELINE</span><small>01 — 04</small></div>
-            <div className="pipeline-query-inputs">
-              <span>IMAGE<small>visual query</small></span><i>+</i><span>TEXT<small>semantic query</small></span>
-            </div>
-            <div className="pipeline-flow">
-              <span className="pipeline-stage"><b>01</b><strong>FINE-TUNED CLIP</strong><small>Encode query</small></span>
-              <i>→</i>
-              <span className="pipeline-stage"><b>02</b><strong>COSINE SCORES</strong><small>Image + text</small></span>
-              <i>→</i>
-              <span className="pipeline-stage"><b>03</b><strong>CATEGORY-AWARE</strong><small>Confidence signal</small></span>
-              <i>→</i>
-              <span className="pipeline-stage pipeline-stage--result"><b>04</b><strong>TOP-K</strong><small>Ranked products</small></span>
-            </div>
-            <div className="pipeline-serving"><span>REACT</span><i>→</i><span>NGINX</span><i>→</i><span>BACKEND ×2</span><i>→</i><span>CLIP + CATALOG</span></div>
-          </div>
+          <RetrievalPipelinePanel />
         </div>
 
         <div className="hero-model-search" id="search">
