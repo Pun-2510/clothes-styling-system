@@ -1,4 +1,4 @@
-"""ResNet18 and SBERT feature encoders for the controlled benchmark."""
+"""Frozen pretrained encoders for the controlled retrieval benchmark."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ import numpy as np
 
 
 SBERT_MODEL_ID = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+BERT_MODEL_ID = "google-bert/bert-base-uncased"
 
 
 def _normalize(matrix):
@@ -44,6 +45,87 @@ def encode_sbert(texts, device="cpu", batch_size=16, model_id=SBERT_MODEL_ID):
         "embedding_dimension": int(embeddings.shape[1]),
     }
     return _normalize(embeddings), metadata
+
+
+def encode_bert(
+    texts,
+    device="cpu",
+    batch_size=16,
+    model_id=BERT_MODEL_ID,
+    max_length=128,
+):
+    """Encode text with a frozen pretrained BERT and mask-aware mean pooling."""
+    import torch
+    from transformers import AutoModel, AutoTokenizer
+
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    model = AutoModel.from_pretrained(model_id).to(device).eval()
+    batches = []
+    with torch.inference_mode():
+        for start in range(0, len(texts), batch_size):
+            inputs = tokenizer(
+                list(texts[start:start + batch_size]),
+                padding=True,
+                truncation=True,
+                max_length=max_length,
+                return_tensors="pt",
+            ).to(device)
+            output = model(**inputs, return_dict=True).last_hidden_state
+            mask = inputs["attention_mask"].unsqueeze(-1).to(output.dtype)
+            pooled = (output * mask).sum(dim=1) / mask.sum(dim=1).clamp_min(1.0)
+            batches.append(torch.nn.functional.normalize(pooled, dim=-1).cpu().numpy())
+    embeddings = np.concatenate(batches)
+    metadata = {
+        "architecture": "BERT",
+        "source": model_id,
+        "pretrained": True,
+        "pooling": "attention-mask mean pooling",
+        "max_length": int(max_length),
+        "parameters": sum(parameter.numel() for parameter in model.parameters()),
+        "embedding_dimension": int(embeddings.shape[1]),
+        "category_in_evaluation_text": False,
+    }
+    del model, tokenizer
+    if str(device).startswith("cuda"):
+        torch.cuda.empty_cache()
+    return _normalize(embeddings), metadata
+
+
+def rank_tfidf(
+    texts,
+    query_positions,
+    query_ids,
+    gallery_ids,
+    max_features=20000,
+):
+    """Fit TF-IDF on the gallery and rank held-out rows by cosine similarity."""
+    from sklearn.feature_extraction.text import TfidfVectorizer
+
+    vectorizer = TfidfVectorizer(
+        lowercase=True,
+        ngram_range=(1, 2),
+        max_features=max_features,
+        norm="l2",
+        dtype=np.float32,
+    )
+    gallery = vectorizer.fit_transform(list(texts))
+    scores = (gallery[np.asarray(query_positions)] @ gallery.T).toarray()
+    query_ids = np.asarray(query_ids).astype(str)
+    gallery_ids = np.asarray(gallery_ids).astype(str)
+    for index, query_id in enumerate(query_ids):
+        scores[index, gallery_ids == query_id] = -np.inf
+    rankings = np.argsort(-scores, axis=1, kind="stable")
+    metadata = {
+        "architecture": "TF-IDF",
+        "source": "fitted on category-free gallery text",
+        "pretrained": False,
+        "ngram_range": [1, 2],
+        "max_features": int(max_features),
+        "embedding_dimension": int(gallery.shape[1]),
+        "vocabulary_size": len(vectorizer.vocabulary_),
+        "category_in_evaluation_text": False,
+    }
+    return rankings, metadata
 
 
 def encode_clip_text(texts, source, device="cpu", batch_size=16):
@@ -190,3 +272,64 @@ def encode_resnet18(image_paths, device="cpu", batch_size=16,
         "embedding_dimension": int(embeddings.shape[1]),
     }
     return _normalize(embeddings), metadata
+
+
+def _encode_torchvision_model(
+    image_paths,
+    device,
+    batch_size,
+    architecture,
+):
+    import torch
+    from PIL import Image
+    from torchvision import models
+
+    if architecture == "efficientnet_b0":
+        weights = models.EfficientNet_B0_Weights.DEFAULT
+        network = models.efficientnet_b0(weights=weights)
+        network.classifier = torch.nn.Identity()
+        display_name = "EfficientNet-B0"
+    elif architecture == "vit_b_16":
+        weights = models.ViT_B_16_Weights.DEFAULT
+        network = models.vit_b_16(weights=weights)
+        network.heads = torch.nn.Identity()
+        display_name = "ViT-B/16"
+    else:
+        raise ValueError(f"Unsupported torchvision architecture: {architecture}")
+
+    preprocess = weights.transforms()
+    network = network.to(device).eval()
+    paths = [Path(path) for path in image_paths]
+    batches = []
+    with torch.inference_mode():
+        for start in range(0, len(paths), batch_size):
+            tensors = []
+            for path in paths[start:start + batch_size]:
+                with Image.open(path) as image:
+                    tensors.append(preprocess(image.convert("RGB")))
+            batches.append(network(torch.stack(tensors).to(device)).cpu().numpy())
+    embeddings = np.concatenate(batches)
+    metadata = {
+        "architecture": display_name,
+        "source": str(weights),
+        "weights": "ImageNet pretrained",
+        "pretrained": True,
+        "parameters": sum(parameter.numel() for parameter in network.parameters()),
+        "embedding_dimension": int(embeddings.shape[1]),
+    }
+    del network
+    if str(device).startswith("cuda"):
+        torch.cuda.empty_cache()
+    return _normalize(embeddings), metadata
+
+
+def encode_efficientnet_b0(image_paths, device="cpu", batch_size=16):
+    """Extract ImageNet-pretrained EfficientNet-B0 pooled image features."""
+    return _encode_torchvision_model(
+        image_paths, device, batch_size, "efficientnet_b0"
+    )
+
+
+def encode_vit_b16(image_paths, device="cpu", batch_size=16):
+    """Extract ImageNet-pretrained ViT-B/16 class-token image features."""
+    return _encode_torchvision_model(image_paths, device, batch_size, "vit_b_16")

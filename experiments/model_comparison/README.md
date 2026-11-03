@@ -11,8 +11,9 @@ Tất cả lệnh trong tài liệu này chạy từ thư mục gốc `dacntt/`.
 
 `compare_full_gallery.py` tạo ba nhóm:
 
-- `controlled_baselines`: ResNet18 image-only, SBERT text-only, pretrained
-  CLIP, fine-tuned CLIP và ResNet18 + SBERT RRF.
+- `controlled_baselines`: TF-IDF, pretrained BERT, SBERT và CLIP cho text-only;
+  ResNet18, ImageNet EfficientNet-B0, ImageNet ViT-B/16 và CLIP cho image-only;
+  cùng với ResNet18 + SBERT RRF cho multimodal độc lập.
 - `clip_finetuning`: pretrained và fine-tuned CLIP trong paired image→text và
   text→image retrieval.
 - `serving_ablation`: các score component và pretrained/fine-tuned multimodal
@@ -56,6 +57,10 @@ system_pipeline_v1/
 retrieval_weights.json
 ```
 
+Các thư mục `core_pretrained_multimodal_v1/` ở trên là kết quả cũ, chưa có
+TF-IDF, BERT, EfficientNet-B0 và ViT-B/16. Core comparison mở rộng bên dưới
+ghi vào `core_extended_pretrained_v1/` để không trộn hai phiên bản protocol.
+
 Tổng hợp ba seed:
 
 ```text
@@ -76,6 +81,12 @@ protocol có category quota, catalog và test queries khác nhau.
 
 ## 3. Kiểm tra nhanh code
 
+Cài các dependency của benchmark trước lần chạy đầu tiên:
+
+```powershell
+.\project\.venv\Scripts\python.exe -m pip install -r .\experiments\model_comparison\requirements.txt
+```
+
 ```powershell
 .\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_full_gallery --self-test
 .\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_category_aware --self-test
@@ -84,7 +95,8 @@ protocol có category quota, catalog và test queries khác nhau.
 
 ## 4. Chạy lại seed 42
 
-Các output dưới đây dùng hậu tố `rerun_v1` để không ghi đè kết quả báo cáo.
+Core comparison mới dùng `core_extended_pretrained_v1`; hai nhóm còn lại vẫn
+dùng hậu tố `rerun_v1`. Mỗi output đều tách khỏi kết quả báo cáo cũ.
 
 ### 4.1. Core comparison
 
@@ -95,13 +107,16 @@ Các output dưới đây dùng hậu tố `rerun_v1` để không ghi đè kế
   --expected-gallery-size 5000 `
   --finetuned-image-embeddings .\project\embeddings_diverse_seed_42\image_embeddings.npy `
   --cache-dir .\experiments\model_comparison\cache\diverse_seed_42 `
-  --resnet-source project-trained `
+  --resnet-source imagenet `
+  --bert-model google-bert/bert-base-uncased `
+  --bert-max-length 128 `
+  --tfidf-max-features 20000 `
   --device cpu `
   --batch-size 16 `
   --ks 1 5 10 `
   --clip-image-weight 0.5 `
   --clip-text-image-weight 0.5 `
-  --output-dir .\experiments\model_comparison\results\diverse_seed_42\core_pretrained_multimodal_rerun_v1
+  --output-dir .\experiments\model_comparison\results\diverse_seed_42\core_extended_pretrained_v1
 ```
 
 ### 4.2. Category-aware comparison
@@ -156,13 +171,16 @@ $weights42 = (Get-Content .\experiments\model_comparison\results\diverse_seed_42
   --expected-gallery-size 5000 `
   --finetuned-image-embeddings .\project\embeddings_diverse_seed_123\image_embeddings.npy `
   --cache-dir .\experiments\model_comparison\cache\diverse_seed_123 `
-  --resnet-source project-trained `
+  --resnet-source imagenet `
+  --bert-model google-bert/bert-base-uncased `
+  --bert-max-length 128 `
+  --tfidf-max-features 20000 `
   --device cpu `
   --batch-size 16 `
   --ks 1 5 10 `
   --clip-image-weight 0.5 `
   --clip-text-image-weight 0.5 `
-  --output-dir .\experiments\model_comparison\results\diverse_seed_123\core_pretrained_multimodal_rerun_v1
+  --output-dir .\experiments\model_comparison\results\diverse_seed_123\core_extended_pretrained_v1
 ```
 
 ### 5.2. Category-aware comparison
@@ -217,13 +235,16 @@ $weights123 = (Get-Content .\experiments\model_comparison\results\diverse_seed_1
   --expected-gallery-size 5000 `
   --finetuned-image-embeddings .\project\embeddings_diverse_seed_2026\image_embeddings.npy `
   --cache-dir .\experiments\model_comparison\cache\diverse_seed_2026 `
-  --resnet-source project-trained `
+  --resnet-source imagenet `
+  --bert-model google-bert/bert-base-uncased `
+  --bert-max-length 128 `
+  --tfidf-max-features 20000 `
   --device cpu `
   --batch-size 16 `
   --ks 1 5 10 `
   --clip-image-weight 0.5 `
   --clip-text-image-weight 0.5 `
-  --output-dir .\experiments\model_comparison\results\diverse_seed_2026\core_pretrained_multimodal_rerun_v1
+  --output-dir .\experiments\model_comparison\results\diverse_seed_2026\core_extended_pretrained_v1
 ```
 
 ### 6.2. Category-aware comparison
@@ -274,10 +295,10 @@ $weights2026 = (Get-Content .\experiments\model_comparison\results\diverse_seed_
 ```powershell
 .\project\.venv\Scripts\python.exe -m experiments.model_comparison.aggregate_seeds `
   --inputs `
-    .\experiments\model_comparison\results\diverse_seed_42\core_pretrained_multimodal_rerun_v1 `
-    .\experiments\model_comparison\results\diverse_seed_123\core_pretrained_multimodal_rerun_v1 `
-    .\experiments\model_comparison\results\diverse_seed_2026\core_pretrained_multimodal_rerun_v1 `
-  --output-dir .\experiments\model_comparison\results\aggregate_diverse_3_seeds_rerun_v1\core_pretrained_multimodal
+    .\experiments\model_comparison\results\diverse_seed_42\core_extended_pretrained_v1 `
+    .\experiments\model_comparison\results\diverse_seed_123\core_extended_pretrained_v1 `
+    .\experiments\model_comparison\results\diverse_seed_2026\core_extended_pretrained_v1 `
+  --output-dir .\experiments\model_comparison\results\aggregate_diverse_3_seeds_extended_v1\core_extended_pretrained
 ```
 
 ### 7.2. Category-aware comparison

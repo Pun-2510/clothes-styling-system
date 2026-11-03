@@ -1,4 +1,4 @@
-"""Run unified baselines, CLIP alignment and serving comparisons on 5,000 products."""
+"""Run frozen baselines, CLIP alignment and serving comparisons on 5,000 products."""
 
 from __future__ import annotations
 
@@ -25,11 +25,16 @@ from .compare_modalities import (
     build_evaluation_text,
 )
 from .encoders import (
+    BERT_MODEL_ID,
     SBERT_MODEL_ID,
+    encode_bert,
     encode_clip_images,
     encode_clip_text,
+    encode_efficientnet_b0,
     encode_resnet18,
     encode_sbert,
+    encode_vit_b16,
+    rank_tfidf,
 )
 from .evaluation import (
     evaluate_query_gallery_category_rankings,
@@ -69,6 +74,9 @@ def arguments():
     )
     parser.add_argument("--resnet-checkpoint", type=Path, default=DEFAULT_RESNET_CHECKPOINT)
     parser.add_argument("--sbert-model", default=SBERT_MODEL_ID)
+    parser.add_argument("--bert-model", default=BERT_MODEL_ID)
+    parser.add_argument("--bert-max-length", type=int, default=128)
+    parser.add_argument("--tfidf-max-features", type=int, default=20000)
     parser.add_argument("--clip-base-model")
     parser.add_argument("--clip-checkpoint", type=Path)
     parser.add_argument(
@@ -85,6 +93,8 @@ def arguments():
 def _validate_arguments(args):
     if args.batch_size < 1 or args.rrf_k < 1 or args.expected_gallery_size < 2:
         raise ValueError("Batch size, RRF k and expected gallery size must be positive.")
+    if args.bert_max_length < 1 or args.tfidf_max_features < 1:
+        raise ValueError("BERT max length and TF-IDF max features must be positive.")
     if any(k < 1 for k in args.ks):
         raise ValueError("Every K value must be positive.")
     if not 0.0 <= args.clip_image_weight <= 1.0:
@@ -289,8 +299,18 @@ def self_test():
     )
     assert paired_metrics["recall@1"] == 1.0
     assert paired_metrics["ndcg@1"] == 1.0
+    tfidf_rankings, tfidf_metadata = rank_tfidf(
+        ["red cotton shirt", "blue cotton shirt", "black leather shoe", "wide brim hat"],
+        [0, 3],
+        ["a", "d"],
+        gallery_ids,
+        100,
+    )
+    assert tfidf_rankings.shape == (2, 4)
+    assert tfidf_rankings[0, 0] == 1
+    assert tfidf_metadata["pretrained"] is False
     print(
-        "PASS: shared full-gallery protocol, category/identity metrics, "
+        "PASS: shared full-gallery protocol, category/identity metrics, TF-IDF, "
         "text serving fusion and multimodal CLIP fusion"
     )
 
@@ -342,6 +362,10 @@ def main():
         "resnet_source": args.resnet_source,
         "resnet_checkpoint": str(args.resnet_checkpoint.resolve()),
         "sbert_model": args.sbert_model,
+        "bert_model": args.bert_model,
+        "bert_max_length": args.bert_max_length,
+        "tfidf_max_features": args.tfidf_max_features,
+        "pretrained_image_baselines": ["ResNet18", "EfficientNet-B0", "ViT-B/16"],
         "clip_base_model": str(clip_base_model),
         "clip_checkpoint": str(clip_checkpoint.resolve()),
         "category_in_text": False,
@@ -361,7 +385,10 @@ def main():
     }
     if args.dry_run:
         print(json.dumps(settings, indent=2, ensure_ascii=False))
-        print("DRY RUN: 473-query x 5,000-gallery configuration is valid; models were not loaded.")
+        print(
+            f"DRY RUN: {len(queries)}-query x {len(gallery)}-gallery configuration "
+            "is valid; models were not loaded."
+        )
         return
 
     use_cache = not args.no_cache
@@ -376,6 +403,19 @@ def main():
         }),
         "sbert": _cache_signature(gallery, {
             "architecture": "Sentence-BERT", "source": args.sbert_model, "category_in_text": False,
+        }),
+        "bert": _cache_signature(gallery, {
+            "architecture": "BERT", "source": args.bert_model,
+            "pooling": "attention-mask mean", "max_length": args.bert_max_length,
+            "category_in_text": False,
+        }),
+        "efficientnet_b0": _cache_signature(gallery, {
+            "architecture": "EfficientNet-B0",
+            "identity": "torchvision.EfficientNet_B0_Weights.DEFAULT",
+        }),
+        "vit_b16": _cache_signature(gallery, {
+            "architecture": "ViT-B/16",
+            "identity": "torchvision.ViT_B_16_Weights.DEFAULT",
         }),
         "clip_pretrained_text": _cache_signature(gallery, {
             "architecture": "CLIP text encoder", "identity": base_identity, "category_in_text": False,
@@ -404,6 +444,36 @@ def main():
         args.cache_dir, "sbert_gallery", signatures["sbert"],
         lambda: encode_sbert(
             gallery.evaluation_text.tolist(), args.device, args.batch_size, args.sbert_model
+        ), use_cache,
+    )
+    print(f"Fitting TF-IDF on {len(gallery)} category-free descriptions...", flush=True)
+    tfidf_rankings, tfidf_metadata = rank_tfidf(
+        gallery.evaluation_text.tolist(),
+        query_positions,
+        queries.product_id.astype(str).to_numpy(),
+        gallery.product_id.astype(str).to_numpy(),
+        args.tfidf_max_features,
+    )
+    print(f"Encoding {len(gallery)} category-free descriptions with BERT...", flush=True)
+    bert_text, bert_metadata = _cached_embeddings(
+        args.cache_dir, "bert_gallery", signatures["bert"],
+        lambda: encode_bert(
+            gallery.evaluation_text.tolist(), args.device, args.batch_size,
+            args.bert_model, args.bert_max_length,
+        ), use_cache,
+    )
+    print(f"Encoding {len(gallery)} images with ImageNet EfficientNet-B0...", flush=True)
+    efficientnet_images, efficientnet_metadata = _cached_embeddings(
+        args.cache_dir, "efficientnet_b0_gallery", signatures["efficientnet_b0"],
+        lambda: encode_efficientnet_b0(
+            gallery.image_path.tolist(), args.device, args.batch_size
+        ), use_cache,
+    )
+    print(f"Encoding {len(gallery)} images with ImageNet ViT-B/16...", flush=True)
+    vit_images, vit_metadata = _cached_embeddings(
+        args.cache_dir, "vit_b16_gallery", signatures["vit_b16"],
+        lambda: encode_vit_b16(
+            gallery.image_path.tolist(), args.device, args.batch_size
         ), use_cache,
     )
     print(f"Encoding {len(gallery)} category-free descriptions with pretrained CLIP...", flush=True)
@@ -454,6 +524,10 @@ def main():
         return matrix[query_positions]
 
     controlled_rankings = {
+        "tfidf_text_only": tfidf_rankings,
+        "bert_text_only": rank_queries_by_cosine(
+            query_rows(bert_text), bert_text, query_ids, gallery_ids
+        ),
         "sbert_text_only": rank_queries_by_cosine(
             query_rows(sbert_text), sbert_text, query_ids, gallery_ids
         ),
@@ -465,6 +539,12 @@ def main():
         ),
         "resnet18_image_only": rank_queries_by_cosine(
             query_rows(resnet_images), resnet_images, query_ids, gallery_ids
+        ),
+        "efficientnet_b0_image_only": rank_queries_by_cosine(
+            query_rows(efficientnet_images), efficientnet_images, query_ids, gallery_ids
+        ),
+        "vit_b16_image_only": rank_queries_by_cosine(
+            query_rows(vit_images), vit_images, query_ids, gallery_ids
         ),
         "clip_pretrained_image_only": rank_queries_by_cosine(
             query_rows(clip_pretrained_images), clip_pretrained_images, query_ids, gallery_ids
@@ -538,6 +618,14 @@ def main():
     }
 
     controlled_specs = {
+        "tfidf_text_only": {
+            "comparison_group": "controlled_baseline", "role": "text baseline",
+            "deployed": False, "input": "text", "formula": "cosine(TF-IDF)",
+        },
+        "bert_text_only": {
+            "comparison_group": "controlled_baseline", "role": "text baseline",
+            "deployed": False, "input": "text", "formula": "S_TT (pretrained BERT)",
+        },
         "sbert_text_only": {
             "comparison_group": "controlled_baseline", "role": "text baseline",
             "deployed": False, "input": "text", "formula": "S_TT (SBERT)",
@@ -553,6 +641,16 @@ def main():
         "resnet18_image_only": {
             "comparison_group": "controlled_baseline", "role": "image baseline",
             "deployed": False, "input": "image", "formula": "S_II (ResNet18)",
+        },
+        "efficientnet_b0_image_only": {
+            "comparison_group": "controlled_baseline", "role": "image baseline",
+            "deployed": False, "input": "image",
+            "formula": "S_II (ImageNet EfficientNet-B0)",
+        },
+        "vit_b16_image_only": {
+            "comparison_group": "controlled_baseline", "role": "image baseline",
+            "deployed": False, "input": "image",
+            "formula": "S_II (ImageNet ViT-B/16)",
         },
         "clip_pretrained_image_only": {
             "comparison_group": "controlled_baseline", "role": "image baseline",
@@ -671,8 +769,12 @@ def main():
             "device_name": torch.cuda.get_device_name() if args.device == "cuda" else platform.processor(),
         },
         "models": {
+            "tfidf": tfidf_metadata,
+            "bert": bert_metadata,
             "sbert": sbert_metadata,
             "resnet18": resnet_metadata,
+            "efficientnet_b0": efficientnet_metadata,
+            "vit_b16": vit_metadata,
             "clip_pretrained_text": clip_pretrained_text_metadata,
             "clip_finetuned_text": clip_finetuned_text_metadata,
             "clip_pretrained_image": clip_pretrained_image_metadata,
@@ -732,7 +834,10 @@ def main():
                 index=False, float_format=lambda value: f"{value:.4f}"
             )
         )
-    print(f"Saved unified 473-query x 5,000-gallery comparisons to: {output}")
+    print(
+        f"Saved unified {len(queries)}-query x {len(gallery)}-gallery "
+        f"comparisons to: {output}"
+    )
 
 
 if __name__ == "__main__":
