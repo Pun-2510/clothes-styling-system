@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 
 from .compare_full_gallery import (
+    DEFAULT_CACHE,
     DEFAULT_CATALOG,
     DEFAULT_FINETUNED_IMAGES,
     _annotated_category_rows,
@@ -22,6 +23,14 @@ from .compare_full_gallery import (
 )
 from .compare_modalities import DEFAULT_RUN, PROJECT, _prepare_output
 from .evaluation import evaluate_query_gallery_category_rankings
+from .category_runtime import (
+    CategoryPolicySettings,
+    apply_dynamic_category_bonus,
+    build_category_evidence,
+    evidence_columns,
+    load_category_prototypes,
+    validate_policy_settings,
+)
 
 
 def arguments():
@@ -40,14 +49,27 @@ def arguments():
     parser.add_argument("--category-confidence-floor", type=float, default=0.50)
     parser.add_argument("--category-confidence-threshold", type=float, default=0.60)
     parser.add_argument("--category-bonus", type=float, default=0.05)
+    parser.add_argument("--category-cache-dir", type=Path, default=DEFAULT_CACHE)
+    parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
+    parser.add_argument("--batch-size", type=int, default=16)
+    parser.add_argument("--category-prototype-weight", type=float, default=1.0)
+    parser.add_argument("--category-relation-neighbors", type=int, default=5)
+    parser.add_argument("--related-top1-bonus-factor", type=float, default=0.50)
+    parser.add_argument("--related-top2-bonus-factor", type=float, default=0.20)
+    parser.add_argument("--unrelated-top1-bonus-factor", type=float, default=0.10)
+    parser.add_argument("--no-cache", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--self-test", action="store_true")
     return parser.parse_args()
 
 
 def _validate_arguments(args):
-    if args.expected_gallery_size < 2 or args.category_top_per_class < 1:
-        raise ValueError("Gallery size and top-per-class must be positive.")
+    if (
+        args.expected_gallery_size < 2
+        or args.category_top_per_class < 1
+        or args.batch_size < 1
+    ):
+        raise ValueError("Gallery size, batch size and top-per-class must be positive.")
     if any(k < 1 for k in args.ks):
         raise ValueError("Every K value must be positive.")
     if not (
@@ -61,6 +83,20 @@ def _validate_arguments(args):
         )
     if args.category_bonus < 0.0:
         raise ValueError("Category bonus cannot be negative.")
+    validate_policy_settings(_policy_settings(args))
+
+
+def _policy_settings(args):
+    return CategoryPolicySettings(
+        top_per_class=args.category_top_per_class,
+        confidence_floor=args.category_confidence_floor,
+        confidence_threshold=args.category_confidence_threshold,
+        prototype_weight=args.category_prototype_weight,
+        relation_neighbors=args.category_relation_neighbors,
+        related_top1_factor=args.related_top1_bonus_factor,
+        related_top2_factor=args.related_top2_bonus_factor,
+        unrelated_top1_factor=args.unrelated_top1_bonus_factor,
+    )
 
 
 def _normalized(matrix):
@@ -171,7 +207,20 @@ def self_test():
     )
     assert hard[0].tolist() == [1]
     assert hard[1].tolist() == [2]
-    print("PASS: hard-filtered and confidence-weighted category ranking")
+    synthetic = [
+        {
+            "strength": 0.5,
+            "factors": {"shirt": 0.5, "top": 0.2},
+        }
+    ]
+    dynamic = apply_dynamic_category_bonus(
+        np.asarray([[0.7, 0.6, 0.5]], dtype=np.float32),
+        synthetic,
+        np.asarray(["shirt", "top", "shoe"]),
+        0.2,
+    )
+    assert np.allclose(dynamic, [[0.75, 0.62, 0.5]])
+    print("PASS: hard, legacy and dynamic category ranking")
 
 
 def main():
@@ -185,7 +234,6 @@ def main():
     from src.category_ranking import (
         apply_confidence_weighted_category_bonus,
         category_confidence_strength,
-        rank_category_candidates,
     )
     from src.clip_data import file_sha256
     from src.clip_runtime import model_identity, same_model_identity
@@ -213,6 +261,11 @@ def main():
         "category_confidence_floor": args.category_confidence_floor,
         "category_confidence_threshold": args.category_confidence_threshold,
         "category_bonus": args.category_bonus,
+        "category_prototype_weight": args.category_prototype_weight,
+        "category_relation_neighbors": args.category_relation_neighbors,
+        "related_top1_bonus_factor": args.related_top1_bonus_factor,
+        "related_top2_bonus_factor": args.related_top2_bonus_factor,
+        "unrelated_top1_bonus_factor": args.unrelated_top1_bonus_factor,
         "self_match": "excluded before category prediction and ranking",
         "relevance": "same ground-truth category after ranking",
     }
@@ -243,19 +296,39 @@ def main():
             gallery["category"].astype(str), sort=True
         ).groups.items()
     }
-    predicted_categories = []
-    confidences = []
-    strengths = []
+    categories = sorted(category_indices)
+    category_prototypes, prototype_metadata = load_category_prototypes(
+        categories,
+        checkpoint,
+        checkpoint_identity,
+        args.category_cache_dir,
+        args.device,
+        args.batch_size,
+        not args.no_cache,
+    )
+    evidence, relation_graph = build_category_evidence(
+        query_vectors,
+        visual_scores,
+        categories,
+        category_indices,
+        category_prototypes,
+        _policy_settings(args),
+    )
+    predicted_categories = np.asarray(
+        [item["predicted"] for item in evidence], dtype=str
+    )
+    confidences = np.asarray(
+        [item["confidence"] for item in evidence], dtype=np.float32
+    )
+    strengths = np.asarray(
+        [item["strength"] for item in evidence], dtype=np.float32
+    )
     threshold_scores = visual_scores.copy()
     weighted_scores = visual_scores.copy()
 
-    for query_index, scores in enumerate(visual_scores):
-        ranked_categories, confidence = rank_category_candidates(
-            scores,
-            category_indices,
-            args.category_top_per_class,
-        )
-        predicted = ranked_categories[0][0]
+    for query_index, (scores, predicted, confidence) in enumerate(
+        zip(visual_scores, predicted_categories, confidences)
+    ):
         matches = (gallery_categories == predicted).astype(np.float32)
         if confidence >= args.category_confidence_threshold:
             threshold_scores[query_index] = (
@@ -270,13 +343,12 @@ def main():
             args.category_confidence_threshold,
         )
         weighted_scores[query_index] = adjusted
-        predicted_categories.append(predicted)
-        confidences.append(confidence)
-        strengths.append(strength)
-
-    predicted_categories = np.asarray(predicted_categories, dtype=str)
-    confidences = np.asarray(confidences, dtype=np.float32)
-    strengths = np.asarray(strengths, dtype=np.float32)
+    dynamic_scores = apply_dynamic_category_bonus(
+        visual_scores,
+        evidence,
+        gallery_categories,
+        args.category_bonus,
+    )
     rankings = {
         "no_category": _descending_rankings(visual_scores),
         "hard_category_filter": _hard_category_rankings(
@@ -287,6 +359,7 @@ def main():
         ),
         "threshold_soft_category": _descending_rankings(threshold_scores),
         "confidence_weighted_category": _descending_rankings(weighted_scores),
+        "dynamic_relation_category": _descending_rankings(dynamic_scores),
     }
     specs = {
         "no_category": {
@@ -313,9 +386,16 @@ def main():
         "confidence_weighted_category": {
             "comparison_group": "category_aware_ablation",
             "role": "confidence-weighted serving",
-            "deployed": True,
+            "deployed": False,
             "input": "image",
             "formula": "S_II + lambda*g(h)*I[c_i=c_hat]",
+        },
+        "dynamic_relation_category": {
+            "comparison_group": "category_aware_ablation",
+            "role": "deployed prototype-and-relation policy",
+            "deployed": True,
+            "input": "image",
+            "formula": "S_II + lambda*g(h)*w(c_i)",
         },
     }
     ks = settings["ks"]
@@ -353,6 +433,12 @@ def main():
             ),
             "weighted_coverage": float(np.mean(strengths > 0.0)),
             "mean_category_strength": float(np.mean(strengths)),
+            "route_counts": {
+                str(name): int(count)
+                for name, count in pd.Series(
+                    [item["route"] for item in evidence]
+                ).value_counts().items()
+            },
         }
     )
 
@@ -361,9 +447,7 @@ def main():
         {
             "product_id": query_ids,
             "actual_category": query_categories,
-            "predicted_category": predicted_categories,
-            "confidence": confidences,
-            "category_strength": strengths,
+            **evidence_columns(evidence),
             "threshold_applied": confidences
             >= args.category_confidence_threshold,
             "weighted_applied": strengths > 0.0,
@@ -386,6 +470,8 @@ def main():
         "status": "complete",
         "settings": settings,
         "embedding": embedding_metadata,
+        "category_prototypes": prototype_metadata,
+        "category_relation_graph": relation_graph,
         "category_prediction": classification,
         "metrics": metrics,
     }
@@ -408,6 +494,7 @@ def main():
         f"- Previous threshold coverage: {classification['threshold_coverage']:.4f}",
         f"- Confidence-weighted coverage: {classification['weighted_coverage']:.4f}",
         f"- Mean category strength: {classification['mean_category_strength']:.4f}",
+        f"- Dynamic route counts: {classification['route_counts']}",
     ]
     (output / "summary.md").write_text("\n".join(summary) + "\n", encoding="utf-8")
 

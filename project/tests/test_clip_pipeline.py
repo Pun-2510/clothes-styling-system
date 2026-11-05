@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import numpy as np
 import pandas as pd
@@ -257,6 +257,160 @@ class CombinedRecommendationTests(unittest.TestCase):
         self.assertAlmostEqual(strength, 0.5)
         self.assertAlmostEqual(effective_bonus, 0.025)
         np.testing.assert_allclose(adjusted, [0.725, 0.69])
+
+    def test_category_evidence_can_correct_a_visual_neighbor_error(self):
+        from src.category_ranking import combine_category_evidence
+
+        visual = [
+            ("Boxers", 0.097),
+            ("Tshirts", 0.082),
+            ("Shirts", 0.064),
+        ]
+        prototypes = {
+            "Boxers": 0.177,
+            "Tshirts": 0.205,
+            "Shirts": 0.225,
+        }
+
+        ranked, confidence = combine_category_evidence(
+            visual,
+            prototypes,
+            prototype_weight=1.0,
+        )
+
+        self.assertEqual(ranked[0][0], "Shirts")
+        self.assertGreaterEqual(confidence, 0.5)
+
+    def test_weighted_categories_keep_full_catalog_and_prioritize_top1(self):
+        from src.recommend import FashionRecommender
+
+        recommender = FashionRecommender.__new__(FashionRecommender)
+        recommender.products = pd.DataFrame({
+            "product_id": ["jeans", "tshirt", "shirt", "boxers"],
+            "category": ["Jeans", "Tshirts", "Shirts", "Boxers"],
+        })
+        recommender.embeddings = np.eye(4, dtype=np.float32)
+
+        with patch(
+            "src.recommend.cosine_similarity",
+            return_value=np.array([0.95, 0.80, 0.75, 0.90], dtype=np.float32),
+        ):
+            results, _ = recommender.recommend_weighted_categories(
+                query_embedding=np.ones(4, dtype=np.float32),
+                category_confidence=0.55,
+                category_factors={"Tshirts": 0.50, "Shirts": 0.20},
+                top_k=4,
+            )
+
+        self.assertEqual(set(results["category"]), {
+            "Jeans", "Tshirts", "Shirts", "Boxers",
+        })
+        bonuses = dict(zip(results["category"], results["category_bonus"]))
+        self.assertGreater(bonuses["Tshirts"], bonuses["Shirts"])
+        self.assertGreater(bonuses["Shirts"], 0.0)
+        self.assertEqual(bonuses["Jeans"], 0.0)
+        self.assertEqual(bonuses["Boxers"], 0.0)
+
+    def test_category_relations_are_inferred_as_mutual_nearest_neighbors(self):
+        from src.category_ranking import (
+            build_mutual_category_neighbors,
+            categories_are_mutual_neighbors,
+        )
+
+        categories = ["Shirts", "Kurtas", "Boxers"]
+        prototypes = np.array([
+            [1.0, 0.0],
+            [0.99, 0.10],
+            [0.0, 1.0],
+        ], dtype=np.float32)
+        relations = build_mutual_category_neighbors(
+            categories, prototypes, neighbor_count=1,
+        )
+
+        self.assertTrue(categories_are_mutual_neighbors(
+            "Shirts", "Kurtas", relations,
+        ))
+        self.assertFalse(categories_are_mutual_neighbors(
+            "Shirts", "Boxers", relations,
+        ))
+
+    def test_ambiguous_related_image_uses_group_bonus_without_candidate_pool(self):
+        from src.recommend import FashionRecommender
+
+        recommender = FashionRecommender.__new__(FashionRecommender)
+        query = np.array([1.0, 0.0], dtype=np.float32)
+        visual_scores = np.array([0.8, 0.7], dtype=np.float32)
+        expected = pd.DataFrame({"category": ["Shirts", "Kurtas"]})
+        recommender.encode_image = Mock(return_value=query)
+        recommender.predict_category = Mock(
+            return_value=("Shirts", 0.55, visual_scores)
+        )
+        recommender._rank_category_evidence = Mock(return_value={
+            "ranked": [("Shirts", 0.30), ("Kurtas", 0.29)],
+        })
+        recommender.category_relation_neighbors = {
+            "Shirts": ("Kurtas",),
+            "Kurtas": ("Shirts",),
+        }
+        recommender.recommend_weighted_categories = Mock(
+            return_value=(expected, 0.01)
+        )
+
+        response = recommender.recommend_by_image(
+            image=object(), category_mode="soft_category", top_k=2,
+        )
+
+        from src.config import (
+            RELATED_TOP1_BONUS_FACTOR,
+            RELATED_TOP2_BONUS_FACTOR,
+        )
+        recommender.recommend_weighted_categories.assert_called_once_with(
+            query,
+            0.55,
+            {
+                "Shirts": RELATED_TOP1_BONUS_FACTOR,
+                "Kurtas": RELATED_TOP2_BONUS_FACTOR,
+            },
+            2,
+        )
+        self.assertEqual(response["category_mode"], "soft_category")
+        self.assertEqual(response["candidate_categories"], ["Shirts", "Kurtas"])
+
+    def test_ambiguous_unrelated_image_uses_only_a_weak_top1_bonus(self):
+        from src.recommend import FashionRecommender
+
+        recommender = FashionRecommender.__new__(FashionRecommender)
+        query = np.array([1.0, 0.0], dtype=np.float32)
+        visual_scores = np.array([0.8, 0.7], dtype=np.float32)
+        expected = pd.DataFrame({"category": ["Shirts", "Boxers"]})
+        recommender.encode_image = Mock(return_value=query)
+        recommender.predict_category = Mock(
+            return_value=("Shirts", 0.55, visual_scores)
+        )
+        recommender._rank_category_evidence = Mock(return_value={
+            "ranked": [("Shirts", 0.30), ("Boxers", 0.29)],
+        })
+        recommender.category_relation_neighbors = {
+            "Shirts": (),
+            "Boxers": (),
+        }
+        recommender.recommend_weighted_categories = Mock(
+            return_value=(expected, 0.01)
+        )
+
+        response = recommender.recommend_by_image(
+            image=object(), category_mode="soft_category", top_k=2,
+        )
+
+        from src.config import UNRELATED_TOP1_BONUS_FACTOR
+        recommender.recommend_weighted_categories.assert_called_once_with(
+            query,
+            0.55,
+            {"Shirts": UNRELATED_TOP1_BONUS_FACTOR},
+            2,
+        )
+        self.assertEqual(response["category_mode"], "soft_category")
+        self.assertEqual(response["candidate_categories"], [])
 
     def test_combined_search_fuses_raw_cosine_scores(self):
         from src.recommend import FashionRecommender

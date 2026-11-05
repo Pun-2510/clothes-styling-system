@@ -67,7 +67,12 @@ export default function ResultsSection({ data, mode, sectionRef, onNewSearch, on
               <span>{t('results.translated', { query: data.query_used })}</span>
             )}
             {mode === 'image' && data.category_mode === 'soft_category' && data.predicted_category && (
-              <span>{t('results.categoryPriority', { category: data.predicted_category, confidence: Math.round((data.category_confidence || 0) * 100) })}</span>
+              <span>{t('results.categoryPriority', {
+                category: (data.candidate_categories?.length > 1
+                  ? data.candidate_categories.join(' / ')
+                  : data.predicted_category),
+                confidence: Math.round((data.category_confidence || 0) * 100),
+              })}</span>
             )}
             {mode === 'image' && data.category_mode === 'no_category' && (
               <span>{t('results.noCategory')}</span>

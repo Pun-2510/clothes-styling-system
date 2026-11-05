@@ -70,7 +70,10 @@ class WebPackageTests(unittest.TestCase):
                 TestClient(app) as client:
             response = client.post(
                 "/api/recommendations/image",
-                data={"top_k": "5", "category_mode": "soft_category"},
+                data={
+                    "top_k": "5",
+                    "category_mode": "soft_category",
+                },
                 files={"file": ("query.png", image_buffer.getvalue(), "image/png")},
             )
 
@@ -80,7 +83,6 @@ class WebPackageTests(unittest.TestCase):
             recommend_by_image.call_args.kwargs["category_mode"],
             "soft_category",
         )
-
     def test_combined_route_translates_and_serializes_fusion_scores(self):
         results = pd.DataFrame({
             "product_id": ["1"],

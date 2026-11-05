@@ -237,6 +237,53 @@ CATEGORY_TOP_PER_CLASS = int(
 if CATEGORY_TOP_PER_CLASS < 1:
     raise ValueError("CATEGORY_TOP_PER_CLASS must be at least 1.")
 
+# Blend balanced visual-neighbour evidence with zero-shot CLIP category
+# prompts. A value of 1.0 gives both raw evidence terms equal scale before the
+# confidence-weighted category bonus is applied.
+CATEGORY_PROTOTYPE_WEIGHT = _configured_float(
+    "CATEGORY_PROTOTYPE_WEIGHT", 1.0
+)
+
+if CATEGORY_PROTOTYPE_WEIGHT < 0.0:
+    raise ValueError("CATEGORY_PROTOTYPE_WEIGHT cannot be negative.")
+
+# Category relationships are inferred automatically from normalized CLIP text
+# prototypes. Two labels are related only when they are mutual nearest
+# neighbours, avoiding a manually maintained category list.
+CATEGORY_RELATION_NEIGHBORS = int(
+    RETRIEVAL_WEIGHTS.get("CATEGORY_RELATION_NEIGHBORS", 5)
+)
+
+if CATEGORY_RELATION_NEIGHBORS < 1:
+    raise ValueError("CATEGORY_RELATION_NEIGHBORS must be at least 1.")
+
+# Ambiguous related labels receive asymmetric bonuses so the leading category
+# remains preferred. An unrelated runner-up receives no bonus, while Top-1
+# keeps only a very small signal instead of falling back completely.
+RELATED_TOP1_BONUS_FACTOR = _configured_float(
+    "RELATED_TOP1_BONUS_FACTOR", 0.50
+)
+RELATED_TOP2_BONUS_FACTOR = _configured_float(
+    "RELATED_TOP2_BONUS_FACTOR", 0.20
+)
+UNRELATED_TOP1_BONUS_FACTOR = _configured_float(
+    "UNRELATED_TOP1_BONUS_FACTOR", 0.10
+)
+
+for setting_name, setting_value in (
+    ("RELATED_TOP1_BONUS_FACTOR", RELATED_TOP1_BONUS_FACTOR),
+    ("RELATED_TOP2_BONUS_FACTOR", RELATED_TOP2_BONUS_FACTOR),
+    ("UNRELATED_TOP1_BONUS_FACTOR", UNRELATED_TOP1_BONUS_FACTOR),
+):
+    if not 0.0 <= setting_value <= 1.0:
+        raise ValueError(f"{setting_name} must be between 0 and 1.")
+
+if RELATED_TOP2_BONUS_FACTOR > RELATED_TOP1_BONUS_FACTOR:
+    raise ValueError(
+        "RELATED_TOP2_BONUS_FACTOR cannot exceed "
+        "RELATED_TOP1_BONUS_FACTOR."
+    )
+
 # Confidence at or below this floor has no influence on ranking. Between the
 # floor and the full threshold, category influence increases linearly.
 CATEGORY_CONFIDENCE_FLOOR = float(

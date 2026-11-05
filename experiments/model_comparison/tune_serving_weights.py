@@ -32,6 +32,13 @@ from .compare_system_pipeline import (
 )
 from .encoders import encode_clip_text
 from .evaluation import evaluate_query_gallery_category_rankings
+from .category_runtime import (
+    CategoryPolicySettings,
+    apply_dynamic_category_bonus,
+    build_category_evidence,
+    load_category_prototypes,
+    validate_policy_settings,
+)
 
 
 DEFAULT_RESULTS = Path(__file__).resolve().parent / "results"
@@ -60,6 +67,11 @@ def arguments():
     parser.add_argument("--category-top-per-class", type=int, default=3)
     parser.add_argument("--category-confidence-floor", type=float, default=0.50)
     parser.add_argument("--category-confidence-threshold", type=float, default=0.60)
+    parser.add_argument("--category-prototype-weight", type=float, default=1.0)
+    parser.add_argument("--category-relation-neighbors", type=int, default=5)
+    parser.add_argument("--related-top1-bonus-factor", type=float, default=0.50)
+    parser.add_argument("--related-top2-bonus-factor", type=float, default=0.20)
+    parser.add_argument("--unrelated-top1-bonus-factor", type=float, default=0.10)
     parser.add_argument("--no-cache", action="store_true")
     parser.add_argument("--self-test", action="store_true")
     return parser.parse_args()
@@ -88,6 +100,20 @@ def _validate_arguments(args):
         <= 1.0
     ):
         raise ValueError("Category thresholds must satisfy 0 <= floor < threshold <= 1.")
+    validate_policy_settings(_policy_settings(args))
+
+
+def _policy_settings(args):
+    return CategoryPolicySettings(
+        top_per_class=args.category_top_per_class,
+        confidence_floor=args.category_confidence_floor,
+        confidence_threshold=args.category_confidence_threshold,
+        prototype_weight=args.category_prototype_weight,
+        relation_neighbors=args.category_relation_neighbors,
+        related_top1_factor=args.related_top1_bonus_factor,
+        related_top2_factor=args.related_top2_bonus_factor,
+        unrelated_top1_factor=args.unrelated_top1_bonus_factor,
+    )
 
 
 def _top_rank_rows(scores, excluded_positions, top_k, candidate_groups=None):
@@ -251,11 +277,11 @@ def main():
     args.query_split = "validation"
 
     sys.path.insert(0, str(PROJECT))
-    from src.category_ranking import category_confidence_strength, rank_category_candidates
     from src.clip_data import file_sha256
     from src.clip_runtime import model_identity, same_model_identity
     from src.query_signals import (
         ATTRIBUTE_RULES,
+        explicit_categories_from_text,
         extract_query_attributes,
     )
 
@@ -327,23 +353,38 @@ def main():
         len(gallery),
     )
 
-    predicted_categories = []
-    category_strengths = []
-    for scores in visual_scores:
-        ranked_categories, confidence = rank_category_candidates(
-            scores, category_indices, args.category_top_per_class
-        )
-        predicted = ranked_categories[0][0]
-        strength = category_confidence_strength(
-            confidence,
-            args.category_confidence_floor,
-            args.category_confidence_threshold,
-        )
-        predicted_categories.append(predicted)
-        category_strengths.append(strength)
-
-    predicted_categories = np.asarray(predicted_categories, dtype=str)
-    category_strengths = np.asarray(category_strengths, dtype=np.float32)
+    catalog_categories = sorted(category_indices)
+    category_prototypes, category_prototype_metadata = load_category_prototypes(
+        catalog_categories,
+        checkpoint,
+        checkpoint_identity,
+        args.query_text_cache_dir,
+        args.device,
+        args.batch_size,
+        not args.no_cache,
+    )
+    category_evidence, relation_graph = build_category_evidence(
+        image_vectors[query_positions],
+        visual_scores,
+        catalog_categories,
+        category_indices,
+        category_prototypes,
+        _policy_settings(args),
+    )
+    predicted_categories = np.asarray(
+        [item["predicted"] for item in category_evidence], dtype=str
+    )
+    category_strengths = np.asarray(
+        [item["strength"] for item in category_evidence], dtype=np.float32
+    )
+    text_categories = []
+    for text in query_texts:
+        explicit = explicit_categories_from_text(text, catalog_categories)
+        text_categories.append(explicit[0] if len(explicit) == 1 else None)
+    text_candidate_groups = [
+        category_indices[value] if value is not None else None
+        for value in text_categories
+    ]
     k = args.objective_k
 
     text_trials = []
@@ -352,7 +393,12 @@ def main():
             text_image_weight * text_to_image_scores
             + (1.0 - text_image_weight) * text_to_text_scores
         )
-        rankings = _top_rank_rows(scores, query_positions, k)
+        rankings = _top_rank_rows(
+            scores,
+            query_positions,
+            k,
+            text_candidate_groups,
+        )
         text_trials.append(
             {
                 "text_image_weight": float(text_image_weight),
@@ -371,13 +417,12 @@ def main():
 
     image_trials = []
     for image_category_bonus in np.linspace(0.0, 0.20, 9):
-        adjusted = visual_scores.copy()
-        for query_index, predicted in enumerate(predicted_categories):
-            adjusted[query_index] += (
-                image_category_bonus
-                * category_strengths[query_index]
-                * (gallery_categories == predicted)
-            )
+        adjusted = apply_dynamic_category_bonus(
+            visual_scores,
+            category_evidence,
+            gallery_categories,
+            image_category_bonus,
+        )
         rankings = _top_rank_rows(adjusted, query_positions, k)
         image_trials.append(
             {
@@ -582,9 +627,16 @@ def main():
             selected_combined["combined_category_weight"], 6
         ),
         "CATEGORY_BONUS": round(selected_image["image_category_bonus"], 6),
+        "CATEGORY_PROTOTYPE_WEIGHT": round(args.category_prototype_weight, 6),
+        "CATEGORY_RELATION_NEIGHBORS": int(args.category_relation_neighbors),
+        "RELATED_TOP1_BONUS_FACTOR": round(args.related_top1_bonus_factor, 6),
+        "RELATED_TOP2_BONUS_FACTOR": round(args.related_top2_bonus_factor, 6),
+        "UNRELATED_TOP1_BONUS_FACTOR": round(
+            args.unrelated_top1_bonus_factor, 6
+        ),
     }
     report = {
-        "version": 2,
+        "version": 3,
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "selection_split": "validation",
         "objective_k": k,
@@ -621,6 +673,8 @@ def main():
             "combined_validation_queries": len(combined_query_indices),
             "gallery_size": len(gallery),
             "combined_query_text_embeddings": combined_text_metadata,
+            "category_prototypes": category_prototype_metadata,
+            "category_relation_graph": relation_graph,
         },
     }
 

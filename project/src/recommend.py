@@ -35,6 +35,11 @@ from src.config import (
     TEXT_EMBEDDINGS_FILE,
     TOP_K,
     CATEGORY_TOP_PER_CLASS,
+    CATEGORY_PROTOTYPE_WEIGHT,
+    CATEGORY_RELATION_NEIGHBORS,
+    RELATED_TOP1_BONUS_FACTOR,
+    RELATED_TOP2_BONUS_FACTOR,
+    UNRELATED_TOP1_BONUS_FACTOR,
     CATEGORY_CONFIDENCE_FLOOR,
     CATEGORY_CONFIDENCE_THRESHOLD,
     CATEGORY_BONUS,
@@ -49,6 +54,10 @@ from src.clip_runtime import model_identity, validate_embedding_metadata
 from src.category_ranking import (
     apply_confidence_weighted_category_bonus,
     category_confidence_strength,
+    build_mutual_category_neighbors,
+    categories_are_mutual_neighbors,
+    combine_category_evidence,
+    rank_category_score_mapping,
     rank_category_candidates,
 )
 
@@ -228,6 +237,22 @@ class FashionRecommender:
             ).groups.items()
         }
 
+        # A short text prototype supplies semantic category evidence. This is
+        # especially useful for cropped real-world photos whose closest
+        # catalog neighbours can be dominated by pose, skin, or background.
+        self.category_prototype_embeddings = (
+            self._encode_category_prototypes()
+        )
+        self.category_relation_neighbors = build_mutual_category_neighbors(
+            self.categories,
+            self.category_prototype_embeddings,
+            CATEGORY_RELATION_NEIGHBORS,
+        )
+        relation_count = sum(
+            len(values)
+            for values in self.category_relation_neighbors.values()
+        ) // 2
+
         log_info(
             f"Loaded products="
             f"{len(self.products):,}"
@@ -236,6 +261,12 @@ class FashionRecommender:
         log_info(
             f"Loaded categories="
             f"{len(self.categories)}"
+        )
+
+        log_info(
+            "Category prototype relation graph | "
+            f"mutual_neighbors={CATEGORY_RELATION_NEIGHBORS} | "
+            f"relations={relation_count}"
         )
 
         log_info(
@@ -357,6 +388,42 @@ class FashionRecommender:
             ).clamp_min(1e-12)
 
         return features.detach().cpu().numpy()[0].astype(np.float32)
+
+    def _encode_category_prototypes(self):
+        """Encode one normalized CLIP text prototype for every category."""
+        prompts = [
+            f"a catalog product photo of {category}"
+            for category in self.categories
+        ]
+        if not prompts:
+            raise RuntimeError("Cannot encode category prototypes without categories.")
+
+        max_length = self.model.config.text_config.max_position_embeddings
+        inputs = self.processor(
+            text=prompts,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=max_length,
+        )
+        inputs = {
+            key: value.to(self.device)
+            for key, value in inputs.items()
+        }
+
+        with torch.inference_mode():
+            text_outputs = self.model.text_model(
+                input_ids=inputs["input_ids"],
+                attention_mask=inputs.get("attention_mask"),
+                return_dict=True,
+            )
+            features = self.model.text_projection(text_outputs.pooler_output)
+            features = features / features.norm(
+                dim=-1,
+                keepdim=True,
+            ).clamp_min(1e-12)
+
+        return features.detach().cpu().numpy().astype(np.float32)
 
     @property
     def has_text_embeddings(self):
@@ -738,8 +805,50 @@ class FashionRecommender:
         }
 
     # =====================================================
-    # PREDICT CATEGORY FROM VISUAL NEIGHBORS
+    # PREDICT CATEGORY FROM NEIGHBORS AND CLIP PROTOTYPES
     # =====================================================
+
+    def _rank_category_evidence(self, query_embedding, scores):
+        """Return the combined category ranking and its evidence details."""
+        visual_ranked_categories, visual_confidence = rank_category_candidates(
+            scores,
+            self.category_indices,
+            CATEGORY_TOP_PER_CLASS,
+        )
+
+        prototype_values = np.asarray(
+            self.category_prototype_embeddings @ query_embedding,
+            dtype=np.float32,
+        )
+        prototype_scores = dict(zip(self.categories, prototype_values))
+        prototype_ranked_categories, prototype_confidence = (
+            rank_category_score_mapping(prototype_scores)
+        )
+        ranked_categories, combined_confidence = combine_category_evidence(
+            visual_ranked_categories,
+            prototype_scores,
+            CATEGORY_PROTOTYPE_WEIGHT,
+        )
+
+        predicted_category = ranked_categories[0][0]
+        if predicted_category == prototype_ranked_categories[0][0]:
+            confidence = prototype_confidence
+            confidence_source = "prototype"
+        elif predicted_category == visual_ranked_categories[0][0]:
+            confidence = visual_confidence
+            confidence_source = "visual_neighbors"
+        else:
+            confidence = combined_confidence
+            confidence_source = "combined"
+
+        return {
+            "ranked": ranked_categories,
+            "confidence": confidence,
+            "confidence_source": confidence_source,
+            "visual_ranked": visual_ranked_categories,
+            "prototype_ranked": prototype_ranked_categories,
+            "prototype_scores": prototype_scores,
+        }
 
     def predict_category(
         self,
@@ -756,17 +865,14 @@ class FashionRecommender:
             self.embeddings
         )
 
-        # Every category contributes the same maximum number of its strongest
-        # similarities, so large categories cannot win only by count.
-        ranked_categories, confidence = rank_category_candidates(
-            scores,
-            self.category_indices,
-            CATEGORY_TOP_PER_CLASS,
-        )
-
-        predicted_category = (
-            ranked_categories[0][0]
-        )
+        evidence = self._rank_category_evidence(query_embedding, scores)
+        ranked_categories = evidence["ranked"]
+        visual_ranked_categories = evidence["visual_ranked"]
+        prototype_ranked_categories = evidence["prototype_ranked"]
+        prototype_scores = evidence["prototype_scores"]
+        predicted_category = ranked_categories[0][0]
+        confidence = evidence["confidence"]
+        confidence_source = evidence["confidence_source"]
 
         # -------------------------------------------------
         # Log category
@@ -776,7 +882,10 @@ class FashionRecommender:
             f"request={request_id} | "
             f"CATEGORY | "
             f"predicted={predicted_category} | "
-            f"confidence={confidence:.4f}"
+            f"confidence={confidence:.4f} | "
+            f"confidence_source={confidence_source} | "
+            f"visual_top={visual_ranked_categories[0][0]} | "
+            f"prototype_top={prototype_ranked_categories[0][0]}"
         )
 
         # -------------------------------------------------
@@ -796,7 +905,9 @@ class FashionRecommender:
                 f"CATEGORY_CANDIDATE | "
                 f"rank={rank} | "
                 f"category={category} | "
-                f"score={category_score:.6f}"
+                f"combined_score={category_score:.6f} | "
+                f"visual_score={dict(visual_ranked_categories).get(category, 0.0):.6f} | "
+                f"prototype_score={prototype_scores.get(category, 0.0):.6f}"
             )
 
         return (
@@ -857,6 +968,49 @@ class FashionRecommender:
         )
 
         return results, elapsed
+
+    def recommend_weighted_categories(
+        self,
+        query_embedding,
+        category_confidence,
+        category_factors,
+        top_k=TOP_K,
+    ):
+        """Apply weighted category evidence while retaining the full catalog."""
+        start_time = time.perf_counter()
+        category_factors = {
+            str(category): float(factor)
+            for category, factor in category_factors.items()
+            if float(factor) > 0.0
+        }
+        visual_scores = cosine_similarity(query_embedding, self.embeddings)
+        product_categories = self.products["category"].astype(str)
+        category_weights = (
+            product_categories
+            .map(category_factors)
+            .fillna(0.0)
+            .astype(np.float32)
+            .to_numpy()
+        )
+        final_scores, _, effective_category_bonus = (
+            apply_confidence_weighted_category_bonus(
+                visual_scores,
+                category_weights,
+                category_confidence,
+                CATEGORY_BONUS,
+                CATEGORY_CONFIDENCE_FLOOR,
+                CATEGORY_CONFIDENCE_THRESHOLD,
+            )
+        )
+        actual_k = min(int(top_k), len(final_scores))
+        top_indices = top_k_indices(final_scores, k=actual_k)
+        results = self.products.iloc[top_indices].copy().reset_index(drop=True)
+        results["visual_similarity"] = visual_scores[top_indices]
+        results["category_bonus"] = (
+            effective_category_bonus * category_weights[top_indices]
+        )
+        results["similarity"] = final_scores[top_indices]
+        return results, time.perf_counter() - start_time
 
 
     # =====================================================
@@ -1042,7 +1196,7 @@ class FashionRecommender:
         image,
         category_mode="no_category",
         top_k=TOP_K,
-        request_id=None
+        request_id=None,
     ):
 
         if request_id is None:
@@ -1083,6 +1237,7 @@ class FashionRecommender:
 
         predicted_category = None
         confidence = None
+        candidate_categories = []
 
         if category_mode == "no_category":
 
@@ -1098,7 +1253,7 @@ class FashionRecommender:
             (
                 predicted_category,
                 confidence,
-                _
+                visual_scores,
             ) = self.predict_category(
                 query_embedding,
                 request_id
@@ -1142,15 +1297,77 @@ class FashionRecommender:
 
                     category_mode = "no_category"
                 else:
-
-                    results, ranking_time = (
-                        self.recommend_soft_category(
-                            query_embedding,
-                            predicted_category,
-                            confidence,
-                            top_k
-                        )
+                    is_ambiguous_category = (
+                        confidence < CATEGORY_CONFIDENCE_THRESHOLD
                     )
+                    if is_ambiguous_category:
+                        category_evidence = self._rank_category_evidence(
+                            query_embedding,
+                            visual_scores,
+                        )
+                        leading_categories = [
+                            category
+                            for category, _ in category_evidence["ranked"][
+                                :2
+                            ]
+                        ]
+                        is_related_pair = (
+                            len(leading_categories) == 2
+                            and categories_are_mutual_neighbors(
+                                leading_categories[0],
+                                leading_categories[1],
+                                self.category_relation_neighbors,
+                            )
+                        )
+                        if is_related_pair:
+                            candidate_categories = leading_categories
+                            results, ranking_time = (
+                                self.recommend_weighted_categories(
+                                    query_embedding,
+                                    confidence,
+                                    {
+                                        leading_categories[0]: RELATED_TOP1_BONUS_FACTOR,
+                                        leading_categories[1]: RELATED_TOP2_BONUS_FACTOR,
+                                    },
+                                    top_k,
+                                )
+                            )
+                            log_info(
+                                f"request={request_id} | "
+                                "RELATED_CATEGORY_BONUS | "
+                                f"categories={candidate_categories} | "
+                                f"top1_factor={RELATED_TOP1_BONUS_FACTOR:.4f} | "
+                                f"top2_factor={RELATED_TOP2_BONUS_FACTOR:.4f} | "
+                                f"confidence={confidence:.4f}"
+                            )
+                        else:
+                            results, ranking_time = (
+                                self.recommend_weighted_categories(
+                                    query_embedding,
+                                    confidence,
+                                    {
+                                        leading_categories[0]: UNRELATED_TOP1_BONUS_FACTOR,
+                                    },
+                                    top_k,
+                                )
+                            )
+                            log_info(
+                                f"request={request_id} | "
+                                "AMBIGUOUS_UNRELATED_WEAK_BONUS | "
+                                f"categories={leading_categories} | "
+                                f"top1_factor={UNRELATED_TOP1_BONUS_FACTOR:.4f} | "
+                                f"confidence={confidence:.4f} | "
+                                f"applied={leading_categories[0]}"
+                            )
+                    else:
+                        results, ranking_time = (
+                            self.recommend_soft_category(
+                                query_embedding,
+                                predicted_category,
+                                confidence,
+                                top_k
+                            )
+                        )
 
         total_time = (
             time.perf_counter()
@@ -1169,6 +1386,7 @@ class FashionRecommender:
             f"requested_mode={requested_category_mode} | "
             f"mode={category_mode} | "
             f"category={predicted_category or 'not_used'} | "
+            f"candidate_categories={candidate_categories or 'not_used'} | "
             f"confidence={confidence_log} | "
             f"category_strength={category_confidence_strength(confidence, CATEGORY_CONFIDENCE_FLOOR, CATEGORY_CONFIDENCE_THRESHOLD) if confidence is not None else 0.0:.4f} | "
             f"ranking={ranking_time:.4f}s | "
@@ -1179,6 +1397,7 @@ class FashionRecommender:
             "category_mode": category_mode,
             "predicted_category": predicted_category,
             "category_confidence": confidence,
+            "candidate_categories": candidate_categories,
             "results": results,
             "ranking_time": ranking_time,
             "total_time": total_time,

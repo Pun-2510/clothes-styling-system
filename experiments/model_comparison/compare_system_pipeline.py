@@ -29,6 +29,14 @@ from .compare_modalities import (
 )
 from .encoders import encode_clip_text
 from .evaluation import evaluate_query_gallery_category_rankings
+from .category_runtime import (
+    CategoryPolicySettings,
+    apply_dynamic_category_bonus,
+    build_category_evidence,
+    evidence_columns,
+    load_category_prototypes,
+    validate_policy_settings,
+)
 
 
 DEFAULT_FINETUNED_TEXT = PROJECT / "embeddings" / "text_embeddings.npy"
@@ -40,11 +48,16 @@ def _serving_defaults():
         CATEGORY_BONUS,
         CATEGORY_CONFIDENCE_FLOOR,
         CATEGORY_CONFIDENCE_THRESHOLD,
+        CATEGORY_PROTOTYPE_WEIGHT,
+        CATEGORY_RELATION_NEIGHBORS,
         CATEGORY_TOP_PER_CLASS,
         COMBINED_ATTRIBUTE_WEIGHT,
         COMBINED_CATEGORY_WEIGHT,
         COMBINED_IMAGE_WEIGHT,
         TEXT_RETRIEVAL_IMAGE_WEIGHT,
+        RELATED_TOP1_BONUS_FACTOR,
+        RELATED_TOP2_BONUS_FACTOR,
+        UNRELATED_TOP1_BONUS_FACTOR,
     )
 
     return {
@@ -56,6 +69,11 @@ def _serving_defaults():
         "category_top_per_class": CATEGORY_TOP_PER_CLASS,
         "category_confidence_floor": CATEGORY_CONFIDENCE_FLOOR,
         "category_confidence_threshold": CATEGORY_CONFIDENCE_THRESHOLD,
+        "category_prototype_weight": CATEGORY_PROTOTYPE_WEIGHT,
+        "category_relation_neighbors": CATEGORY_RELATION_NEIGHBORS,
+        "related_top1_bonus_factor": RELATED_TOP1_BONUS_FACTOR,
+        "related_top2_bonus_factor": RELATED_TOP2_BONUS_FACTOR,
+        "unrelated_top1_bonus_factor": UNRELATED_TOP1_BONUS_FACTOR,
     }
 
 
@@ -109,6 +127,31 @@ def arguments():
         type=float,
         default=defaults["category_confidence_threshold"],
     )
+    parser.add_argument(
+        "--category-prototype-weight",
+        type=float,
+        default=defaults["category_prototype_weight"],
+    )
+    parser.add_argument(
+        "--category-relation-neighbors",
+        type=int,
+        default=defaults["category_relation_neighbors"],
+    )
+    parser.add_argument(
+        "--related-top1-bonus-factor",
+        type=float,
+        default=defaults["related_top1_bonus_factor"],
+    )
+    parser.add_argument(
+        "--related-top2-bonus-factor",
+        type=float,
+        default=defaults["related_top2_bonus_factor"],
+    )
+    parser.add_argument(
+        "--unrelated-top1-bonus-factor",
+        type=float,
+        default=defaults["unrelated_top1_bonus_factor"],
+    )
     parser.add_argument("--no-cache", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--self-test", action="store_true")
@@ -134,6 +177,20 @@ def _validate_arguments(args):
         raise ValueError(
             "Category thresholds must satisfy 0 <= floor < threshold <= 1."
         )
+    validate_policy_settings(_policy_settings(args))
+
+
+def _policy_settings(args):
+    return CategoryPolicySettings(
+        top_per_class=args.category_top_per_class,
+        confidence_floor=args.category_confidence_floor,
+        confidence_threshold=args.category_confidence_threshold,
+        prototype_weight=args.category_prototype_weight,
+        relation_neighbors=args.category_relation_neighbors,
+        related_top1_factor=args.related_top1_bonus_factor,
+        related_top2_factor=args.related_top2_bonus_factor,
+        unrelated_top1_factor=args.unrelated_top1_bonus_factor,
+    )
 
 
 def _normalized(matrix, label):
@@ -292,17 +349,13 @@ def main():
     _validate_arguments(args)
 
     sys.path.insert(0, str(PROJECT))
-    from src.category_ranking import (
-        category_confidence_strength,
-        rank_category_candidates,
-    )
     from src.clip_data import file_sha256
     from src.clip_runtime import model_identity, same_model_identity
     from src.query_signals import (
         ATTRIBUTE_RULES,
         categories_are_related,
+        explicit_categories_from_text,
         extract_query_attributes,
-        infer_category_from_text,
     )
 
     _, queries, gallery, query_positions, experiment, training, training_path = (
@@ -333,6 +386,11 @@ def main():
         "category_top_per_class": args.category_top_per_class,
         "category_confidence_floor": args.category_confidence_floor,
         "category_confidence_threshold": args.category_confidence_threshold,
+        "category_prototype_weight": args.category_prototype_weight,
+        "category_relation_neighbors": args.category_relation_neighbors,
+        "related_top1_bonus_factor": args.related_top1_bonus_factor,
+        "related_top2_bonus_factor": args.related_top2_bonus_factor,
+        "unrelated_top1_bonus_factor": args.unrelated_top1_bonus_factor,
         "query_text": "product name and description; category column omitted",
         "gallery_text": "runtime product text including product, category and description",
         "self_match": "excluded before category prediction and ranking",
@@ -426,25 +484,43 @@ def main():
     }
     catalog_categories = sorted(category_indices)
 
-    predicted_categories = []
-    category_confidences = []
-    category_strengths = []
+    category_prototypes, category_prototype_metadata = load_category_prototypes(
+        catalog_categories,
+        checkpoint,
+        checkpoint_identity,
+        args.query_text_cache_dir,
+        args.device,
+        args.batch_size,
+        not args.no_cache,
+    )
+    category_evidence, relation_graph = build_category_evidence(
+        query_image_vectors,
+        visual_scores,
+        catalog_categories,
+        category_indices,
+        category_prototypes,
+        _policy_settings(args),
+    )
+
+    predicted_categories = np.asarray(
+        [item["predicted"] for item in category_evidence], dtype=str
+    )
+    category_confidences = np.asarray(
+        [item["confidence"] for item in category_evidence], dtype=np.float32
+    )
+    category_strengths = np.asarray(
+        [item["strength"] for item in category_evidence], dtype=np.float32
+    )
     text_categories = []
+    explicit_text_categories = []
     applied_categories = []
     category_sources = []
-    for query_index, scores in enumerate(visual_scores):
-        ranked_categories, confidence = rank_category_candidates(
-            scores, category_indices, args.category_top_per_class
-        )
-        predicted = ranked_categories[0][0]
-        strength = category_confidence_strength(
-            confidence,
-            args.category_confidence_floor,
-            args.category_confidence_threshold,
-        )
-        text_category = infer_category_from_text(
+    for query_index, predicted in enumerate(predicted_categories):
+        strength = category_strengths[query_index]
+        explicit = explicit_categories_from_text(
             query_texts[query_index], catalog_categories
         )
+        text_category = explicit[0] if len(explicit) == 1 else None
         if text_category is not None:
             if strength > 0.0 and categories_are_related(predicted, text_category):
                 applied_category = predicted
@@ -459,24 +535,27 @@ def main():
             applied_category = None
             category_source = None
 
-        predicted_categories.append(predicted)
-        category_confidences.append(confidence)
-        category_strengths.append(strength)
         text_categories.append(text_category)
+        explicit_text_categories.append(explicit)
         applied_categories.append(applied_category)
         category_sources.append(category_source)
 
-    predicted_categories = np.asarray(predicted_categories, dtype=str)
-    category_confidences = np.asarray(category_confidences, dtype=np.float32)
-    category_strengths = np.asarray(category_strengths, dtype=np.float32)
+    image_deployed_scores = apply_dynamic_category_bonus(
+        visual_scores,
+        category_evidence,
+        gallery_categories,
+        args.image_category_bonus,
+    )
 
-    image_deployed_scores = visual_scores.copy()
-    for query_index, predicted in enumerate(predicted_categories):
-        image_deployed_scores[query_index] += (
-            args.image_category_bonus
-            * category_strengths[query_index]
-            * (gallery_categories == predicted)
-        )
+    text_candidate_groups = [
+        category_indices[value] if value is not None else None
+        for value in text_categories
+    ]
+    text_deployed_rankings = _rank_rows(
+        text_scores,
+        query_positions,
+        text_candidate_groups,
+    )
 
     combined_base_rankings = _rank_rows(combined_base_scores, query_positions)
     combined_attribute_rankings = _rank_rows(
@@ -507,7 +586,7 @@ def main():
 
     query_mode_rankings = {
         "image_only_deployed": _rank_rows(image_deployed_scores, query_positions),
-        "text_only_deployed": _rank_rows(text_scores, query_positions),
+        "text_only_deployed": text_deployed_rankings,
         "combined_full_deployed": combined_full_rankings,
     }
     combined_rankings = {
@@ -522,14 +601,14 @@ def main():
             "role": "deployed image query",
             "deployed": True,
             "input": "image",
-            "formula": "S_II + lambda_I*g(h)*I[c_i=c_hat]",
+            "formula": "S_II + lambda_I*g(h)*w(c_i)",
         },
         "text_only_deployed": {
             "comparison_group": "query_mode",
             "role": "deployed text query",
             "deployed": True,
             "input": "text",
-            "formula": "w_t*S_TI + (1-w_t)*S_TT",
+            "formula": "w_t*S_TI + (1-w_t)*S_TT; exact category => hard pool",
         },
         "combined_full_deployed": {
             "comparison_group": "query_mode",
@@ -617,10 +696,14 @@ def main():
         {
             "product_id": query_ids,
             "actual_category": query_categories,
-            "predicted_image_category": predicted_categories,
-            "category_confidence": category_confidences,
-            "category_strength": category_strengths,
+            **{
+                f"image_{key}": value
+                for key, value in evidence_columns(category_evidence).items()
+            },
             "text_category": [value or "" for value in text_categories],
+            "explicit_text_categories": [
+                ";".join(values) for values in explicit_text_categories
+            ],
             "applied_category": [value or "" for value in applied_categories],
             "category_source": [value or "" for value in category_sources],
             "attributes": [";".join(values) for values in query_attributes],
@@ -668,7 +751,9 @@ def main():
             "image": image_metadata,
             "runtime_text": text_metadata,
             "query_text": query_text_metadata,
+            "category_prototypes": category_prototype_metadata,
         },
+        "category_relation_graph": relation_graph,
         "query_mode_metrics": query_mode_metrics,
         "combined_ablation_metrics": combined_metrics,
         "attribute_metrics": attribute_rows,

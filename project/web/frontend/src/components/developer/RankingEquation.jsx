@@ -34,7 +34,8 @@ function ImageEquation() {
     <math display="block" aria-label="Image-only retrieval score">
       <mrow>
         <Score index="image" /><mo>=</mo><Score index="II" /><mo>+</mo>
-        <Subscript symbol="λ" index="I" /><mo>·</mo><ConfidenceFunction /><mo>·</mo><mi>C</mi>
+        <Subscript symbol="λ" index="I" /><mo>·</mo><ConfidenceFunction /><mo>·</mo>
+        <mi>w</mi><mo>(</mo><Subscript symbol="c" index="i" /><mo>)</mo>
       </mrow>
     </math>
   )

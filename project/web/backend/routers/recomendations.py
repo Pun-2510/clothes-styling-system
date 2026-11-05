@@ -247,6 +247,9 @@ def recommend_by_image(
                     recommendation["category_confidence"]
                 )
             ),
+            candidate_categories=recommendation.get(
+                "candidate_categories", []
+            ),
             processing_times=ImageProcessingTimes(
                 ranking=float(
                     recommendation["ranking_time"]

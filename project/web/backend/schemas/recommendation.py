@@ -88,6 +88,7 @@ class ImageRecommendationResponse(BaseModel):
     category_mode: CategoryMode
     predicted_category: str | None
     category_confidence: float | None
+    candidate_categories: list[str] = Field(default_factory=list)
     processing_times: ImageProcessingTimes
     items: list[ImageProductRecommendation]
 
