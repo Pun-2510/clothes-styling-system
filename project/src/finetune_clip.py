@@ -276,9 +276,10 @@ def main():
     training_path.write_text(json.dumps(training, indent=2), encoding="utf-8")
     print(
         f"Checkpoint: {run_dir / 'best'}\n"
-        "Unified comparisons are run from the repository root with "
-        "experiments.model_comparison.compare_full_gallery; see "
-        "experiments/model_comparison/README.md."
+        "Next: generate project-local catalog embeddings with "
+        "src.generate_clip_embeddings, then select serving weights with "
+        "src.tune_retrieval_weights. Repository-level comparisons are optional "
+        "research tasks and are not required to run the website."
     )
 
 

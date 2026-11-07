@@ -1,8 +1,8 @@
 # Website: React + FastAPI + Nginx Reverse Proxy/Load Balancer
 
 `web/backend/`, `web/frontend/`, `web/nginx/` chứa code phục vụ website.
-Logic ML dùng chung vẫn ở `src/`. Dữ liệu, embeddings, checkpoint và log vẫn
-nằm ở thư mục gốc `project/`, không chuyển vào web hoặc kết quả thí nghiệm.
+Logic ML dùng chung vẫn ở `src/`. Catalog, checkpoint, embeddings, validation
+weights và log đều nằm trong `project/`; website không đọc `experiments/`.
 
 ## Chạy một lệnh
 
@@ -22,8 +22,9 @@ tiền xử lý, training, sinh embedding hoặc compare khi khởi động Dock
 ```dotenv
 FASHION_CATALOG_DIR=./data/processed
 FASHION_EMBEDDINGS_DIR=./embeddings
-FASHION_CHECKPOINT_DIR=./runs/clip_finetune_3epochs_local/best
+FASHION_CHECKPOINT_DIR=./runs/clip_finetune/best
 FASHION_IMAGE_DIR=./data/data
+FASHION_RETRIEVAL_WEIGHTS_FILE=./retrieval_weights.json
 ```
 
 Các thư mục được hiểu tương đối với `project/docker-compose.yml`. `.env` không
@@ -36,7 +37,7 @@ Muốn thay số lượng (ví dụ 4.000), tự chạy từ `project/`:
 .\.venv\Scripts\python.exe -m src.prepare_dataset --num-products 4000
 .\.venv\Scripts\python.exe -m src.generate_clip_embeddings `
   --csv data/processed/products.csv `
-  --model runs/clip_finetune_3epochs_local/best `
+  --model runs/clip_finetune/best `
   --output-dir embeddings
 docker-compose up -d --build --force-recreate backend backend_2
 ```
@@ -47,13 +48,13 @@ artifact, `up --build` có thể không tự tạo lại backend nếu image/con
 dùng `--force-recreate` như trên hoặc restart cả hai để nạp dữ liệu mới.
 Khởi động hệ thống bình thường sau khi chuẩn bị xong vẫn chỉ cần một lệnh `up`.
 
-Fine-tune là tùy chọn: nếu cần, chạy `src.finetune_clip` vào một `runs/<tên-mới>`
-sau tiền xử lý và trước sinh embeddings. Sau đó dùng đúng checkpoint mới để sinh
-embeddings và cập nhật `FASHION_CHECKPOINT_DIR` trong `.env`. Catalog, embeddings
-và checkpoint phải khớp provenance; không sửa hash để bỏ qua kiểm tra.
+Fine-tune là tùy chọn khi đã tải một bộ artifact đồng bộ. Nếu tự xây từ đầu, chạy
+`src.finetune_clip`, sinh embeddings, rồi chạy `src.tune_retrieval_weights` để
+ghi `project/retrieval_weights.json`. Catalog, embeddings, checkpoint và weights
+phải cùng một pipeline; không sửa hash để bỏ qua kiểm tra.
 
-Các thí nghiệm so sánh nằm tại `experiments/model_comparison/` ở cấp repository
-và không phải đầu vào của website.
+Các thí nghiệm so sánh nằm tại `experiments/model_comparison/` ở cấp repository,
+hoàn toàn độc lập và không phải đầu vào của website.
 
 ## Chạy API hoặc frontend riêng ngoài Docker
 

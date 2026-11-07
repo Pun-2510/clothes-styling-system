@@ -85,7 +85,7 @@ class ComposeLoadBalancingTests(unittest.TestCase):
                      "FASHION_CHECKPOINT_DIR": (ROOT / "example experiment" / "best").as_posix()}
         services = self.configuration(variables)
         targets = dict(zip(("/app/data/processed", "/app/data/data", "/app/embeddings",
-                            "/app/runs/clip_finetune_3epochs_local/best"), variables.values()))
+                            "/app/model/best"), variables.values()))
         for name in ("backend", "backend_2"):
             mounts = {m["target"]: m for m in services[name]["volumes"]}
             for target, source in targets.items():

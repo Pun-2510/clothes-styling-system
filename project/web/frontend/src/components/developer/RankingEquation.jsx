@@ -70,7 +70,7 @@ function CombinedEquation() {
       <math display="block">
         <mrow>
           <Score index="final" /><mo>=</mo><Score index="attr" /><mo>+</mo><Subscript symbol="λ" index="C" /><mo>·</mo>
-          <ConfidenceFunction /><mo>·</mo><mi>C</mi>
+          <ConfidenceFunction /><mo>·</mo><mi>w</mi><mo>(</mo><Subscript symbol="c" index="i" /><mo>)</mo>
         </mrow>
       </math>
     </div>

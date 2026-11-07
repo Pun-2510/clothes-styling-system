@@ -486,6 +486,117 @@ class CombinedRecommendationTests(unittest.TestCase):
         self.assertAlmostEqual(image_led["text_weight"], 0.25)
         self.assertIn("text_similarity", image_led["results"].columns)
 
+    def test_combined_ambiguous_related_image_uses_weighted_top2_bonus(self):
+        from src.config import (
+            RELATED_TOP1_BONUS_FACTOR,
+            RELATED_TOP2_BONUS_FACTOR,
+        )
+        from src.recommend import FashionRecommender
+
+        recommender = FashionRecommender.__new__(FashionRecommender)
+        recommender.products = pd.DataFrame({
+            "product_id": ["shirt", "kurta", "boxer"],
+            "product_name": ["Shirt", "Kurta", "Boxer"],
+            "category": ["Shirts", "Kurtas", "Boxers"],
+            "description": ["", "", ""],
+            "image_reference": ["shirt.jpg", "kurta.jpg", "boxer.jpg"],
+        })
+        recommender.categories = ["Shirts", "Kurtas", "Boxers"]
+        recommender.embeddings = np.eye(3, dtype=np.float32)
+        recommender.text_embeddings = np.eye(3, dtype=np.float32)
+        recommender.encode_image = lambda image: np.ones(3, dtype=np.float32)
+        recommender.encode_text = lambda text: np.ones(3, dtype=np.float32)
+        recommender.predict_category = Mock(return_value=(
+            "Shirts",
+            0.55,
+            np.array([0.60, 0.59, 0.58], dtype=np.float32),
+        ))
+        recommender._rank_category_evidence = Mock(return_value={
+            "ranked": [("Shirts", 0.30), ("Kurtas", 0.29), ("Boxers", 0.10)],
+        })
+        recommender.category_relation_neighbors = {
+            "Shirts": ("Kurtas",),
+            "Kurtas": ("Shirts",),
+            "Boxers": (),
+        }
+
+        with patch(
+            "src.recommend.cosine_similarity",
+            side_effect=[
+                np.zeros(3, dtype=np.float32),
+                np.zeros(3, dtype=np.float32),
+            ],
+        ):
+            recommendation = recommender.recommend_combined(
+                image=object(), text="similar item", top_k=3,
+            )
+
+        matches = dict(zip(
+            recommendation["results"]["category"],
+            recommendation["results"]["category_match"],
+        ))
+        self.assertEqual(
+            recommendation["category_route"],
+            "ambiguous_related_top2",
+        )
+        self.assertEqual(
+            recommendation["candidate_categories"],
+            ["Shirts", "Kurtas"],
+        )
+        self.assertAlmostEqual(matches["Shirts"], RELATED_TOP1_BONUS_FACTOR)
+        self.assertAlmostEqual(matches["Kurtas"], RELATED_TOP2_BONUS_FACTOR)
+        self.assertAlmostEqual(matches["Boxers"], 0.0)
+
+    def test_combined_ambiguous_unrelated_image_uses_weak_top1_bonus(self):
+        from src.config import UNRELATED_TOP1_BONUS_FACTOR
+        from src.recommend import FashionRecommender
+
+        recommender = FashionRecommender.__new__(FashionRecommender)
+        recommender.products = pd.DataFrame({
+            "product_id": ["shirt", "boxer"],
+            "product_name": ["Shirt", "Boxer"],
+            "category": ["Shirts", "Boxers"],
+            "description": ["", ""],
+            "image_reference": ["shirt.jpg", "boxer.jpg"],
+        })
+        recommender.categories = ["Shirts", "Boxers"]
+        recommender.embeddings = np.eye(2, dtype=np.float32)
+        recommender.text_embeddings = None
+        recommender.encode_image = lambda image: np.ones(2, dtype=np.float32)
+        recommender.encode_text = lambda text: np.ones(2, dtype=np.float32)
+        recommender.predict_category = Mock(return_value=(
+            "Shirts",
+            0.55,
+            np.array([0.60, 0.59], dtype=np.float32),
+        ))
+        recommender._rank_category_evidence = Mock(return_value={
+            "ranked": [("Shirts", 0.30), ("Boxers", 0.29)],
+        })
+        recommender.category_relation_neighbors = {
+            "Shirts": (),
+            "Boxers": (),
+        }
+
+        with patch(
+            "src.recommend.cosine_similarity",
+            return_value=np.zeros(2, dtype=np.float32),
+        ):
+            recommendation = recommender.recommend_combined(
+                image=object(), text="similar item", top_k=2,
+            )
+
+        matches = dict(zip(
+            recommendation["results"]["category"],
+            recommendation["results"]["category_match"],
+        ))
+        self.assertEqual(
+            recommendation["category_route"],
+            "ambiguous_unrelated_top1",
+        )
+        self.assertEqual(recommendation["candidate_categories"], [])
+        self.assertAlmostEqual(matches["Shirts"], UNRELATED_TOP1_BONUS_FACTOR)
+        self.assertAlmostEqual(matches["Boxers"], 0.0)
+
     def test_explicit_text_category_and_colour_override_image_colour(self):
         from src.recommend import FashionRecommender
 
@@ -518,7 +629,8 @@ class CombinedRecommendationTests(unittest.TestCase):
         self.assertEqual(results.iloc[0].product_id, "red-cap")
         self.assertEqual(set(results.category), {"Caps"})
         self.assertEqual(recommendation["applied_category"], "Caps")
-        self.assertEqual(recommendation["category_source"], "text_image")
+        self.assertEqual(recommendation["category_source"], "text")
+        self.assertEqual(recommendation["category_route"], "explicit_text")
         self.assertEqual(recommendation["detected_attributes"], ["red"])
 
         self.assertTrue(

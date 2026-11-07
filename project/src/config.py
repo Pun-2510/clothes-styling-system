@@ -32,9 +32,9 @@ PROCESSED_CSV = (
     "products.csv"
 )
 
-# Offline validation can produce this artifact with
-# ``python -m experiments.model_comparison.tune_serving_weights``. When the
-# file is absent, the conservative built-in values below remain available.
+# Offline validation produces this project-local artifact with
+# ``python -m src.tune_retrieval_weights``. When the file is absent, the
+# conservative built-in values below remain available.
 RETRIEVAL_WEIGHTS_PATH = Path(
     os.environ.get(
         "RETRIEVAL_WEIGHTS_PATH",
@@ -165,7 +165,7 @@ CLIP_MODEL = (
 FINETUNED_CLIP_MODEL = (
     BASE_DIR
     / "runs"
-    / "clip_finetune_3epochs_local"
+    / "clip_finetune"
     / "best"
 )
 

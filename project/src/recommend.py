@@ -643,27 +643,66 @@ class FashionRecommender:
             if len(explicit_text_categories) == 1
             else None
         )
+        category_factors = {}
+        candidate_categories = []
+        category_route = "none"
+
+        # An explicit text category is the clearest user instruction.  It
+        # therefore takes precedence over the image prediction and is handled
+        # as a hard candidate constraint below.  Image evidence is only used
+        # when text does not name a category; in that case the same dynamic
+        # Top-2 policy as image-only retrieval is applied to the fused score.
         if text_category is not None:
-            if (
-                image_category_strength > 0.0
-                and self.categories_are_related(
-                    predicted_category,
-                    text_category,
-                )
-            ):
-                applied_category = predicted_category
-                category_source = "text_image"
-            else:
-                applied_category = text_category
-                category_source = "text"
+            applied_category = text_category
+            category_source = "text"
+            category_route = "explicit_text"
+            contextual_text = str(text).strip()
+        elif len(explicit_text_categories) > 1:
+            applied_category = None
+            category_source = None
+            category_route = "multiple_text_categories"
             contextual_text = str(text).strip()
         elif image_category_strength > 0.0:
-            applied_category = predicted_category
+            category_evidence = self._rank_category_evidence(
+                image_query,
+                visual_scores,
+            )
+            leading_categories = [
+                category
+                for category, _ in category_evidence["ranked"][:2]
+            ]
+            applied_category = leading_categories[0]
             category_source = "image"
+
+            if category_confidence >= CATEGORY_CONFIDENCE_THRESHOLD:
+                category_factors = {applied_category: 1.0}
+                category_route = "confident_top1"
+            else:
+                is_related_pair = (
+                    len(leading_categories) == 2
+                    and categories_are_mutual_neighbors(
+                        leading_categories[0],
+                        leading_categories[1],
+                        self.category_relation_neighbors,
+                    )
+                )
+                if is_related_pair:
+                    candidate_categories = leading_categories
+                    category_factors = {
+                        leading_categories[0]: RELATED_TOP1_BONUS_FACTOR,
+                        leading_categories[1]: RELATED_TOP2_BONUS_FACTOR,
+                    }
+                    category_route = "ambiguous_related_top2"
+                else:
+                    category_factors = {
+                        applied_category: UNRELATED_TOP1_BONUS_FACTOR,
+                    }
+                    category_route = "ambiguous_unrelated_top1"
             contextual_text = str(text).strip()
         else:
             applied_category = None
             category_source = None
+            category_route = "low_confidence"
             contextual_text = str(text).strip()
 
         text_query = self.encode_text(contextual_text)
@@ -698,11 +737,20 @@ class FashionRecommender:
                 + COMBINED_ATTRIBUTE_WEIGHT * attribute_scores
             )
 
-        if applied_category is not None:
+        if category_source == "text":
             category_scores = (
                 self.products["category"]
                 .astype(str)
                 .eq(applied_category)
+                .astype(np.float32)
+                .to_numpy()
+            )
+        elif category_source == "image":
+            category_scores = (
+                self.products["category"]
+                .astype(str)
+                .map(category_factors)
+                .fillna(0.0)
                 .astype(np.float32)
                 .to_numpy()
             )
@@ -723,7 +771,7 @@ class FashionRecommender:
                     CATEGORY_CONFIDENCE_THRESHOLD,
                 )
             )
-        elif category_source in {"text", "text_image"}:
+        elif category_source == "text":
             category_strength = 1.0
             effective_category_bonus = 0.0
         else:
@@ -731,7 +779,7 @@ class FashionRecommender:
             effective_category_bonus = 0.0
 
         eligible_indices = np.arange(len(final_scores))
-        if category_source in {"text", "text_image"}:
+        if category_source == "text":
             category_indices = np.flatnonzero(category_scores)
             if len(category_indices) > 0:
                 eligible_indices = category_indices
@@ -765,7 +813,7 @@ class FashionRecommender:
                     for category in explicit_text_categories
                 ],
             }
-        elif category_source in {"text", "text_image"}:
+        elif category_source == "text":
             guidance = {
                 "status": "category_applied",
                 "applied_category": applied_category,
@@ -784,6 +832,8 @@ class FashionRecommender:
             f"query={str(text)[:80]!r} | context={contextual_text[:100]!r} | "
             f"category={applied_category or 'not_used'} | "
             f"category_source={category_source or 'not_used'} | "
+            f"category_route={category_route} | "
+            f"candidate_categories={candidate_categories or 'not_used'} | "
             f"category_strength={category_strength:.4f} | "
             f"category_bonus={effective_category_bonus:.4f} | "
             f"attributes={attributes or 'not_used'} | top_k={actual_k} | "
@@ -798,6 +848,8 @@ class FashionRecommender:
             "text_weight": text_weight,
             "applied_category": applied_category,
             "category_source": category_source,
+            "category_route": category_route,
+            "candidate_categories": candidate_categories,
             "category_strength": category_strength,
             "detected_attributes": attributes,
             "guidance": guidance,

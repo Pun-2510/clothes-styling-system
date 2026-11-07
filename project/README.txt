@@ -1,50 +1,48 @@
-# HƯỚNG DẪN CHẠY HỆ THỐNG HIỆN TẠI
+# HƯỚNG DẪN CHẠY HỆ THỐNG TRONG `project/`
 
-Tài liệu này mô tả bộ artifact diverse seed 42 đang được website sử dụng.
-Trừ mục thí nghiệm được ghi rõ chạy từ thư mục gốc `dacntt/`, mọi lệnh còn lại
-được chạy từ `dacntt/project/`.
+Tài liệu này mô tả pipeline vận hành độc lập của website. Sau khi người dùng
+clone repository, toàn bộ catalog đã xử lý, checkpoint fine-tuned CLIP,
+embeddings, cache validation và retrieval weights đều được tạo bên trong
+`project/`. Website không đọc file từ `experiments/`.
 
-## 1. CẤU HÌNH ĐANG TRIỂN KHAI
-
-```text
-Catalog:     data/processed_diverse/products.csv
-Images:      data/data/
-Checkpoint:  runs/clip_finetune_diverse_seed_42/best/
-Embeddings:  embeddings_diverse_seed_42/
-Weights:     ../experiments/model_comparison/results/diverse_seed_42/retrieval_weights.json
-```
-
-Các thành phần này được tạo từ cùng catalog seed 42. Không thay riêng một file
-`products.csv`, checkpoint, embedding hoặc weight JSON bằng artifact của seed
-khác vì backend kiểm tra model/catalog checksum khi khởi động.
-
-Workflow:
+## 1. PHÂN TÁCH HỆ THỐNG VÀ THÍ NGHIỆM
 
 ```text
-Dataset gốc
-   ↓
-Loại ảnh lỗi/trùng + diverse sampling + category audit
-   ↓
-Catalog 5.000 sản phẩm
-   ↓
-Fine-tune CLIP và chọn best checkpoint trên validation
-   ↓
-Sinh image/text embeddings
-   ↓
-Chọn retrieval weights trên validation
-   ↓
-Đánh giá test trên seed 42, 123 và 2026
-   ↓
-Docker Compose: React + Nginx + 2 FastAPI backends
+<repository>/
+├── project/                         Hệ thống chạy thật
+│   ├── data/processed/              Catalog đã chuẩn bị và category audit
+│   ├── runs/clip_finetune/          Split, log huấn luyện và best checkpoint
+│   ├── embeddings/                  Image/text embeddings của catalog
+│   ├── validation/                  Cache và bảng thử trọng số validation
+│   ├── retrieval_weights.json       Trọng số website sử dụng
+│   ├── src/                         Tiền xử lý, training, validation, retrieval
+│   ├── web/                         React, FastAPI và Nginx
+│   ├── .env                         Cấu hình cục bộ, Git bỏ qua
+│   └── docker-compose.yml
+└── experiments/                     Đánh giá nghiên cứu, không phục vụ website
 ```
+
+`seed = 42` trong hướng dẫn chỉ giúp tái lập catalog và split. Nó không có nghĩa
+website phải đọc thư mục `experiments/.../seed_42`. Có thể đổi seed, nhưng mọi
+artifact của một lần chạy phải được tạo từ cùng catalog và checkpoint.
 
 ## 2. ĐIỀU KIỆN TIÊN QUYẾT
 
+- Git.
 - Python 3.12 hoặc 3.13.
-- Docker Desktop và Docker Compose.
-- Internet trong lần đầu tải thư viện, image và Hugging Face models.
-- Mini Fashion Product Images and Text Dataset:
-  https://www.kaggle.com/datasets/nirmalsankalana/mini-product-image-and-text-dataset
+- Docker Desktop có Docker Compose v2.
+- Ít nhất khoảng 15–20 GB dung lượng trống cho dataset, model, image Docker và
+  Hugging Face cache.
+- Internet ở lần đầu để tải package, Docker image, CLIP và model dịch VI → EN.
+- GPU NVIDIA là tùy chọn. CPU vẫn chạy được nhưng fine-tuning và validation lâu hơn.
+- Node.js chỉ cần khi chạy frontend ngoài Docker; không cần cho workflow Docker.
+
+Dataset mặc định:
+
+```text
+Mini Fashion Product Images and Text Dataset
+https://www.kaggle.com/datasets/nirmalsankalana/mini-product-image-and-text-dataset
+```
 
 Đặt dữ liệu như sau:
 
@@ -57,14 +55,20 @@ project/
         └── ...
 ```
 
-Kiểm tra:
+## 3. CLONE VÀ CHUYỂN VÀO PROJECT
+
+Tên thư mục sau khi clone do người dùng quyết định, vì vậy hướng dẫn không giả
+định repository luôn có tên `dacntt`.
 
 ```powershell
-Test-Path .\data\data.csv
-Test-Path .\data\data
+git clone https://github.com/Pun-2510/clothes-styling-system.git
+Set-Location .\clothes-styling-system\project
 ```
 
-## 3. TẠO MÔI TRƯỜNG PYTHON
+Nếu clone bằng tên khác, thay `clothes-styling-system` bằng tên đó. Từ mục này
+trở đi, tất cả lệnh vận hành đều chạy tại thư mục `project/`.
+
+## 4. TẠO MÔI TRƯỜNG PYTHON
 
 ```powershell
 py -3 -m venv .venv
@@ -72,53 +76,12 @@ py -3 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-Không bắt buộc chạy `Activate.ps1` vì các lệnh gọi trực tiếp Python trong venv.
+Không bắt buộc chạy `Activate.ps1`; các lệnh dưới đây gọi trực tiếp Python trong
+`.venv` để tránh nhầm môi trường.
 
-## 4. CHẠY NHANH BẰNG ARTIFACT CÓ SẴN
+## 5. OFFLINE PIPELINE TỪ ĐẦU
 
-Liên kết artifact hiện có:
-
-```text
-https://drive.google.com/file/d/1_xiQjMBlf5EMZVRflDwC2G5kbgEkwy00/view?usp=drive_link
-```
-
-Một bộ artifact đồng bộ cho cấu hình hiện tại cần có:
-
-```text
-data/processed_diverse/
-├── products.csv
-├── products.preparation.json
-├── products.category_audit.csv
-└── products.category_audit.json
-
-embeddings_diverse_seed_42/
-├── image_embeddings.npy
-├── image_embeddings.npy.json
-├── text_embeddings.npy
-└── text_embeddings.npy.json
-
-runs/clip_finetune_diverse_seed_42/
-├── dataset.csv
-├── experiment.json
-├── training.json
-└── best/
-    ├── config.json
-    ├── model.safetensors
-    ├── processor_config.json
-    ├── tokenizer.json
-    └── tokenizer_config.json
-
-../experiments/model_comparison/results/diverse_seed_42/
-└── retrieval_weights.json
-```
-
-Ảnh catalog vẫn phải nằm trong `data/data/`. Nếu gói tải về sử dụng tên thư mục
-cũ, không tự trộn với bộ diverse; hãy sửa toàn bộ năm đường dẫn trong `.env`
-theo đúng bộ artifact đó.
-
-Nếu đã có đủ artifact, chuyển thẳng đến mục 9.
-
-## 5. TỰ PREPARE CATALOG DIVERSE SEED 42
+### 5.1. Chuẩn bị catalog và category audit
 
 ```powershell
 .\.venv\Scripts\python.exe -m src.prepare_dataset `
@@ -128,36 +91,37 @@ Nếu đã có đủ artifact, chuyển thẳng đến mục 9.
   --min-per-category 25 `
   --sampling-strategy diverse `
   --seed 42 `
-  --output data/processed_diverse/products.csv
+  --output data/processed/products.csv
 ```
 
-Prepare thực hiện:
+Các tham số có thể thay đổi:
 
-- Chuẩn hóa metadata và kiểm tra ảnh.
-- Loại ảnh trùng lặp.
-- Cố gắng phân bổ tối thiểu 25 sản phẩm cho mỗi category.
-- Chọn đại diện khác nhau trong từng category bằng descriptor ảnh nhẹ và
-  metadata; đây không phải CLIP embedding.
-- Tự sinh category audit.
+- `--num-products 5000`: số sản phẩm muốn đưa vào catalog. Có thể dùng 4000,
+  6000 hoặc giá trị phù hợp máy; không được lớn hơn số dòng hợp lệ của dataset.
+- `--all`: dùng toàn bộ sản phẩm hợp lệ; dùng thay cho `--num-products`.
+- `--min-per-category 25`: số lượng tối thiểu mong muốn cho mỗi category. Nếu
+  dữ liệu nguồn không đủ, audit ghi cảnh báo chứ không tạo dữ liệu giả.
+- `--sampling-strategy diverse`: ưu tiên mẫu khác nhau trong từng category.
+  Có thể dùng `random` cho baseline đơn giản.
+- `--seed 42`: cố định lựa chọn ngẫu nhiên và split để có thể tái lập.
+- `--output`: nơi ghi catalog vận hành. Giữ đường dẫn mặc định giúp `.env` và
+  Docker không cần sửa.
 
-Kết quả:
+Kết quả đều nằm trong `project/data/processed/`:
 
 ```text
-data/processed_diverse/products.csv
-data/processed_diverse/products.preparation.json
-data/processed_diverse/products.category_audit.csv
-data/processed_diverse/products.category_audit.json
+products.csv
+products.preparation.json
+products.category_audit.csv
+products.category_audit.json
 ```
 
-## 6. FINE-TUNE CLIP SEED 42
-
-Mỗi `run-dir` là bất biến và không được ghi đè. Nếu muốn chạy lại, dùng một tên
-run mới thay vì xóa kết quả cũ.
+### 5.2. Fine-tune CLIP
 
 ```powershell
 .\.venv\Scripts\python.exe -m src.finetune_clip `
-  --csv data/processed_diverse/products.csv `
-  --run-dir runs/clip_finetune_diverse_seed_42 `
+  --csv data/processed/products.csv `
+  --run-dir runs/clip_finetune `
   --trainable full `
   --epochs 3 `
   --batch-size 16 `
@@ -168,116 +132,122 @@ run mới thay vì xóa kết quả cũ.
   --seed 42
 ```
 
-Validation chọn checkpoint tốt nhất. Test split không được dùng để cập nhật
-trọng số hoặc chọn epoch. Checkpoint triển khai nằm tại:
+Giải thích tham số chính:
+
+- `--epochs 3`: số lần model đi qua tập train. Tăng có thể cải thiện hoặc gây
+  overfitting và luôn làm thời gian chạy dài hơn.
+- `--batch-size 16`: số cặp ảnh–text xử lý trong một bước. Giảm xuống 8 hoặc 4
+  nếu thiếu VRAM/RAM; tăng nếu phần cứng cho phép.
+- `--learning-rate 1e-6`: mức cập nhật trọng số mỗi bước.
+- `--trainable full`: cập nhật toàn bộ CLIP. Dùng `projections` để chỉ cập nhật
+  projection layers và `logit_scale`, nhanh và nhẹ hơn.
+- Hai tham số category balance giảm ảnh hưởng của category quá lớn khi train.
+- `--seed` phải khớp quy ước của lần chạy nếu muốn tái lập split.
+
+`run-dir` được xem là bất biến và không ghi đè. Nếu thư mục đã tồn tại, dùng tên
+mới, ví dụ `runs/clip_finetune_v2`, rồi thay đúng tên đó trong các bước sau và
+trong `.env`. Checkpoint triển khai mặc định:
 
 ```text
-runs/clip_finetune_diverse_seed_42/best/
+runs/clip_finetune/best/
 ```
 
-## 7. SINH IMAGE VÀ TEXT EMBEDDINGS
+Validation chọn epoch tốt nhất; test split không được dùng để cập nhật model.
+
+### 5.3. Sinh image và text embeddings
 
 ```powershell
 .\.venv\Scripts\python.exe -m src.generate_clip_embeddings `
-  --csv data/processed_diverse/products.csv `
-  --model runs/clip_finetune_diverse_seed_42/best `
-  --output-dir embeddings_diverse_seed_42 `
+  --csv data/processed/products.csv `
+  --model runs/clip_finetune/best `
+  --output-dir embeddings `
+  --modality both `
   --batch-size 16
 ```
 
-Không xóa các file `.npy.json`; backend dùng chúng để kiểm tra tính đồng bộ của
-catalog, model và embedding.
+- `--modality both` tạo cả hai file mà website cần.
+- `--batch-size` chỉ ảnh hưởng tài nguyên và tốc độ encode, không đổi công thức
+  cosine similarity. Giảm khi thiếu bộ nhớ.
+- Có thể thêm `--device cpu` hoặc `--device cuda`.
 
-## 8. CHỌN RETRIEVAL WEIGHTS TRÊN VALIDATION
+Không xóa các file `.npy.json`; backend dùng chúng để xác minh catalog,
+checkpoint và embedding không bị trộn từ các lần chạy khác nhau.
 
-Lệnh này chạy từ thư mục gốc repository:
+### 5.4. Chọn retrieval weights trên validation
 
-```powershell
-Set-Location ..
-```
-
-`--weights-output` được chỉ định rõ để không ghi đè file mặc định cũ trong
-`project/`:
+Đây là lệnh vận hành trong `project/`, không gọi module trong `experiments/`:
 
 ```powershell
-.\project\.venv\Scripts\python.exe -m experiments.model_comparison.tune_serving_weights `
-  --run-dir .\project\runs\clip_finetune_diverse_seed_42 `
-  --catalog-csv .\project\data\processed_diverse\products.csv `
-  --image-embeddings .\project\embeddings_diverse_seed_42\image_embeddings.npy `
-  --text-embeddings .\project\embeddings_diverse_seed_42\text_embeddings.npy `
-  --expected-gallery-size 5000 `
-  --device cpu `
-  --batch-size 16 `
+.\.venv\Scripts\python.exe -m src.tune_retrieval_weights `
+  --run-dir runs/clip_finetune `
+  --catalog-csv data/processed/products.csv `
+  --image-embeddings embeddings/image_embeddings.npy `
+  --text-embeddings embeddings/text_embeddings.npy `
+  --output-dir validation/weight_tuning `
+  --weights-output retrieval_weights.json `
   --objective-k 10 `
-  --min-combined-image-weight 0.20 `
-  --max-combined-image-weight 0.80 `
-  --weights-output .\experiments\model_comparison\results\diverse_seed_42\retrieval_weights.json `
-  --output-dir .\experiments\model_comparison\results\diverse_seed_42\weight_tuning_rebuild_v1
+  --batch-size 16
 ```
 
-Mỗi lần chạy lại phải dùng một `--output-dir` mới hoặc rỗng. File weight đang
-được website sử dụng chứa các giá trị chọn từ validation seed 42:
+Lệnh chỉ dùng validation split và chọn:
 
-```text
-TEXT_RETRIEVAL_IMAGE_WEIGHT = 0.45
-COMBINED_IMAGE_WEIGHT       = 0.80
-COMBINED_ATTRIBUTE_WEIGHT   = 0.10
-COMBINED_CATEGORY_WEIGHT    = 0.25
-CATEGORY_BONUS              = 0.20
-```
+- Tỷ lệ text→image so với text→text.
+- Trọng số ảnh, attribute và category cho combined query.
+- Category bonus cho image-only.
 
-Các giá trị này là kết quả của seed 42, không phải hằng số áp dụng cho mọi seed.
-
-Quay lại project:
+`--objective-k 10` nghĩa là chọn theo danh sách Top-10; có thể đổi nếu giao diện
+chủ yếu trả Top-5. `--batch-size` điều khiển encode các query validation. Không
+cần truyền `--expected-gallery-size`; chương trình tự đọc số dòng catalog. Nếu
+muốn kiểm tra nghiêm ngặt, thêm đúng giá trị đã prepare, ví dụ:
 
 ```powershell
-Set-Location .\project
+  --expected-gallery-size 5000
 ```
 
-## 9. CẤU HÌNH `.env`
+Các bảng thử được lưu trong `validation/weight_tuning/`; file website đọc là
+`project/retrieval_weights.json`. Mỗi lần tune lại nên dùng output mới, ví dụ
+`validation/weight_tuning_v2`, vì chương trình không ghi đè thư mục kết quả cũ.
 
-Repository theo dõi `.env.example`; `.env` là cấu hình cục bộ và bị Git bỏ qua.
-Nếu chưa có `.env`:
+## 6. CẤU HÌNH CỤC BỘ
+
+Tạo `.env` một lần:
 
 ```powershell
-Copy-Item .env.example .env
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
-Cấu hình hiện tại:
+Cấu hình mặc định hoàn toàn nằm trong `project/`:
 
 ```env
-FASHION_CATALOG_DIR=./data/processed_diverse
+FASHION_CATALOG_DIR=./data/processed
 FASHION_IMAGE_DIR=./data/data
-FASHION_EMBEDDINGS_DIR=./embeddings_diverse_seed_42
-FASHION_CHECKPOINT_DIR=./runs/clip_finetune_diverse_seed_42/best
-FASHION_RETRIEVAL_WEIGHTS_FILE=../experiments/model_comparison/results/diverse_seed_42/retrieval_weights.json
+FASHION_EMBEDDINGS_DIR=./embeddings
+FASHION_CHECKPOINT_DIR=./runs/clip_finetune/best
+FASHION_RETRIEVAL_WEIGHTS_FILE=./retrieval_weights.json
 
 CATEGORY_CONFIDENCE_FLOOR=0.50
 CATEGORY_CONFIDENCE_THRESHOLD=0.60
 CATEGORY_TOP_PER_CLASS=3
+CATEGORY_PROTOTYPE_WEIGHT=1.0
 ```
 
-Category confidence hoạt động như sau:
+Đường dẫn tương đối được Docker Compose hiểu từ `project/`, không phụ thuộc tên
+thư mục repository. Nếu dùng run mới, sửa đồng bộ checkpoint, embeddings,
+catalog và weight file; không trộn artifact từ các lần chạy khác nhau.
 
-- `confidence <= 0.50`: không cộng category bonus.
-- `0.50 < confidence < 0.60`: bonus tăng tuyến tính.
-- `confidence >= 0.60`: dùng toàn bộ category bonus trong weight JSON.
-- `CATEGORY_TOP_PER_CLASS=3`: mỗi category đóng góp tối đa ba láng giềng mạnh
-  khi backend ước lượng category từ ảnh.
-
-## 10. KIỂM TRA ARTIFACT VÀ CHẠY DOCKER
+## 7. KIỂM TRA ARTIFACT VÀ CHẠY ONLINE
 
 ```powershell
-Test-Path .\data\processed_diverse\products.csv
+Test-Path .\data\processed\products.csv
 Test-Path .\data\data
-Test-Path .\embeddings_diverse_seed_42\image_embeddings.npy
-Test-Path .\embeddings_diverse_seed_42\text_embeddings.npy
-Test-Path .\runs\clip_finetune_diverse_seed_42\best\model.safetensors
-Test-Path ..\experiments\model_comparison\results\diverse_seed_42\retrieval_weights.json
+Test-Path .\runs\clip_finetune\best\model.safetensors
+Test-Path .\embeddings\image_embeddings.npy
+Test-Path .\embeddings\text_embeddings.npy
+Test-Path .\retrieval_weights.json
 docker compose config --quiet
 ```
 
-Tất cả `Test-Path` phải trả về `True`.
+Tất cả `Test-Path` phải trả về `True`. Sau đó chạy website:
 
 ```powershell
 docker compose up -d --build
@@ -285,25 +255,24 @@ docker compose up -d --build
 
 Địa chỉ:
 
-```text
-Website:       http://localhost:5173
-API qua Nginx: http://localhost:8000
-Swagger:       http://localhost:8000/docs
-```
+- Website: `http://localhost:5173`
+- API qua Nginx: `http://localhost:8000`
+- Swagger: `http://localhost:8000/docs`
+- Developer Dashboard: `http://localhost:5173/developer`
 
-Kiểm tra:
+Kiểm tra trạng thái:
 
 ```powershell
 docker compose ps
-docker compose logs -f nginx backend backend_2
 Invoke-RestMethod http://localhost:8000/api/health
 Invoke-RestMethod http://localhost:8000/api/health/ready
+docker compose logs -f nginx backend backend_2
 ```
 
-Sau khi đổi `.env`, checkpoint hoặc weight file:
+Sau khi đổi `.env`, checkpoint, embeddings hoặc weights:
 
 ```powershell
-docker compose up -d --force-recreate
+docker compose up -d --build --force-recreate
 ```
 
 Dừng hệ thống:
@@ -312,84 +281,65 @@ Dừng hệ thống:
 docker compose down
 ```
 
-Không dùng `docker compose down -v` nếu muốn giữ Hugging Face cache.
+Không dùng `docker compose down -v` nếu muốn giữ Hugging Face và Node cache.
 
-## 11. LOGIC TRUY XUẤT
+## 8. CHẠY NHANH BẰNG ARTIFACT CÓ SẴN (TÙY CHỌN)
 
-Frontend dùng một form duy nhất:
-
-- Chỉ văn bản: text-only retrieval.
-- Chỉ ảnh: image-only retrieval và confidence-weighted category bonus.
-- Ảnh + văn bản: combined retrieval; văn bản bổ sung category/attribute.
-
-Các cosine component:
+Nếu không muốn tự fine-tune, có thể tải gói artifact đồng bộ:
 
 ```text
-S_II: image query  → catalog image
-S_TI: text query   → catalog image
-S_TT: text query   → catalog text
+https://drive.google.com/file/d/1_xiQjMBlf5EMZVRflDwC2G5kbgEkwy00/view?usp=drive_link
 ```
 
-Text score và combined base score:
+Sau khi giải nén, sắp xếp hoặc đổi tên thành đúng cấu trúc project-local:
 
 ```text
-S_T    = w_t * S_TI + (1 - w_t) * S_TT
-S_base = w_i * S_II + (1 - w_i) * S_T
+project/data/processed/products.csv
+project/data/data/<images>
+project/runs/clip_finetune/best/<checkpoint files>
+project/embeddings/image_embeddings.npy
+project/embeddings/image_embeddings.npy.json
+project/embeddings/text_embeddings.npy
+project/embeddings/text_embeddings.npy.json
+project/retrieval_weights.json
 ```
 
-Hệ thống dùng raw cosine fusion, không dùng percentile. Sau fusion, attribute
-signal và category policy được áp dụng theo weight JSON. Image-only sử dụng
-soft category bonus; hard category filter chỉ là baseline thí nghiệm. Với text,
-backend chỉ giới hạn candidate pool khi truy vấn nêu đúng một category rõ ràng.
-Nếu không có category hoặc có nhiều category độc lập, hệ thống giữ toàn catalog
-và giao diện yêu cầu người dùng chọn một loại sản phẩm cụ thể.
+Nếu gói cũ mang tên seed, có thể giữ tên thư mục đó nhưng phải cập nhật `.env`.
+Website vẫn không được trỏ tới `experiments/`.
 
-## 12. KẾT QUẢ THÍ NGHIỆM HIỆN TẠI
+## 9. HỆ THỐNG ONLINE LÀM GÌ
 
-Ba seed diverse đã hoàn tất:
+- Text-only: kết hợp text→image và text→text; chỉ hard-filter khi câu truy vấn
+  nêu rõ đúng một catalog category.
+- Image-only: image→image trên toàn catalog; category prediction chỉ thêm soft
+  bonus theo confidence và quan hệ Top-2, không lọc cứng.
+- Image + text: ảnh giữ ngữ cảnh sản phẩm và text bổ sung category/attribute.
+  Một category được ghi rõ trong text tạo hard candidate pool. Nếu text không
+  nêu category, hệ thống dùng confidence và quan hệ Top-2 của ảnh để cộng soft
+  bonus động giống Image-only, không loại sản phẩm ngoài category.
+- Tất cả nhánh dùng raw cosine similarity; percentile không được dùng.
 
-```text
-Seed 42:   catalog 5.000, test queries 460
-Seed 123:  catalog 5.000, test queries 464
-Seed 2026: catalog 5.000, test queries 462
-```
+## 10. THÍ NGHIỆM NGHIÊN CỨU RIÊNG
 
-Mỗi seed có ba nhóm kết quả:
-
-```text
-experiments/model_comparison/results/diverse_seed_<seed>/
-├── core_pretrained_multimodal_v1/
-├── category_aware_v1/
-├── system_pipeline_v1/
-└── retrieval_weights.json
-```
-
-Kết quả mean ± sample standard deviation:
-
-```text
-experiments/model_comparison/results/aggregate_diverse_3_seeds_v1/
-├── core_pretrained_multimodal/mean_std_summary.csv
-├── category_aware/mean_std_summary.csv
-└── system_pipeline/mean_std_summary.csv
-```
-
-Thí nghiệm báo cáo Precision, Recall, F1 và NDCG tại `K = 1, 5, 10`.
-Lệnh chạy riêng từng seed và lệnh aggregate nằm trong:
+Các so sánh pretrained/fine-tuned CLIP, TF-IDF, BERT, SBERT, ResNet18,
+EfficientNet, ViT, category ablation, system pipeline và tổng hợp nhiều seed nằm ở:
 
 ```text
 ../experiments/model_comparison/README.md
 ```
 
-Không gộp kết quả random sampling cũ với diverse sampling thành sáu seed vì
-hai bộ dùng category quota, catalog và test queries khác nhau.
+Thí nghiệm có thể đọc artifact của từng seed để đánh giá, nhưng Docker và code
+trong `project/` không đọc kết quả `experiments/`. Không cần chạy thí nghiệm để
+khởi động website.
 
-## 13. KIỂM THỬ
+## 11. KIỂM THỬ CODE
 
 ```powershell
+.\.venv\Scripts\python.exe -m src.tune_retrieval_weights --self-test
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-Build frontend riêng:
+Build frontend ngoài Docker (tùy chọn):
 
 ```powershell
 Set-Location web/frontend
@@ -398,16 +348,16 @@ npm run build
 Set-Location ../..
 ```
 
-## 14. LỖI THƯỜNG GẶP
+## 12. LỖI THƯỜNG GẶP
 
-- `Output directory is not empty`: dùng một output directory mới cho thí nghiệm.
-- `Experiment dataset changed`: catalog không khớp với run; không sửa dataset
-  trong một run đã tồn tại.
-- Embedding/checksum mismatch: sinh lại cả image và text embeddings bằng cùng
-  catalog và checkpoint.
-- HTTP 502: kiểm tra readiness và log hai backend.
-- HTTP 429: chờ rate-limit window hoặc giảm số request lặp lại.
-- Docker không thấy file ngoài `project/`: kiểm tra đường dẫn
-  `FASHION_RETRIEVAL_WEIGHTS_FILE` và chạy `docker compose config`.
-- Đổi `.env` nhưng container giữ cấu hình cũ: chạy
-  `docker compose up -d --force-recreate`.
+- `Output directory is not empty`: chọn tên mới cho `--output-dir` validation.
+- `Experiment dataset changed`: không chỉnh `dataset.csv` bên trong một run cũ;
+  tạo run mới từ catalog mới.
+- Embedding/checksum mismatch: sinh lại cả image và text embeddings bằng đúng
+  catalog và checkpoint đang cấu hình.
+- Docker báo thiếu mount: kiểm tra năm biến `FASHION_*` trong `.env`; các đường
+  dẫn phải tồn tại trước khi chạy Compose.
+- HTTP 502: xem `docker compose ps` và log hai backend.
+- HTTP 429: chờ rate-limit window hoặc giảm request lặp lại.
+- CPU quá chậm: giảm catalog/batch size để thử flow trước, hoặc dùng CUDA.
+- Git clone vào tên khác: không sửa code; chỉ chuyển đúng vào `<tên-clone>/project`.

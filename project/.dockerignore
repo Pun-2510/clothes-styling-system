@@ -13,4 +13,5 @@ data/
 embeddings/
 embeddings_finetuned/
 runs/
+validation/
 archive.zip

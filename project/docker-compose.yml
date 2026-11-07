@@ -32,7 +32,7 @@ services:
       context: .
       dockerfile: web/backend/Dockerfile
     environment: &backend-environment
-      CLIP_MODEL_PATH: /app/runs/clip_finetune_3epochs_local/best
+      CLIP_MODEL_PATH: /app/model/best
       CLIP_EMBEDDING_DIR: /app/embeddings
       CATEGORY_CONFIDENCE_THRESHOLD: ${CATEGORY_CONFIDENCE_THRESHOLD:-0.60}
       CATEGORY_CONFIDENCE_FLOOR: ${CATEGORY_CONFIDENCE_FLOOR:-0.50}
@@ -66,8 +66,8 @@ services:
         target: /app/embeddings
         read_only: true
       - type: bind
-        source: ${FASHION_CHECKPOINT_DIR:-./runs/clip_finetune_3epochs_local/best}
-        target: /app/runs/clip_finetune_3epochs_local/best
+        source: ${FASHION_CHECKPOINT_DIR:-./runs/clip_finetune/best}
+        target: /app/model/best
         read_only: true
       - type: bind
         source: ./logs
