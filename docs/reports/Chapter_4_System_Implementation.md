@@ -9,7 +9,7 @@ Docker deployment. Experimental results are presented in Chapter 5.
 - Briefly list the main technologies: Python, PyTorch, Transformers, FastAPI,
   React, Vite, Nginx, and Docker Compose.
 - Summarize the source-code organization: `project/src/` for machine-learning
-  and retrieval logic, and `project/web/` for the backend, frontend, and Nginx configuration.
+  and retrieval logic, and `project/web/` for the backend, frontend, public reverse proxy, and internal API Gateway configuration.
 
 **[Table 4.1. Main technologies and their roles]**
 
@@ -89,10 +89,10 @@ Docker deployment. Experimental results are presented in Chapter 5.
 
 ### 4.5.1. Docker Deployment
 
-- Describe `project/docker-compose.yml`, which starts the frontend, Nginx
-  reverse proxy/load balancer, and two FastAPI backends.
+- Describe `project/docker-compose.yml`, which starts the frontend, public Nginx
+  reverse proxy, internal Nginx API Gateway, and two FastAPI backends.
 - Explain mounting the prepared catalog, embeddings, and checkpoint, and briefly
-  describe Nginx load distribution, bounded retries, and centralized rate limiting.
+  describe public path routing and the API Gateway's load distribution, bounded retries, and centralized rate limiting.
 - Present `docker compose up -d --build` from `project/` after the required
   artifacts have been prepared.
 

@@ -56,7 +56,10 @@ def arguments():
     parser.add_argument(
         "--weights-output",
         type=Path,
-        default=PROJECT / "retrieval_weights.json",
+        help=(
+            "Experimental weight artifact. Defaults to "
+            "<output-dir>/retrieval_weights.json and never overwrites project runtime weights."
+        ),
     )
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
     parser.add_argument("--batch-size", type=int, default=16)
@@ -688,6 +691,8 @@ def main():
         json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
     )
 
+    if args.weights_output is None:
+        args.weights_output = output / "retrieval_weights.json"
     args.weights_output.parent.mkdir(parents=True, exist_ok=True)
     temporary = args.weights_output.with_suffix(args.weights_output.suffix + ".tmp")
     temporary.write_text(

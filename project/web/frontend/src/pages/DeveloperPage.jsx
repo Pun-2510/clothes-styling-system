@@ -11,9 +11,9 @@ const COPY = {
     refresh: 'Làm mới trạng thái', refreshing: 'Đang kiểm tra...', updated: 'Cập nhật',
     overview: 'Tổng quan', health: 'System Health', backend: 'Backend hiện tại', pipeline: 'Quy trình hệ thống', formulas: 'Công thức xếp hạng', commands: 'Quy trình khởi chạy',
     healthy: 'Hoạt động', degraded: 'Chưa sẵn sàng', unavailable: 'Không kết nối', waiting: 'Đang kiểm tra',
-    loadBalancer: 'Nginx load balancer', model: 'Fine-tuned CLIP', imageEmbeddings: 'Image embeddings', textEmbeddings: 'Text embeddings', translator: 'Bộ dịch VI → EN',
+    loadBalancer: 'API Gateway · Nginx', model: 'Fine-tuned CLIP', imageEmbeddings: 'Image embeddings', textEmbeddings: 'Text embeddings', translator: 'Bộ dịch VI → EN',
     activeInstance: 'Instance đang phản hồi', observedUpstream: 'Upstream Nginx', device: 'Thiết bị suy luận', products: 'Sản phẩm catalog', apiVersion: 'Phiên bản API', activeModel: 'Checkpoint đang dùng',
-    topology: 'Kiến trúc phục vụ', topologyText: 'Trình duyệt → React → Nginx (least_conn) → backend / backend_2 → fine-tuned CLIP và catalog embeddings',
+    topology: 'Kiến trúc phục vụ', topologyText: 'Trình duyệt → Web Reverse Proxy :80 → frontend hoặc API Gateway → backend / backend_2 → fine-tuned CLIP và catalog embeddings',
     offline: 'Offline pipeline', online: 'Online retrieval pipeline',
     offlineSteps: ['Chuẩn bị catalog theo số lượng yêu cầu và tự sinh category audit trong project/data/processed.', 'Chia train/validation/test và fine-tune CLIP bằng category-balanced sampling trong project/runs.', 'Chọn checkpoint tốt nhất trên validation set.', 'Sinh image/text embeddings từ cùng checkpoint và catalog vào project/embeddings.', 'Chọn trọng số retrieval bằng lệnh project-local và ghi project/retrieval_weights.json.', 'Kiểm tra artifact rồi khởi động Docker Compose; experiments không phải đầu vào của website.'],
     onlineSteps: ['Tự nhận biết truy vấn text-only, image-only hoặc combined.', 'Mã hóa query bằng fine-tuned CLIP; tiếng Việt được dịch sang tiếng Anh trước khi encode.', 'Tính raw cosine similarity với toàn bộ catalog embeddings.', 'Ảnh kết hợp láng giềng cân bằng và CLIP prototype rồi kiểm tra quan hệ Top-2.', 'Trong combined, một category được viết rõ trong text được ưu tiên; nếu không, ảnh dùng dynamic Top-2 bonus.', 'Xếp hạng Top-K và trả kết quả qua Nginx load balancer.'],
@@ -35,9 +35,9 @@ const COPY = {
     refresh: 'Refresh status', refreshing: 'Checking...', updated: 'Updated',
     overview: 'Overview', health: 'System Health', backend: 'Current backend', pipeline: 'System pipeline', formulas: 'Ranking formulas', commands: 'Run workflow',
     healthy: 'Healthy', degraded: 'Not ready', unavailable: 'Unavailable', waiting: 'Checking',
-    loadBalancer: 'Nginx load balancer', model: 'Fine-tuned CLIP', imageEmbeddings: 'Image embeddings', textEmbeddings: 'Text embeddings', translator: 'VI → EN translator',
+    loadBalancer: 'API Gateway · Nginx', model: 'Fine-tuned CLIP', imageEmbeddings: 'Image embeddings', textEmbeddings: 'Text embeddings', translator: 'VI → EN translator',
     activeInstance: 'Responding instance', observedUpstream: 'Nginx upstream', device: 'Inference device', products: 'Catalog products', apiVersion: 'API version', activeModel: 'Active checkpoint',
-    topology: 'Serving architecture', topologyText: 'Browser → React → Nginx (least_conn) → backend / backend_2 → fine-tuned CLIP and catalog embeddings',
+    topology: 'Serving architecture', topologyText: 'Browser → Web Reverse Proxy :80 → frontend or API Gateway → backend / backend_2 → fine-tuned CLIP and catalog embeddings',
     offline: 'Offline pipeline', online: 'Online retrieval pipeline',
     offlineSteps: ['Prepare the requested catalog size and write its category audit to project/data/processed.', 'Create train/validation/test splits and fine-tune CLIP with category-balanced sampling under project/runs.', 'Select the best checkpoint on the validation split.', 'Generate image/text embeddings from the same checkpoint and catalog under project/embeddings.', 'Run the project-local validation command and write project/retrieval_weights.json.', 'Verify the artifacts and start Docker Compose; experiments are not website inputs.'],
     onlineSteps: ['Detect text-only, image-only, or combined input automatically.', 'Encode the query with fine-tuned CLIP; Vietnamese text is translated before encoding.', 'Calculate raw cosine similarity against all catalog embeddings.', 'Image evidence combines balanced neighbours with CLIP prototypes and inspects the Top-2 relation.', 'For combined retrieval, an explicit text category takes priority; otherwise the image uses dynamic Top-2 bonuses.', 'Rank Top-K products and return them through the Nginx load balancer.'],
@@ -171,7 +171,7 @@ export default function DeveloperPage() {
 
           <section id="overview" className="dev-section">
             <div className="dev-section-heading"><span>01</span><div><small>{copy.overview}</small><h2>{copy.topology}</h2></div></div>
-            <div className="dev-topology"><span>Browser</span><b>→</b><span>React :5173</span><b>→</b><span>Nginx :8000</span><b>→</b><span>backend × 2</span><b>→</b><span>CLIP</span></div>
+            <div className="dev-topology"><span>Browser :80</span><b>→</b><span>Reverse Proxy</span><b>→</b><span>Frontend / API Gateway</span><b>→</b><span>backend × 2</span><b>→</b><span>CLIP</span></div>
             <p className="dev-section-note">{copy.topologyText}</p>
           </section>
 

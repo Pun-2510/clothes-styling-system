@@ -62,6 +62,11 @@ project/embeddings/**
 project/embeddings_finetuned/**
 !project/embeddings_finetuned/.gitkeep
 !project/embeddings_finetuned/README.md
+# Project-local validation caches and trial tables are regenerated offline.
+# Keep only the final lightweight project/retrieval_weights.json in Git.
+project/validation/**
+!project/validation/.gitkeep
+!project/validation/README.md
 experiments/model_comparison/results/**
 !experiments/model_comparison/results/.gitkeep
 # Keep lightweight, report-ready experiment tables in Git. Large JSON reports,

@@ -2,129 +2,85 @@
 
 Hệ thống truy xuất sản phẩm thời trang bằng ảnh, văn bản hoặc kết hợp cả hai.
 Fine-tuned CLIP tạo image/text embeddings trong cùng không gian; raw cosine
-similarity, thuộc tính văn bản và category confidence được dùng để xếp hạng
-Top-K sản phẩm. Frontend tự nhận biết loại truy vấn từ input, không yêu cầu
-người dùng chọn image-only, text-only hay combined.
+similarity, thuộc tính văn bản và category evidence được dùng để xếp hạng Top-K.
 
-## Pipeline hiện tại
+## Hai phạm vi độc lập
 
 ```text
-43.662 sản phẩm hợp lệ
+<repository>/
+├── project/       Pipeline vận hành và website độc lập
+└── experiments/   So sánh mô hình và đánh giá nghiên cứu
+```
+
+`project/` không đọc checkpoint, embeddings hoặc retrieval weights từ
+`experiments/`. Sau khi clone, pipeline vận hành tạo toàn bộ artifact tại:
+
+```text
+project/data/processed/products.csv
+project/runs/clip_finetune/best/
+project/embeddings/
+project/validation/
+project/retrieval_weights.json
+```
+
+Thư mục repository có thể mang bất kỳ tên nào. Chỉ cần chuyển vào `project/`
+trước khi chạy các lệnh hệ thống.
+
+## Workflow hệ thống
+
+```text
+Raw metadata + images
         ↓
-Category-balanced diverse sampling → catalog 5.000 sản phẩm
+Prepare catalog + category audit
         ↓
-Category audit + train/validation/test split
+Fine-tune CLIP; select best epoch on validation
         ↓
-Fine-tune CLIP và chọn best checkpoint trên validation
+Generate catalog image/text embeddings
         ↓
-Sinh image_embeddings.npy + text_embeddings.npy
+Tune retrieval weights on validation
         ↓
-Chọn retrieval weights trên validation
-        ↓
-Đánh giá test trên 3 seed: 42, 123, 2026
-        ↓
-React → Nginx → 2 FastAPI backends → Fine-tuned CLIP
+Browser :80 → Web Reverse Proxy → frontend / API Gateway → 2 FastAPI backends → Fine-tuned CLIP
 ```
 
 Website hỗ trợ:
 
-- Một form thống nhất cho ảnh, văn bản và truy vấn kết hợp.
-- Crop thủ công vùng trang phục trước khi tìm bằng ảnh.
-- Gợi ý bổ sung mô tả khi kết quả image-only chưa đúng.
-- Category-aware ranking với confidence-weighted soft bonus.
-- Duyệt catalog, xem chi tiết sản phẩm và lịch sử tìm kiếm trên thiết bị.
-- Developer dashboard hiển thị health, model artifacts và ranking formulas.
+- Một form cho image-only, text-only và combined query.
+- Crop thủ công vùng trang phục.
+- Category-aware soft ranking cho ảnh và explicit category routing cho text.
+- Duyệt catalog, trang chi tiết, lịch sử cục bộ và Developer Dashboard.
+- Nginx reverse proxy, least-connection load balancing và rate limiting.
 
-## Artifact đang được website sử dụng
-
-Cấu hình triển khai hiện tại nằm trong `project/.env`:
-
-```text
-Catalog:     project/data/processed_diverse/products.csv
-Images:      project/data/data/
-Embeddings:  project/embeddings_diverse_seed_42/
-Checkpoint:  project/runs/clip_finetune_diverse_seed_42/best/
-Weights:     experiments/model_comparison/results/diverse_seed_42/retrieval_weights.json
-```
-
-Các artifact trên phải thuộc cùng catalog và checkpoint. Không trộn
-`products.csv`, embeddings, checkpoint hoặc retrieval weights của seed khác.
-
-## Chạy website
+## Bắt đầu
 
 ```powershell
-Set-Location .\project
+git clone https://github.com/Pun-2510/clothes-styling-system.git
+Set-Location .\clothes-styling-system\project
+Get-Content .\README.txt -Encoding utf8
+```
+
+Tài liệu [project/README.txt](project/README.txt) hướng dẫn đầy đủ:
+
+- Điều kiện tiên quyết và cấu trúc dataset.
+- Prepare catalog với số lượng sản phẩm tùy chỉnh.
+- Fine-tuning, sinh embeddings và chọn weights trên validation.
+- Ý nghĩa các tham số như seed, batch size, epoch và category balance.
+- Cấu hình `.env`, kiểm tra artifact và Docker Compose.
+- Gói artifact Google Drive để chạy nhanh.
+
+Sau khi đã chuẩn bị đủ artifact:
+
+```powershell
 docker compose config --quiet
 docker compose up -d --build
 ```
 
-Địa chỉ:
+- Website: `http://localhost`
+- API/Swagger: `http://localhost/docs`
+- Developer Dashboard: `http://localhost/developer`
 
-- Website: `http://localhost:5173`
-- API qua Nginx: `http://localhost:8000`
-- Swagger: `http://localhost:8000/docs`
+## Thí nghiệm nghiên cứu
 
-Kiểm tra:
-
-```powershell
-docker compose ps
-Invoke-RestMethod http://localhost:8000/api/health/ready
-```
-
-## Hướng dẫn đầy đủ
-
-Sau khi clone repository, chuyển vào `project/` và đọc
-[project/README.txt](project/README.txt). Tài liệu này chứa:
-
-- Cấu trúc dataset và môi trường Python.
-- Lệnh diverse sampling, fine-tuning và sinh embeddings.
-- Lệnh chọn retrieval weights trên validation.
-- Cấu hình `.env` và Docker Compose.
-- Vị trí kết quả thí nghiệm ba seed.
-
-```powershell
-Set-Location .\project
-Get-Content .\README.txt -Encoding utf8
-```
-
-Thí nghiệm được chạy từ thư mục gốc repository. Kết quả tổng hợp chính:
-
-```text
-experiments/model_comparison/results/aggregate_diverse_3_seeds_v1/
-├── core_pretrained_multimodal/
-├── category_aware/
-└── system_pipeline/
-```
-
-## Cấu trúc chính
-
-```text
-dacntt/
-├── project/
-│   ├── src/                         Data, training và retrieval logic
-│   ├── web/
-│   │   ├── frontend/                React
-│   │   ├── backend/                 FastAPI
-│   │   └── nginx/                   Reverse proxy, load balancer, rate limit
-│   ├── data/processed_diverse/      Catalog seed 42 đang triển khai
-│   ├── runs/clip_finetune_diverse_seed_42/
-│   ├── embeddings_diverse_seed_42/
-│   ├── .env
-│   ├── docker-compose.yml
-│   └── README.txt
-└── experiments/model_comparison/
-    ├── compare_full_gallery.py
-    ├── compare_category_aware.py
-    ├── compare_system_pipeline.py
-    ├── tune_serving_weights.py
-    └── aggregate_seeds.py
-```
-
-## Ghi chú đánh giá
-
-- Test gallery có đúng 5.000 sản phẩm.
-- Mỗi seed dùng catalog, split, checkpoint, embeddings và validation weights
-  tương ứng.
-- Báo cáo Precision@K, Recall@K, F1@K và NDCG@K tại `K = 1, 5, 10`.
-- Bộ random sampling cũ và diverse sampling mới là hai protocol khác nhau;
-  không gộp chúng thành sáu seed để tính một giá trị trung bình.
+Các so sánh TF-IDF, BERT, SBERT, ResNet18, EfficientNet, ViT, pretrained CLIP,
+fine-tuned CLIP, Category-Aware ranking và system pipeline nằm riêng tại
+[experiments/model_comparison/README.md](experiments/model_comparison/README.md).
+Kết quả thí nghiệm không phải đầu vào để Docker chạy website.

@@ -89,19 +89,22 @@ CLIP fine-tuning ---> Best checkpoint + image/text embeddings
           |
           +--------------------> Model comparisons
 
-User ---> React frontend ---> Nginx reverse proxy/load balancer ---> FastAPI backend 1/2
-                                                        |
-                                                        v
-                                      Catalog + model + embeddings
-                                                        |
-                                                        v
-                                             Ranked Top-K products
+User ---> Web reverse proxy ---> React frontend
+                  |
+                  +---> API Gateway ---> FastAPI backend 1/2
+                                               |
+                                               v
+                             Catalog + model + embeddings
+                                               |
+                                               v
+                                    Ranked Top-K products
 ```
 
 | Component | Technology | Main responsibility |
 |---|---|---|
 | Frontend | React and Vite | Collect query inputs and display ranked products. |
-| Reverse proxy and load balancer | Nginx | Provide one entry point, distribute requests, and enforce API rate limits. |
+| Web reverse proxy | Nginx | Provide the public port 80 entry point and route website and API paths. |
+| API Gateway and load balancer | Nginx | Apply API rate limits, bounded retries, and least-connection backend distribution. |
 | Recommendation API | FastAPI | Validate requests, translate text when requested, and serialize results. |
 | Recommendation engine | PyTorch, Transformers, NumPy | Encode queries, calculate scores, and rank products. |
 | Artifact storage | CSV, JSON, NumPy arrays, safetensors | Store the catalog, embeddings, metadata, and checkpoint. |
@@ -251,12 +254,13 @@ what the user provides.
 
 ## 3.8. Deployment and Reliability Design
 
-Docker Compose builds and starts the React frontend, Nginx reverse proxy/load balancer, and two
-FastAPI backend instances. The processed catalog, embeddings, and selected
+Docker Compose builds and starts the React frontend, a public Nginx web reverse
+proxy, an internal Nginx API Gateway, and two FastAPI backend instances. The processed catalog, embeddings, and selected
 checkpoint must already exist or be downloaded before the web stack starts.
 
-Nginx applies the `least_conn` strategy, centrally limits API traffic per client,
-and retries eligible connection errors, timeouts, and selected upstream failures.
+The web reverse proxy publishes port 80 and routes frontend and API traffic by
+path. The API Gateway applies the `least_conn` strategy, centrally limits API
+traffic per client, and retries eligible connection errors, timeouts, and selected upstream failures.
 Requests that exceed the configured rate receive HTTP 429. Health checks distinguish a running
 container from a backend that has successfully loaded its model and artifacts.
 Docker restart policies provide basic service recovery. This design improves a

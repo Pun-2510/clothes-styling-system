@@ -15,13 +15,8 @@ services:
       - type: volume
         source: node_modules
         target: /app/node_modules
-    ports:
-      - 5173:5173
-    environment:
-      VITE_API_PROXY_TARGET: http://nginx:80
-    depends_on:
-      nginx:
-        condition: service_healthy
+    expose:
+      - "5173"
     restart: unless-stopped
     networks:
       - app-network
@@ -100,14 +95,15 @@ services:
       RECOMMENDATION_LOG_NAME: recommendation-backend_2.log
       BACKEND_INSTANCE: backend_2
 
-  nginx:
-    # Dynamic upstream DNS requires Nginx >= 1.27.3.
+  api-gateway:
+    # Internal API Gateway: rate limiting, bounded retry and least-connection
+    # distribution across the two model-serving backends.
     image: nginx:stable-alpine
-    ports:
-      - "8000:80"
+    expose:
+      - "80"
     volumes:
       - type: bind
-        source: ./web/nginx
+        source: ./web/api-gateway
         target: /etc/nginx/conf.d
         read_only: true
     depends_on:
@@ -118,6 +114,31 @@ services:
         condition: service_started
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/lb-health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  reverse-proxy:
+    # The only public entry point. Website, API, Swagger and catalog images are
+    # all available through the same origin at http://localhost:80.
+    image: nginx:stable-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - type: bind
+        source: ./web/reverse-proxy
+        target: /etc/nginx/conf.d
+        read_only: true
+    depends_on:
+      frontend:
+        condition: service_started
+      api-gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/proxy-health"]
       interval: 10s
       timeout: 3s
       retries: 3

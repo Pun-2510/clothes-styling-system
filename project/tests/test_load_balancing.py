@@ -21,26 +21,33 @@ class ComposeLoadBalancingTests(unittest.TestCase):
                                 capture_output=True, text=True, check=True, timeout=30)
         return json.loads(result.stdout)["services"]
 
-    def test_only_nginx_publishes_api_and_frontend_uses_nginx(self):
+    def test_only_reverse_proxy_is_public_and_gateway_is_internal(self):
         services = self.configuration()
         self.assertEqual(
-            set(services), {"frontend", "nginx", "backend", "backend_2"}
+            set(services), {
+                "frontend", "reverse-proxy", "api-gateway",
+                "backend", "backend_2",
+            }
         )
-        self.assertFalse(services["backend"].get("ports"))
-        self.assertFalse(services["backend_2"].get("ports"))
+        for name in ("frontend", "api-gateway", "backend", "backend_2"):
+            self.assertFalse(services[name].get("ports"), name)
         self.assertEqual(
-            str(services["nginx"]["ports"][0]["published"]), "8000"
+            str(services["reverse-proxy"]["ports"][0]["published"]), "80"
         )
-        self.assertEqual(services["nginx"]["ports"][0]["target"], 80)
-        self.assertEqual(
-            services["frontend"]["environment"]["VITE_API_PROXY_TARGET"],
-            "http://nginx:80",
-        )
+        self.assertEqual(services["reverse-proxy"]["ports"][0]["target"], 80)
         for name in ("backend", "backend_2"):
             self.assertEqual(
-                services["nginx"]["depends_on"][name]["condition"],
+                services["api-gateway"]["depends_on"][name]["condition"],
                 "service_started",
             )
+        self.assertEqual(
+            services["reverse-proxy"]["depends_on"]["api-gateway"]["condition"],
+            "service_healthy",
+        )
+        self.assertEqual(
+            services["reverse-proxy"]["depends_on"]["frontend"]["condition"],
+            "service_started",
+        )
 
     def test_instances_share_artifacts_and_have_separate_logs(self):
         services = self.configuration()
@@ -63,16 +70,22 @@ class ComposeLoadBalancingTests(unittest.TestCase):
             ("backend_2", "/app/web/backend", "web/backend"),
             ("frontend", "/app", "web/frontend"),
             (
-                "nginx",
+                "api-gateway",
                 "/etc/nginx/conf.d",
-                "web/nginx",
+                "web/api-gateway",
+            ),
+            (
+                "reverse-proxy",
+                "/etc/nginx/conf.d",
+                "web/reverse-proxy",
             ),
         ):
             mount = next(m for m in services[name]["volumes"] if m["target"] == target)
             self.assertEqual(Path(mount["source"]), ROOT / relative)
             self.assertTrue(Path(mount["source"]).exists())
         dockerfile = (ROOT / "web/backend/Dockerfile").read_text(encoding="utf-8")
-        self.assertTrue((ROOT / "web/nginx/nginx.conf").is_file())
+        self.assertTrue((ROOT / "web/api-gateway/nginx.conf").is_file())
+        self.assertTrue((ROOT / "web/reverse-proxy/nginx.conf").is_file())
         self.assertIn('"web.backend.main:app"', dockerfile)
         for line in dockerfile.splitlines():
             if line.startswith("COPY "):
@@ -93,9 +106,9 @@ class ComposeLoadBalancingTests(unittest.TestCase):
                 self.assertTrue(mounts[target]["read_only"])
 
 
-class NginxConfigurationContractTests(unittest.TestCase):
+class GatewayConfigurationContractTests(unittest.TestCase):
     def test_dns_balancing_and_bounded_retry_contract(self):
-        config = (ROOT / "web" / "nginx" / "nginx.conf").read_text(
+        config = (ROOT / "web" / "api-gateway" / "nginx.conf").read_text(
             encoding="utf-8"
         )
         for directive in ("resolver 127.0.0.11", "zone fashion_backends 64k;", "least_conn;",
@@ -111,13 +124,15 @@ class NginxConfigurationContractTests(unittest.TestCase):
             self.assertIn("non_idempotent", block)
 
     def test_api_rate_limiting_contract(self):
-        config = (ROOT / "web" / "nginx" / "nginx.conf").read_text(
+        config = (ROOT / "web" / "api-gateway" / "nginx.conf").read_text(
             encoding="utf-8"
         )
         self.assertIn(
-            "limit_req_zone $binary_remote_addr zone=fashion_api_per_ip:10m rate=5r/s;",
+            "limit_req_zone $fashion_client_ip zone=fashion_api_per_ip:10m rate=5r/s;",
             config,
         )
+        self.assertIn("map $http_x_real_ip $fashion_client_ip", config)
+        self.assertIn("proxy_set_header X-Real-IP $fashion_client_ip;", config)
         self.assertIn("limit_req_status 429;", config)
         self.assertIn("error_page 429 = @rate_limited;", config)
         self.assertIn("add_header Retry-After 1 always;", config)
@@ -128,6 +143,28 @@ class NginxConfigurationContractTests(unittest.TestCase):
         )
         health_block = config.split("location = /lb-health {", 1)[1].split("}", 1)[0]
         self.assertNotIn("limit_req ", health_block)
+
+
+class ReverseProxyConfigurationContractTests(unittest.TestCase):
+    def test_frontend_and_gateway_routes_are_separated(self):
+        config = (ROOT / "web" / "reverse-proxy" / "nginx.conf").read_text(
+            encoding="utf-8"
+        )
+        for directive in (
+            "server frontend:5173 resolve;",
+            "server api-gateway:80 resolve;",
+            "location ^~ /api/ {",
+            "location ^~ /catalog-images/ {",
+            "location ^~ /docs {",
+            "proxy_pass http://fashion_frontend;",
+            "proxy_pass http://fashion_api_gateway;",
+        ):
+            self.assertIn(directive, config)
+        frontend_block = config.rsplit("location / {", 1)[1].split("}", 1)[0]
+        self.assertIn("fashion_frontend", frontend_block)
+        self.assertIn("proxy_set_header Host $http_host;", frontend_block)
+        self.assertIn("proxy_set_header Upgrade $http_upgrade;", frontend_block)
+        self.assertNotIn("fashion_backends", config)
 
 
 if __name__ == "__main__":

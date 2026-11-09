@@ -237,6 +237,18 @@ catalog và weight file; không trộn artifact từ các lần chạy khác nha
 
 ## 7. KIỂM TRA ARTIFACT VÀ CHẠY ONLINE
 
+Kiến trúc Docker chỉ public một cổng:
+
+```text
+Browser :80
+  → Web Reverse Proxy
+      ├── website → frontend:5173
+      └── API/docs/images → API Gateway
+                              → least_conn → backend / backend_2
+```
+
+Frontend, API Gateway và backend không publish cổng trực tiếp ra host.
+
 ```powershell
 Test-Path .\data\processed\products.csv
 Test-Path .\data\data
@@ -255,18 +267,20 @@ docker compose up -d --build
 
 Địa chỉ:
 
-- Website: `http://localhost:5173`
-- API qua Nginx: `http://localhost:8000`
-- Swagger: `http://localhost:8000/docs`
-- Developer Dashboard: `http://localhost:5173/developer`
+- Website qua Web Reverse Proxy: `http://localhost`
+- API qua cùng public origin: `http://localhost/api`
+- Swagger: `http://localhost/docs`
+- Developer Dashboard: `http://localhost/developer`
 
 Kiểm tra trạng thái:
 
 ```powershell
 docker compose ps
-Invoke-RestMethod http://localhost:8000/api/health
-Invoke-RestMethod http://localhost:8000/api/health/ready
-docker compose logs -f nginx backend backend_2
+Invoke-RestMethod http://localhost/api/health
+Invoke-RestMethod http://localhost/api/health/ready
+docker compose exec reverse-proxy nginx -t
+docker compose exec api-gateway nginx -t
+docker compose logs -f reverse-proxy api-gateway backend backend_2
 ```
 
 Sau khi đổi `.env`, checkpoint, embeddings hoặc weights:

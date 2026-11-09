@@ -1,5 +1,15 @@
 # Model comparison experiments
 
+> **Phạm vi riêng:** thư mục này chỉ dùng cho đánh giá nghiên cứu và kết quả
+> nhiều seed. Website trong `project/` không đọc catalog, embeddings, checkpoint
+> hoặc weight JSON từ `experiments/`. Pipeline vận hành và lệnh validation dùng
+> cho website nằm trong `project/README.txt` và chạy bằng
+> `python -m src.tune_retrieval_weights` từ thư mục `project/`.
+
+Các lệnh bên dưới được chạy từ thư mục gốc repository vì chúng cần đồng thời
+truy cập code thí nghiệm và artifact của seed được đánh giá. Tên thư mục clone
+không cần là `dacntt`.
+
 Thư mục này chứa protocol đánh giá hiện tại cho catalog diverse 5.000 sản phẩm
 trên ba seed độc lập: `42`, `123` và `2026`.
 

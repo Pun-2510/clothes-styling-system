@@ -1,6 +1,7 @@
-# Website: React + FastAPI + Nginx Reverse Proxy/Load Balancer
+# Website: React + Web Reverse Proxy + API Gateway + FastAPI
 
-`web/backend/`, `web/frontend/`, `web/nginx/` chứa code phục vụ website.
+`web/backend/`, `web/frontend/`, `web/reverse-proxy/` và `web/api-gateway/`
+chứa code phục vụ website.
 Logic ML dùng chung vẫn ở `src/`. Catalog, checkpoint, embeddings, validation
 weights và log đều nằm trong `project/`; website không đọc `experiments/`.
 
@@ -9,12 +10,11 @@ weights và log đều nằm trong `project/`; website không đọc `experiment
 Từ `project/`, sau khi bật Docker Desktop và chuẩn bị đủ artifact:
 
 ```powershell
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
-Lệnh tương đương: `docker compose up -d --build`.
-Web: http://localhost:5173 — API/Swagger: http://localhost:8000/docs.
-Compose tự đọc `.env`, khởi động frontend, Nginx và hai backend. Không tự
+Web: http://localhost — API/Swagger: http://localhost/docs.
+Compose tự đọc `.env`, khởi động frontend, Web Reverse Proxy, API Gateway và hai backend. Không tự
 tiền xử lý, training, sinh embedding hoặc compare khi khởi động Docker.
 
 ## Artifact riêng cho web
@@ -39,7 +39,7 @@ Muốn thay số lượng (ví dụ 4.000), tự chạy từ `project/`:
   --csv data/processed/products.csv `
   --model runs/clip_finetune/best `
   --output-dir embeddings
-docker-compose up -d --build --force-recreate backend backend_2
+docker compose up -d --build --force-recreate backend backend_2
 ```
 
 Hai lệnh Python ghi lại catalog/embeddings web; lưu bản sao nếu cần giữ bộ cũ.
@@ -72,22 +72,27 @@ npm ci
 npm run dev
 ```
 
-Vite mặc định proxy tới localhost:8000; trong Compose proxy tới Nginx.
+Khi chạy ngoài Docker, Vite mặc định proxy API tới `localhost:8000`. Trong
+Compose, trình duyệt chỉ gọi cùng origin `localhost:80`; Web Reverse Proxy tự
+định tuyến `/api` sang API Gateway.
 `.env` dành cho Compose không tự cấu hình lệnh Python chạy trực tiếp; Python dùng
 `src/config.py` và các biến `CLIP_MODEL_PATH`, `CLIP_EMBEDDING_DIR` nếu được đặt.
 
 ## Tài liệu và kiểm tra
 
-- [Nginx reverse proxy, load balancing và rate limiting](nginx/README.md)
+- [Web Reverse Proxy](reverse-proxy/README.md)
+- [API Gateway, load balancing và rate limiting](api-gateway/README.md)
 - [Workflow và toàn bộ câu lệnh](../README.txt)
 - [Thí nghiệm độc lập](../../experiments/model_comparison/README.md)
 
 ```powershell
 docker compose config --quiet
-docker compose exec nginx nginx -t
-docker compose logs -f nginx backend backend_2
+docker compose exec reverse-proxy nginx -t
+docker compose exec api-gateway nginx -t
+docker compose logs -f reverse-proxy api-gateway backend backend_2
 ```
 
-Hai backend nạp model vào RAM riêng; tên service và đường API không đổi khi
+Reverse Proxy là service duy nhất publish port `80`; frontend, API Gateway và
+hai backend chỉ dùng Docker network. Hai backend nạp model vào RAM riêng; tên service và đường API không đổi khi
 chuyển thư mục. Backend build context vẫn là `project/` để lấy được `src/`;
 frontend build context là `web/frontend/`.
