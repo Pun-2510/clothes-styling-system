@@ -29,6 +29,11 @@ from ..serializers import (
     serialize_image_results,
     serialize_text_results,
 )
+from ..explanations import (
+    build_combined_explanation,
+    build_image_explanation,
+    build_text_explanation,
+)
 from src.logger import log_exception
 from src.recommend import FashionRecommender
 from src.config import COMBINED_IMAGE_WEIGHT, TEXT_RETRIEVAL_IMAGE_WEIGHT
@@ -164,6 +169,12 @@ def recommend_by_text(
             elapsed_seconds=float(elapsed),
             guidance=guidance,
             items=items,
+            explanation=build_text_explanation(
+                recommender,
+                guidance=guidance,
+                image_weight=image_weight,
+                result_categories=results["category"].tolist(),
+            ),
         )
 
     except HTTPException:
@@ -261,6 +272,13 @@ def recommend_by_image(
             items=serialize_image_results(
                 recommendation["results"]
             ),
+            explanation=build_image_explanation(
+                recommender,
+                recommendation=recommendation,
+                result_categories=(
+                    recommendation["results"]["category"].tolist()
+                ),
+            ),
         )
 
     except Exception as error:
@@ -351,6 +369,13 @@ def recommend_by_image_and_text(
                 },
             ),
             items=items,
+            explanation=build_combined_explanation(
+                recommender,
+                recommendation=recommendation,
+                result_categories=(
+                    recommendation["results"]["category"].tolist()
+                ),
+            ),
         )
 
     except HTTPException:
