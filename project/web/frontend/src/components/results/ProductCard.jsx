@@ -1,4 +1,5 @@
 import Icon from '../common/Icon'
+import FavoriteButton from '../common/FavoriteButton'
 import { productUrl } from '../../services/catalogApi'
 import ProductImage from './ProductImage'
 import { useLanguage } from '../../i18n'
@@ -10,13 +11,18 @@ export default function ProductCard({ item, index, mode }) {
   const detailScore = mode === 'text' ? item.text_to_image_score : item.visual_similarity
 
   return (
-    <article className="product-card">
-      <a className="product-card-link" href={productUrl(item.product_id)}>
+    <article className={`product-card${hasScore ? ' product-card--scored' : ''}`}>
+      <div className="product-card-media">
+        <a className="product-card-image-link" href={productUrl(item.product_id)}>
         <div className="product-visual">
           <ProductImage reference={item.image_reference} name={item.product_name} />
           {hasScore && <span className="rank">#{index + 1}</span>}
           {hasScore && <span className="score-pill">{finalScore.toFixed(3)}</span>}
         </div>
+        </a>
+        <FavoriteButton product={item} className="product-favorite" />
+      </div>
+      <a className="product-card-link" href={productUrl(item.product_id)}>
         <div className="product-copy">
           <span className="category">{item.category || t('product.fashion')}</span>
           <h3>{item.product_name || t('product.unnamed')}</h3>

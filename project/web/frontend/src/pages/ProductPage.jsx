@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import FavoriteButton from '../components/common/FavoriteButton'
 import ProductCard from '../components/results/ProductCard'
 import ProductImage from '../components/results/ProductImage'
 import { ProductDetailSkeleton } from '../components/results/CatalogSkeleton'
@@ -31,7 +32,10 @@ export default function ProductPage({ productId }) {
         <div className="detail-copy">
           <span className="eyebrow">{product.category || t('detail.product')}</span>
           <h1>{product.product_name}</h1>
-          <span className="detail-id">{t('detail.id', { id: product.product_id })}</span>
+          <div className="detail-actions">
+            <span className="detail-id">{t('detail.id', { id: product.product_id })}</span>
+            <FavoriteButton product={product} variant="detail" />
+          </div>
           <div className="detail-divider" />
           <h2>{t('detail.info')}</h2>
           <p>{product.description || t('detail.noDescription')}</p>

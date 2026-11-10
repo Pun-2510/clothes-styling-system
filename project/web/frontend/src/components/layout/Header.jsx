@@ -4,6 +4,7 @@ import ProductImage from '../results/ProductImage'
 import SearchHistoryDrawer from './SearchHistoryDrawer'
 import { categoryUrl, featuredCategories, getCategories } from '../../services/catalogApi'
 import { clearSearchHistory, deleteSearchHistoryEntry, loadSearchHistory } from '../../services/searchHistory'
+import { loadFavorites, subscribeFavorites } from '../../services/favorites'
 import { useLanguage } from '../../i18n'
 
 export default function Header({ serverStatus, onRetry }) {
@@ -13,6 +14,7 @@ export default function Header({ serverStatus, onRetry }) {
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [historyEntries, setHistoryEntries] = useState(loadSearchHistory)
+  const [favorites, setFavorites] = useState(loadFavorites)
   const categoryMenuRef = useRef(null)
 
   useEffect(() => {
@@ -22,6 +24,8 @@ export default function Header({ serverStatus, onRetry }) {
       .catch(() => {})
     return () => { active = false }
   }, [])
+
+  useEffect(() => subscribeFavorites(setFavorites), [])
 
   useEffect(() => {
     const refreshHistory = () => setHistoryEntries(loadSearchHistory())
@@ -141,6 +145,11 @@ export default function Header({ serverStatus, onRetry }) {
               </>
             )}
           </div>
+          <a className={`favorites-nav-link ${path === '/favorites' ? 'active' : ''}`} href="/favorites">
+            <Icon name="heart" size={16} />
+            <span>{t('header.favorites')}</span>
+            {favorites.length > 0 && <small>{favorites.length}</small>}
+          </a>
           <a className={path === '/developer' ? 'active' : ''} href="/developer">Developer</a>
         </nav>
         <a className="header-model-link" href="/#search"><span>AI</span> Fine-tuned CLIP · Category-aware</a>
