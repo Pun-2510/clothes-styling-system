@@ -1,6 +1,6 @@
 {
   "version": 4,
-  "created_utc": "2026-11-07T07:22:15.130623+00:00",
+  "created_utc": "2026-11-10T21:07:40.309678+00:00",
   "selection_split": "validation",
   "objective_k": 10,
   "selection_policy": {
@@ -13,10 +13,10 @@
     "maximum": 0.8
   },
   "weights": {
-    "TEXT_RETRIEVAL_IMAGE_WEIGHT": 0.4,
-    "COMBINED_IMAGE_WEIGHT": 0.8,
-    "COMBINED_ATTRIBUTE_WEIGHT": 0.05,
-    "COMBINED_CATEGORY_WEIGHT": 0.125,
+    "TEXT_RETRIEVAL_IMAGE_WEIGHT": 0.5,
+    "COMBINED_IMAGE_WEIGHT": 0.7,
+    "COMBINED_ATTRIBUTE_WEIGHT": 0.0,
+    "COMBINED_CATEGORY_WEIGHT": 0.15,
     "CATEGORY_BONUS": 0.2,
     "CATEGORY_PROTOTYPE_WEIGHT": 1.0,
     "CATEGORY_RELATION_NEIGHBORS": 5,
@@ -26,72 +26,74 @@
   },
   "selected_metrics": {
     "text_only": {
-      "text_image_weight": 0.4,
-      "precision": 0.7905405405405397,
-      "recall": 0.08504102111984024,
-      "f1": 0.12565147164915325,
-      "category_macro_precision": 0.6414230508614269,
-      "category_macro_recall": 0.26808001055948993,
-      "category_macro_f1": 0.3079447698857356,
-      "evaluated_queries": 962,
+      "text_image_weight": 0.5,
+      "precision": 0.6943600867678955,
+      "recall": 0.17011215013335595,
+      "f1": 0.23644463001133703,
+      "category_macro_precision": 0.6418900075428052,
+      "category_macro_recall": 0.3146729858815657,
+      "category_macro_f1": 0.3734527657001287,
+      "evaluated_queries": 461,
       "skipped_queries": 0,
       "selected": true
     },
     "image_only": {
       "image_category_bonus": 0.2,
-      "precision": 0.7204781704781691,
-      "recall": 0.06898684394867637,
-      "f1": 0.10305426709259588,
-      "category_macro_precision": 0.513011891872244,
-      "category_macro_recall": 0.20372991737510374,
-      "category_macro_f1": 0.22925818809555773,
-      "evaluated_queries": 962,
+      "precision": 0.6060737527114964,
+      "recall": 0.1356137802828688,
+      "f1": 0.18901329275514014,
+      "category_macro_precision": 0.48929354316860924,
+      "category_macro_recall": 0.23141604096859852,
+      "category_macro_f1": 0.2654092436439902,
+      "evaluated_queries": 461,
       "skipped_queries": 0,
       "selected": true
     },
     "combined": {
-      "stage": "refined",
-      "image_weight": 0.8,
-      "attribute_weight": 0.05,
-      "combined_category_weight": 0.125,
+      "stage": "coarse",
+      "image_weight": 0.7000000000000002,
+      "attribute_weight": 0.0,
+      "combined_category_weight": 0.15000000000000002,
       "eligible_for_selection": true,
-      "precision": 0.6872832369942186,
-      "recall": 0.05936723614766377,
-      "f1": 0.08965730721337381,
-      "category_macro_precision": 0.48968684497940435,
-      "category_macro_recall": 0.17831120858836016,
-      "category_macro_f1": 0.20232333249018822,
-      "evaluated_queries": 865,
+      "precision": 0.5773631840796026,
+      "recall": 0.12115683401958763,
+      "f1": 0.1697292195611816,
+      "category_macro_precision": 0.46384109940671026,
+      "category_macro_recall": 0.2125631677201568,
+      "category_macro_f1": 0.24597602380521602,
+      "evaluated_queries": 402,
       "skipped_queries": 0,
-      "attribute_queries": 865,
-      "mean_attribute_match": 0.7336694205728914,
-      "all_attributes_match_rate": 0.5572254335260116,
+      "attribute_queries": 402,
+      "mean_attribute_match": 0.5528689914971442,
+      "all_attributes_match_rate": 0.39427860696517414,
       "selected": true
     }
   },
   "provenance": {
-    "run_dir": "runs/clip_finetune",
+    "run_dir": "runs/clip_finetune_cpu_small",
     "catalog_csv": "data/processed/products.csv",
-    "dataset_sha256": "9f0ce18efefda755725ec25ca2d4c3fada5a6666c689e645d6eba123af4296be",
-    "training_json_sha256": "14ba945d43856408d8f7d36f10ab2ef091c8c875688bf277c7e6292faae1d9f8",
-    "catalog_sha256": "6fa922ceb71baf6ffd6ce718919c2efd2c9cda07585559385030ebdd278e29b0",
-    "validation_queries": 962,
-    "combined_validation_queries": 865,
-    "gallery_size": 10000,
+    "dataset_sha256": "1c551664b11adeea850399255b85164cb2aeb385ac2ac53749aef0cba664376a",
+    "training_json_sha256": "84110670c62077689507034619ad509f8ca9b01b454255abd8009738a532b0e3",
+    "catalog_sha256": "0257c37cbb8f73ef7ab95d39268c67f5c74043215de3523eaf7bc6e700b0ec65",
+    "validation_queries": 461,
+    "combined_validation_queries": 402,
+    "gallery_size": 5000,
     "combined_query_text_embeddings": {
       "architecture": "CLIP text encoder",
       "embedding_dimension": 512,
-      "encoding_seconds": 4.948625499964692
+      "encoding_seconds": 8.597391600022092
     },
     "category_prototypes": {
       "architecture": "CLIP text encoder",
       "embedding_dimension": 512,
-      "encoding_seconds": 0.9436878999695182
+      "encoding_seconds": 3.931188399961684
     },
     "category_relation_graph": {
       "Accessory Gift Set": [
-        "Fragrance Gift Set",
         "Beauty Accessory",
+        "Free Gifts",
+        "Fragrance Gift Set",
+        "Travel Accessory",
         "Jewellery Set"
       ],
       "Baby Dolls": [],
@@ -104,43 +106,45 @@
       "Bangle": [
         "Bracelet",
         "Ring",
-        "Wristbands"
+        "Wristbands",
+        "Watches"
       ],
       "Basketballs": [
         "Footballs"
       ],
       "Bath Robe": [
-        "Robe",
-        "Nightdress"
+        "Robe"
       ],
       "Beauty Accessory": [
         "Travel Accessory",
-        "Free Gifts",
+        "Accessory Gift Set",
         "Shoe Accessories",
-        "Accessory Gift Set"
+        "Free Gifts",
+        "Hair Accessory"
       ],
       "Belts": [
         "Wristbands",
-        "Ties"
+        "Ties",
+        "Waist Pouch"
       ],
       "Blazers": [
         "Jackets"
       ],
       "Body Lotion": [
         "Body Wash and Scrub",
-        "Face Wash and Cleanser",
-        "Deodorant",
-        "Face Serum and Gel"
+        "Face Serum and Gel",
+        "Deodorant"
       ],
       "Body Wash and Scrub": [
         "Face Wash and Cleanser",
         "Face Scrub and Exfoliator",
         "Body Lotion",
-        "Makeup Remover",
-        "Deodorant"
+        "Perfume and Body Mist",
+        "Makeup Remover"
       ],
       "Booties": [
-        "Heels"
+        "Heels",
+        "Socks"
       ],
       "Boxers": [
         "Shorts",
@@ -160,88 +164,98 @@
       "Briefs": [
         "Shorts",
         "Boxers",
+        "Waist Pouch",
         "Bra"
       ],
       "Camisoles": [
-        "Compact",
+        "Tops",
+        "Clothing Set",
         "Free Gifts",
-        "Kurtis",
-        "Churidar",
-        "Tops"
+        "Compact"
       ],
       "Capris": [
-        "Shorts",
         "Trousers",
-        "Tights"
+        "Shorts",
+        "Jeggings",
+        "Leggings"
       ],
-      "Caps": [],
+      "Caps": [
+        "Hat"
+      ],
       "Casual Shoes": [
-        "Sports Shoes",
         "Formal Shoes",
+        "Sports Shoes",
         "Heels",
-        "Shoe Accessories",
-        "Flats"
+        "Sports Sandals",
+        "Sandals"
       ],
       "Churidar": [
-        "Camisoles",
-        "Kurtis",
-        "Patiala"
+        "Compact",
+        "Patiala",
+        "Kurtis"
       ],
       "Clothing Set": [
         "Free Gifts",
+        "Shirts",
         "Tops",
-        "Shirts"
+        "Camisoles",
+        "Dresses"
       ],
       "Clutches": [
         "Handbags",
-        "Tablet Sleeve",
-        "Waist Pouch"
+        "Wallets",
+        "Waist Pouch",
+        "Tablet Sleeve"
       ],
       "Compact": [
-        "Camisoles",
         "Free Gifts",
-        "Kurtis",
+        "Camisoles",
+        "Ipad",
+        "Churidar",
         "Flats"
       ],
       "Concealer": [
-        "Eyeshadow"
+        "Eyeshadow",
+        "Highlighter and Blush"
       ],
       "Cufflinks": [
         "Ties and Cufflinks"
       ],
-      "Cushion Covers": [
-        "Tablet Sleeve"
-      ],
+      "Cushion Covers": [],
       "Deodorant": [
         "Body Lotion",
-        "Sunscreen",
-        "Body Wash and Scrub"
+        "Sunscreen"
       ],
-      "Dresses": [],
+      "Dresses": [
+        "Clothing Set"
+      ],
       "Duffel Bag": [
         "Trolley Bag",
         "Messenger Bag",
-        "Laptop Bag",
         "Rucksacks"
       ],
       "Dupatta": [
         "Salwar and Dupatta",
         "Sarees",
         "Salwar",
+        "Stoles",
         "Scarves"
       ],
       "Earrings": [
         "Jewellery Set",
-        "Ring"
+        "Pendant",
+        "Necklace and Chains",
+        "Hair Accessory"
       ],
       "Eye Cream": [
-        "Lip Care",
         "Face Moisturisers",
+        "Lip Care",
         "Face Serum and Gel"
       ],
       "Eyeshadow": [
         "Highlighter and Blush",
-        "Concealer"
+        "Concealer",
+        "Makeup Remover"
       ],
       "Face Moisturisers": [
         "Lip Care",
@@ -257,6 +271,7 @@
       ],
       "Face Serum and Gel": [
         "Face Moisturisers",
+        "Face Wash and Cleanser",
         "Eye Cream",
         "Body Lotion"
       ],
@@ -264,13 +279,12 @@
         "Body Wash and Scrub",
         "Face Scrub and Exfoliator",
         "Face Moisturisers",
-        "Makeup Remover",
-        "Body Lotion"
+        "Face Serum and Gel",
+        "Makeup Remover"
       ],
       "Flats": [
-        "Compact",
-        "Casual Shoes",
-        "Formal Shoes"
+        "Formal Shoes",
+        "Compact"
       ],
       "Flip Flops": [
         "Sandals",
@@ -292,14 +306,16 @@
       ],
       "Free Gifts": [
         "Compact",
-        "Camisoles",
-        "Beauty Accessory",
         "Clothing Set",
-        "Travel Accessory"
+        "Accessory Gift Set",
+        "Beauty Accessory",
+        "Camisoles"
       ],
       "Gloves": [],
       "Hair Accessory": [
         "Headband",
+        "Beauty Accessory",
+        "Earrings",
         "Hair Colour"
       ],
       "Hair Colour": [
@@ -309,45 +325,50 @@
         "Laptop Bag",
         "Backpacks",
         "Mobile Pouch",
-        "Clutches",
-        "Messenger Bag"
+        "Clutches"
       ],
       "Hat": [
-        "Headband"
+        "Headband",
+        "Caps"
       ],
       "Headband": [
         "Hair Accessory",
-        "Hat",
-        "Wristbands"
+        "Wristbands",
+        "Hat"
       ],
       "Heels": [
-        "Casual Shoes",
         "Formal Shoes",
+        "Casual Shoes",
         "Sandals",
         "Booties",
         "Sports Shoes"
       ],
       "Highlighter and Blush": [
-        "Eyeshadow"
+        "Eyeshadow",
+        "Concealer"
       ],
       "Innerwear Vests": [
+        "Swimwear",
         "Shapewear"
       ],
-      "Ipad": [],
+      "Ipad": [
+        "Compact"
+      ],
       "Jackets": [
-        "Rain Jacket",
         "Blazers",
+        "Rain Jacket",
         "Sweatshirts",
         "Sweaters"
       ],
       "Jeans": [
-        "Trousers",
         "Jeggings"
       ],
       "Jeggings": [
         "Leggings",
-        "Tights",
-        "Jeans"
+        "Jeans",
+        "Trousers",
+        "Capris",
+        "Tights"
       ],
       "Jewellery Set": [
         "Accessory Gift Set",
@@ -355,11 +376,9 @@
         "Earrings"
       ],
       "Jumpsuit": [
-        "Tracksuits"
+        "Rompers"
       ],
-      "Kajal and Eyeliner": [
-        "Lip Liner"
-      ],
+      "Kajal and Eyeliner": [],
       "Key chain": [
         "Pendant"
       ],
@@ -369,25 +388,24 @@
         "Salwar and Dupatta"
       ],
       "Kurtas": [
-        "Kurta Sets"
+        "Kurta Sets",
+        "Tunics"
       ],
       "Kurtis": [
-        "Camisoles",
-        "Compact",
         "Churidar"
       ],
       "Laptop Bag": [
         "Messenger Bag",
-        "Trolley Bag",
         "Handbags",
-        "Backpacks",
-        "Duffel Bag"
+        "Trolley Bag",
+        "Backpacks"
       ],
       "Leggings": [
         "Tights",
         "Jeggings",
-        "Lounge Pants",
-        "Trousers"
+        "Trousers",
+        "Capris",
+        "Lounge Pants"
       ],
       "Lehenga Choli": [
         "Salwar and Dupatta"
@@ -395,41 +413,46 @@
       "Lip Care": [
         "Lip Plumper",
         "Face Moisturisers",
-        "Eye Cream",
-        "Lip Gloss"
+        "Lip Gloss",
+        "Lipstick",
+        "Eye Cream"
       ],
       "Lip Gloss": [
         "Lip Care",
-        "Lipstick"
+        "Lip Plumper",
+        "Lipstick",
+        "Lip Liner"
       ],
       "Lip Liner": [
         "Lip Plumper",
         "Lipstick",
-        "Kajal and Eyeliner"
+        "Lip Gloss"
       ],
       "Lip Plumper": [
         "Lip Care",
         "Lip Liner",
+        "Lipstick",
         "Face Moisturisers",
-        "Lipstick"
+        "Lip Gloss"
       ],
       "Lipstick": [
         "Lip Plumper",
+        "Lip Care",
         "Lip Liner",
-        "Lip Gloss"
+        "Lip Gloss",
+        "Nail Polish"
       ],
       "Lounge Pants": [
         "Trousers",
         "Track Pants",
-        "Lounge Shorts",
         "Rain Trousers",
-        "Leggings"
+        "Leggings",
+        "Lounge Shorts"
       ],
       "Lounge Shorts": [
         "Shorts",
         "Lounge Pants",
-        "Boxers",
-        "Skirts"
+        "Boxers"
       ],
       "Lounge Tshirts": [
         "Tshirts",
@@ -437,7 +460,8 @@
       ],
       "Makeup Remover": [
         "Face Wash and Cleanser",
-        "Body Wash and Scrub"
+        "Body Wash and Scrub",
+        "Eyeshadow"
       ],
       "Mascara": [],
       "Mask and Peel": [
@@ -446,45 +470,46 @@
       "Mens Grooming Kit": [],
       "Messenger Bag": [
         "Laptop Bag",
-        "Duffel Bag",
-        "Mobile Pouch",
         "Trolley Bag",
-        "Handbags"
+        "Duffel Bag"
       ],
       "Mobile Pouch": [
         "Waist Pouch",
-        "Tablet Sleeve",
         "Travel Accessory",
-        "Messenger Bag",
-        "Handbags"
+        "Tablet Sleeve",
+        "Handbags",
+        "Wallets"
       ],
       "Mufflers": [],
       "Nail Essentials": [
         "Nail Polish"
       ],
       "Nail Polish": [
-        "Nail Essentials"
+        "Nail Essentials",
+        "Lipstick"
       ],
       "Necklace and Chains": [
         "Pendant",
-        "Jewellery Set"
+        "Jewellery Set",
+        "Earrings"
       ],
       "Nehru Jackets": [
         "Waistcoat"
       ],
       "Night suits": [],
-      "Nightdress": [
-        "Bath Robe"
-      ],
+      "Nightdress": [],
       "Patiala": [
-        "Churidar"
+        "Churidar",
+        "Salwar"
       ],
       "Pendant": [
         "Necklace and Chains",
-        "Key chain"
+        "Key chain",
+        "Earrings"
       ],
       "Perfume and Body Mist": [
-        "Fragrance Gift Set"
+        "Fragrance Gift Set",
+        "Body Wash and Scrub"
       ],
       "Rain Jacket": [
         "Jackets"
@@ -497,14 +522,15 @@
       "Ring": [
         "Bracelet",
         "Bangle",
-        "Earrings"
+        "Watches"
       ],
       "Robe": [
         "Bath Robe",
-        "Shrug"
+        "Rompers"
       ],
       "Rompers": [
-        "Tunics"
+        "Jumpsuit",
+        "Robe"
       ],
       "Rucksacks": [
         "Backpacks",
@@ -512,31 +538,33 @@
       ],
       "Salwar": [
         "Salwar and Dupatta",
+        "Sarees",
         "Dupatta",
-        "Kurta Sets"
+        "Kurta Sets",
+        "Patiala"
       ],
       "Salwar and Dupatta": [
         "Salwar",
         "Dupatta",
         "Sarees",
-        "Kurta Sets",
-        "Lehenga Choli"
+        "Lehenga Choli",
+        "Kurta Sets"
       ],
       "Sandals": [
         "Sports Sandals",
         "Heels",
-        "Flip Flops"
+        "Flip Flops",
+        "Casual Shoes"
       ],
       "Sarees": [
         "Dupatta",
         "Salwar and Dupatta",
-        "Scarves"
+        "Salwar"
       ],
       "Scarves": [
         "Stoles",
         "Ties",
-        "Dupatta",
-        "Sarees"
+        "Dupatta"
       ],
       "Shapewear": [
         "Innerwear Vests"
@@ -549,40 +577,36 @@
       ],
       "Shoe Accessories": [
         "Beauty Accessory",
-        "Casual Shoes",
-        "Travel Accessory",
-        "Sports Shoes"
+        "Travel Accessory"
       ],
       "Shoe Laces": [],
       "Shorts": [
         "Lounge Shorts",
-        "Capris",
         "Briefs",
-        "Boxers",
-        "Skirts"
+        "Skirts",
+        "Capris",
+        "Boxers"
       ],
-      "Shrug": [
-        "Robe"
-      ],
+      "Shrug": [],
       "Skirts": [
-        "Shorts",
-        "Lounge Shorts"
+        "Shorts"
       ],
       "Socks": [
         "Stockings",
+        "Booties",
         "Tights"
       ],
       "Sports Sandals": [
         "Sandals",
         "Sports Shoes",
+        "Casual Shoes",
         "Flip Flops"
       ],
       "Sports Shoes": [
         "Casual Shoes",
         "Formal Shoes",
-        "Sports Sandals",
         "Heels",
-        "Shoe Accessories"
+        "Sports Sandals"
       ],
       "Stockings": [
         "Socks",
@@ -590,7 +614,8 @@
       ],
       "Stoles": [
         "Scarves",
-        "Tunics"
+        "Ties",
+        "Dupatta"
       ],
       "Sunglasses": [],
       "Sunscreen": [
@@ -601,7 +626,8 @@
       ],
       "Sweaters": [
         "Sweatshirts",
-        "Jackets"
+        "Jackets",
+        "Tracksuits"
       ],
       "Sweatshirts": [
         "Sweaters",
@@ -609,28 +635,28 @@
         "Tracksuits"
       ],
       "Swimwear": [
-        "Bra"
+        "Bra",
+        "Innerwear Vests"
       ],
       "Tablet Sleeve": [
         "Mobile Pouch",
         "Wallets",
-        "Cushion Covers",
         "Clutches"
       ],
       "Ties": [
         "Ties and Cufflinks",
         "Belts",
-        "Scarves"
+        "Scarves",
+        "Stoles"
       ],
       "Ties and Cufflinks": [
-        "Cufflinks",
-        "Ties"
+        "Ties",
+        "Cufflinks"
       ],
       "Tights": [
         "Leggings",
-        "Jeggings",
         "Stockings",
-        "Capris",
+        "Jeggings",
         "Socks"
       ],
       "Toner": [],
@@ -647,17 +673,17 @@
       "Tracksuits": [
         "Track Pants",
         "Sweatshirts",
-        "Jumpsuit"
+        "Sweaters"
       ],
       "Travel Accessory": [
         "Beauty Accessory",
-        "Free Gifts",
+        "Accessory Gift Set",
         "Shoe Accessories",
         "Mobile Pouch"
       ],
       "Trolley Bag": [
-        "Duffel Bag",
         "Laptop Bag",
+        "Duffel Bag",
         "Messenger Bag",
         "Backpacks"
       ],
@@ -665,8 +691,8 @@
         "Rain Trousers",
         "Lounge Pants",
         "Capris",
-        "Jeans",
-        "Leggings"
+        "Leggings",
+        "Jeggings"
       ],
       "Trunk": [],
       "Tshirts": [
@@ -674,24 +700,29 @@
         "Lounge Tshirts"
       ],
       "Tunics": [
-        "Rompers",
-        "Stoles"
+        "Kurtas"
       ],
       "Umbrellas": [],
       "Waist Pouch": [
         "Mobile Pouch",
-        "Clutches"
+        "Briefs",
+        "Clutches",
+        "Belts"
       ],
       "Waistcoat": [
         "Nehru Jackets",
         "Suspenders"
       ],
       "Wallets": [
+        "Mobile Pouch",
+        "Clutches",
         "Tablet Sleeve"
       ],
       "Watches": [
         "Bracelet",
-        "Wristbands"
+        "Wristbands",
+        "Ring",
+        "Bangle"
       ],
       "Water Bottle": [],
       "Wristbands": [
