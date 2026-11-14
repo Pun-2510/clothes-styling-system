@@ -30,7 +30,7 @@ export async function checkServerReady() {
   }
 }
 
-export async function searchByText({ query, language, topK }) {
+export async function searchByText({ query, language, topK, audience }) {
   try {
     const response = await trackedFetch(`${API_BASE}/api/recommendations/text`, {
       method: 'POST',
@@ -39,6 +39,7 @@ export async function searchByText({ query, language, topK }) {
         query: query.trim(),
         language,
         top_k: topK,
+        audience: audience || null,
       }),
     })
     return await readResponse(response)
@@ -47,11 +48,12 @@ export async function searchByText({ query, language, topK }) {
   }
 }
 
-export async function searchByImage({ file, topK }) {
+export async function searchByImage({ file, topK, audience }) {
   const payload = new FormData()
   payload.append('file', file)
   payload.append('top_k', String(topK))
   payload.append('category_mode', AUTOMATIC_CATEGORY_MODE)
+  if (audience) payload.append('audience', audience)
 
   try {
     const response = await trackedFetch(`${API_BASE}/api/recommendations/image`, {
@@ -64,12 +66,13 @@ export async function searchByImage({ file, topK }) {
   }
 }
 
-export async function searchByCombined({ file, query, language, topK }) {
+export async function searchByCombined({ file, query, language, topK, audience }) {
   const payload = new FormData()
   payload.append('file', file)
   payload.append('query', query.trim())
   payload.append('language', language)
   payload.append('top_k', String(topK))
+  if (audience) payload.append('audience', audience)
 
   try {
     const response = await trackedFetch(`${API_BASE}/api/recommendations/combined`, {

@@ -27,6 +27,11 @@ from src.category_ranking import (
     rank_category_candidates,
     rank_category_score_mapping,
 )
+from src.category_prompts import (
+    CATEGORY_PROMPT_TEMPLATES,
+    aggregate_category_prompt_embeddings,
+    category_prompt_ensemble,
+)
 from src.clip_data import file_sha256, load_experiment_data
 from src.clip_runtime import model_identity, same_model_identity, validate_embedding_metadata
 from src.config import BASE_DIR
@@ -377,20 +382,26 @@ def load_category_prototypes(
     use_cache=True,
 ):
     labels = [str(value) for value in categories]
-    prompts = [f"a catalog product photo of {category}" for category in labels]
+    prompt_groups = category_prompt_ensemble(labels)
+    prompts = [prompt for group in prompt_groups for prompt in group]
     frame = pd.DataFrame(
         {
-            "product_id": [f"category::{value}" for value in labels],
-            "image_sha256": [""] * len(labels),
+            "product_id": [
+                f"category::{category_index}::prompt::{prompt_index}"
+                for category_index in range(len(labels))
+                for prompt_index in range(len(CATEGORY_PROMPT_TEMPLATES))
+            ],
+            "image_sha256": [""] * len(prompts),
             "evaluation_text": prompts,
         }
     )
     signature = cache_signature(
         frame,
         {
-            "architecture": "CLIP category text prototype",
+            "architecture": "CLIP category text prompt ensemble",
             "identity": identity,
-            "prompt": "a catalog product photo of {category}",
+            "prompt_templates": list(CATEGORY_PROMPT_TEMPLATES),
+            "aggregation": "mean normalized prompts, then L2 normalize",
         },
     )
     values, metadata = cached_embeddings(
@@ -400,7 +411,16 @@ def load_category_prototypes(
         lambda: encode_texts(model, processor, prompts, device, batch_size),
         use_cache,
     )
-    return normalized(values, "category prototype embeddings"), metadata
+    prototypes = aggregate_category_prompt_embeddings(values, len(labels))
+    metadata = {
+        **metadata,
+        "architecture": "CLIP category text prompt ensemble",
+        "category_count": len(labels),
+        "prompts_per_category": len(CATEGORY_PROMPT_TEMPLATES),
+        "prompt_templates": list(CATEGORY_PROMPT_TEMPLATES),
+        "aggregation": "mean normalized prompts, then L2 normalize",
+    }
+    return prototypes, metadata
 
 
 def build_category_evidence(

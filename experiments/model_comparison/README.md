@@ -47,8 +47,12 @@ Tất cả lệnh trong tài liệu này chạy từ thư mục gốc `dacntt/`.
 - Combined deployed.
 - Raw fusion, attribute contribution, category contribution và full ranking.
 
-Mọi bảng báo cáo Precision@K, Recall@K, F1@K và NDCG@K tại
+Mọi bảng báo cáo Precision@K, Recall@K, F1@K, NDCG@K và MAP@K tại
 `K = 1, 5, 10`.
+
+MAP@K thưởng cho hệ thống đưa các sản phẩm relevant lên sớm và liên tục trong
+danh sách Top-K. Với paired retrieval chỉ có một relevant target, MAP@K tương
+đương reciprocal rank bị giới hạn tại K.
 
 ## 2. Kết quả đã hoàn tất
 
@@ -105,8 +109,8 @@ Cài các dependency của benchmark trước lần chạy đầu tiên:
 
 ## 4. Chạy lại seed 42
 
-Core comparison mới dùng `core_extended_pretrained_v1`; hai nhóm còn lại vẫn
-dùng hậu tố `rerun_v1`. Mỗi output đều tách khỏi kết quả báo cáo cũ.
+Các lệnh MAP dùng hậu tố `map_v1`. Mỗi output đều tách khỏi kết quả báo cáo cũ
+vì thư mục kết quả của chương trình phải rỗng trước khi chạy.
 
 ### 4.1. Core comparison
 
@@ -126,7 +130,7 @@ dùng hậu tố `rerun_v1`. Mỗi output đều tách khỏi kết quả báo c
   --ks 1 5 10 `
   --clip-image-weight 0.5 `
   --clip-text-image-weight 0.5 `
-  --output-dir .\experiments\model_comparison\results\diverse_seed_42\core_extended_pretrained_v1
+  --output-dir .\experiments\model_comparison\results\diverse_seed_42\core_extended_pretrained_map_v1
 ```
 
 ### 4.2. Category-aware comparison
@@ -142,7 +146,7 @@ dùng hậu tố `rerun_v1`. Mỗi output đều tách khỏi kết quả báo c
   --category-confidence-floor 0.50 `
   --category-confidence-threshold 0.60 `
   --category-bonus 0.20 `
-  --output-dir .\experiments\model_comparison\results\diverse_seed_42\category_aware_rerun_v1
+  --output-dir .\experiments\model_comparison\results\diverse_seed_42\category_aware_map_v1
 ```
 
 ### 4.3. System pipeline comparison
@@ -167,7 +171,7 @@ $weights42 = (Get-Content .\experiments\model_comparison\results\diverse_seed_42
   --category-top-per-class 3 `
   --category-confidence-floor 0.50 `
   --category-confidence-threshold 0.60 `
-  --output-dir .\experiments\model_comparison\results\diverse_seed_42\system_pipeline_rerun_v1
+  --output-dir .\experiments\model_comparison\results\diverse_seed_42\system_pipeline_map_v1
 ```
 
 ## 5. Chạy lại seed 123
@@ -190,7 +194,7 @@ $weights42 = (Get-Content .\experiments\model_comparison\results\diverse_seed_42
   --ks 1 5 10 `
   --clip-image-weight 0.5 `
   --clip-text-image-weight 0.5 `
-  --output-dir .\experiments\model_comparison\results\diverse_seed_123\core_extended_pretrained_v1
+  --output-dir .\experiments\model_comparison\results\diverse_seed_123\core_extended_pretrained_map_v1
 ```
 
 ### 5.2. Category-aware comparison
@@ -206,7 +210,7 @@ $weights42 = (Get-Content .\experiments\model_comparison\results\diverse_seed_42
   --category-confidence-floor 0.50 `
   --category-confidence-threshold 0.60 `
   --category-bonus 0.20 `
-  --output-dir .\experiments\model_comparison\results\diverse_seed_123\category_aware_rerun_v1
+  --output-dir .\experiments\model_comparison\results\diverse_seed_123\category_aware_map_v1
 ```
 
 ### 5.3. System pipeline comparison
@@ -231,7 +235,7 @@ $weights123 = (Get-Content .\experiments\model_comparison\results\diverse_seed_1
   --category-top-per-class 3 `
   --category-confidence-floor 0.50 `
   --category-confidence-threshold 0.60 `
-  --output-dir .\experiments\model_comparison\results\diverse_seed_123\system_pipeline_rerun_v1
+  --output-dir .\experiments\model_comparison\results\diverse_seed_123\system_pipeline_map_v1
 ```
 
 ## 6. Chạy lại seed 2026
@@ -254,7 +258,7 @@ $weights123 = (Get-Content .\experiments\model_comparison\results\diverse_seed_1
   --ks 1 5 10 `
   --clip-image-weight 0.5 `
   --clip-text-image-weight 0.5 `
-  --output-dir .\experiments\model_comparison\results\diverse_seed_2026\core_extended_pretrained_v1
+  --output-dir .\experiments\model_comparison\results\diverse_seed_2026\core_extended_pretrained_map_v1
 ```
 
 ### 6.2. Category-aware comparison
@@ -270,7 +274,7 @@ $weights123 = (Get-Content .\experiments\model_comparison\results\diverse_seed_1
   --category-confidence-floor 0.50 `
   --category-confidence-threshold 0.60 `
   --category-bonus 0.20 `
-  --output-dir .\experiments\model_comparison\results\diverse_seed_2026\category_aware_rerun_v1
+  --output-dir .\experiments\model_comparison\results\diverse_seed_2026\category_aware_map_v1
 ```
 
 ### 6.3. System pipeline comparison
@@ -295,7 +299,7 @@ $weights2026 = (Get-Content .\experiments\model_comparison\results\diverse_seed_
   --category-top-per-class 3 `
   --category-confidence-floor 0.50 `
   --category-confidence-threshold 0.60 `
-  --output-dir .\experiments\model_comparison\results\diverse_seed_2026\system_pipeline_rerun_v1
+  --output-dir .\experiments\model_comparison\results\diverse_seed_2026\system_pipeline_map_v1
 ```
 
 ## 7. Tổng hợp ba seed vừa chạy lại
@@ -305,10 +309,10 @@ $weights2026 = (Get-Content .\experiments\model_comparison\results\diverse_seed_
 ```powershell
 .\project\.venv\Scripts\python.exe -m experiments.model_comparison.aggregate_seeds `
   --inputs `
-    .\experiments\model_comparison\results\diverse_seed_42\core_extended_pretrained_v1 `
-    .\experiments\model_comparison\results\diverse_seed_123\core_extended_pretrained_v1 `
-    .\experiments\model_comparison\results\diverse_seed_2026\core_extended_pretrained_v1 `
-  --output-dir .\experiments\model_comparison\results\aggregate_diverse_3_seeds_extended_v1\core_extended_pretrained
+    .\experiments\model_comparison\results\diverse_seed_42\core_extended_pretrained_map_v1 `
+    .\experiments\model_comparison\results\diverse_seed_123\core_extended_pretrained_map_v1 `
+    .\experiments\model_comparison\results\diverse_seed_2026\core_extended_pretrained_map_v1 `
+  --output-dir .\experiments\model_comparison\results\aggregate_diverse_3_seeds_map_v1\core_extended_pretrained
 ```
 
 ### 7.2. Category-aware comparison
@@ -316,10 +320,10 @@ $weights2026 = (Get-Content .\experiments\model_comparison\results\diverse_seed_
 ```powershell
 .\project\.venv\Scripts\python.exe -m experiments.model_comparison.aggregate_seeds `
   --inputs `
-    .\experiments\model_comparison\results\diverse_seed_42\category_aware_rerun_v1 `
-    .\experiments\model_comparison\results\diverse_seed_123\category_aware_rerun_v1 `
-    .\experiments\model_comparison\results\diverse_seed_2026\category_aware_rerun_v1 `
-  --output-dir .\experiments\model_comparison\results\aggregate_diverse_3_seeds_rerun_v1\category_aware
+    .\experiments\model_comparison\results\diverse_seed_42\category_aware_map_v1 `
+    .\experiments\model_comparison\results\diverse_seed_123\category_aware_map_v1 `
+    .\experiments\model_comparison\results\diverse_seed_2026\category_aware_map_v1 `
+  --output-dir .\experiments\model_comparison\results\aggregate_diverse_3_seeds_map_v1\category_aware
 ```
 
 ### 7.3. System pipeline comparison
@@ -327,10 +331,10 @@ $weights2026 = (Get-Content .\experiments\model_comparison\results\diverse_seed_
 ```powershell
 .\project\.venv\Scripts\python.exe -m experiments.model_comparison.aggregate_seeds `
   --inputs `
-    .\experiments\model_comparison\results\diverse_seed_42\system_pipeline_rerun_v1 `
-    .\experiments\model_comparison\results\diverse_seed_123\system_pipeline_rerun_v1 `
-    .\experiments\model_comparison\results\diverse_seed_2026\system_pipeline_rerun_v1 `
-  --output-dir .\experiments\model_comparison\results\aggregate_diverse_3_seeds_rerun_v1\system_pipeline
+    .\experiments\model_comparison\results\diverse_seed_42\system_pipeline_map_v1 `
+    .\experiments\model_comparison\results\diverse_seed_123\system_pipeline_map_v1 `
+    .\experiments\model_comparison\results\diverse_seed_2026\system_pipeline_map_v1 `
+  --output-dir .\experiments\model_comparison\results\aggregate_diverse_3_seeds_map_v1\system_pipeline
 ```
 
 `aggregate_seeds.py` chỉ đọc kết quả có sẵn; nó không prepare dataset, fine-tune,

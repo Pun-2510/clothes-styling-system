@@ -28,6 +28,7 @@ class WebPackageTests(unittest.TestCase):
             self.assertIn("/api/recommendations/text", routes)
             self.assertIn("/api/recommendations/combined", routes)
             self.assertIn("/api/catalog/categories", routes)
+            self.assertIn("/api/catalog/audiences", routes)
             self.assertIn("/api/catalog/products", routes)
             self.assertIn("/api/catalog/products/{product_id}", routes)
             response = client.post("/api/recommendations/text", json={"query": "   "})
@@ -73,6 +74,7 @@ class WebPackageTests(unittest.TestCase):
                 data={
                     "top_k": "5",
                     "category_mode": "soft_category",
+                    "audience": "women",
                 },
                 files={"file": ("query.png", image_buffer.getvalue(), "image/png")},
             )
@@ -82,6 +84,10 @@ class WebPackageTests(unittest.TestCase):
         self.assertEqual(
             recommend_by_image.call_args.kwargs["category_mode"],
             "soft_category",
+        )
+        self.assertEqual(
+            recommend_by_image.call_args.kwargs["audience"],
+            "women",
         )
     def test_combined_route_translates_and_serializes_fusion_scores(self):
         results = pd.DataFrame({
@@ -128,6 +134,7 @@ class WebPackageTests(unittest.TestCase):
                     "language": "vi",
                     "top_k": "5",
                     "image_weight": "0.5",
+                    "audience": "women",
                 },
                 files={"file": ("query.png", image_buffer.getvalue(), "image/png")},
             )
@@ -140,6 +147,10 @@ class WebPackageTests(unittest.TestCase):
         self.assertEqual(
             recommend_combined.call_args.kwargs["text"],
             "black office dress",
+        )
+        self.assertEqual(
+            recommend_combined.call_args.kwargs["audience"],
+            "women",
         )
 
 

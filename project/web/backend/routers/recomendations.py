@@ -17,6 +17,7 @@ from fastapi import (
 
 from ..dependencies import get_recommender, get_translator
 from ..schemas.recommendation import (
+    AudiencePreference,
     CategoryMode,
     CombinedRecommendationResponse,
     ImageProcessingTimes,
@@ -155,6 +156,7 @@ def recommend_by_text(
                 top_k=payload.top_k,
                 image_weight=image_weight,
                 return_guidance=True,
+                audience=payload.audience,
             )
         )
 
@@ -166,6 +168,7 @@ def recommend_by_text(
             language=payload.language,
             top_k=len(items),
             image_weight=image_weight,
+            audience=payload.audience,
             elapsed_seconds=float(elapsed),
             guidance=guidance,
             items=items,
@@ -230,6 +233,7 @@ def recommend_by_image(
         CategoryMode,
         Form(),
     ] = CategoryMode.NO_CATEGORY,
+    audience: Annotated[AudiencePreference | None, Form()] = None,
 ) -> ImageRecommendationResponse:
     image = read_uploaded_image(file)
 
@@ -241,6 +245,7 @@ def recommend_by_image(
             category_mode=category_mode.value,
             top_k=top_k,
             request_id=request_id,
+            audience=audience,
         )
 
         return ImageRecommendationResponse(
@@ -261,6 +266,7 @@ def recommend_by_image(
             candidate_categories=recommendation.get(
                 "candidate_categories", []
             ),
+            audience=recommendation.get("audience"),
             processing_times=ImageProcessingTimes(
                 ranking=float(
                     recommendation["ranking_time"]
@@ -322,6 +328,7 @@ def recommend_by_image_and_text(
         float,
         Form(ge=0.0, le=1.0),
     ] = COMBINED_IMAGE_WEIGHT,
+    audience: Annotated[AudiencePreference | None, Form()] = None,
 ) -> CombinedRecommendationResponse:
     query = query.strip()
     if not query:
@@ -348,6 +355,7 @@ def recommend_by_image_and_text(
             top_k=top_k,
             image_weight=image_weight,
             request_id=request_id,
+            audience=audience,
         )
         items = serialize_combined_results(recommendation["results"])
 
@@ -359,6 +367,7 @@ def recommend_by_image_and_text(
             top_k=len(items),
             image_weight=float(recommendation["image_weight"]),
             text_weight=float(recommendation["text_weight"]),
+            audience=recommendation.get("audience"),
             elapsed_seconds=float(recommendation["elapsed"]),
             guidance=recommendation.get(
                 "guidance",

@@ -80,6 +80,9 @@ export default function ResultsSection({ data, mode, sectionRef, onNewSearch, on
             {mode === 'image' && data.category_mode === 'no_category' && (
               <span>{t('results.noCategory')}</span>
             )}
+            {data.audience && (
+              <span>{t('results.audiencePreference', { audience: t(`audience.${data.audience}`) })}</span>
+            )}
             <span>{t('results.seconds', { seconds: Number(elapsed || 0).toFixed(2) })}</span>
           </div>
           {onNewSearch && (

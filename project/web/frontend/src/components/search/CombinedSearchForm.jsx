@@ -14,6 +14,7 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
   const [query, setQuery] = useState(initialQuery || savedForm.query || '')
   const [language, setLanguage] = useState(savedForm.language === 'en' ? 'en' : 'vi')
   const [topK, setTopK] = useState(RESULT_COUNTS.includes(savedForm.topK) ? savedForm.topK : 5)
+  const [audience, setAudience] = useState(['women', 'men', 'kids', 'unisex'].includes(savedForm.audience) ? savedForm.audience : '')
   const inputRef = useRef(null)
   const queryInputRef = useRef(null)
   const onClearResultRef = useRef(onClearResult)
@@ -21,6 +22,11 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
   const hasImage = Boolean(file)
   const hasText = Boolean(query.trim())
   const canSearch = hasImage || hasText
+  const settingsSummary = [
+    hasText ? (language === 'vi' ? 'Tiếng Việt' : 'English') : null,
+    t('search.products', { count: topK }),
+    audience ? t(`audience.${audience}`) : t('audience.any'),
+  ].filter(Boolean).join(' · ')
 
   useEffect(() => () => {
     if (preview) URL.revokeObjectURL(preview)
@@ -41,8 +47,8 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
   }, [])
 
   useEffect(() => {
-    saveSearchFormState({ query, language, topK })
-  }, [query, language, topK])
+    saveSearchFormState({ query, language, topK, audience })
+  }, [query, language, topK, audience])
 
   useEffect(() => {
     if (!restoreRequest) return
@@ -51,6 +57,7 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
     setQuery(restoreRequest.query || '')
     setLanguage(restoreRequest.language === 'en' ? 'en' : 'vi')
     setTopK(RESULT_COUNTS.includes(restoreRequest.topK) ? restoreRequest.topK : 5)
+    setAudience(['women', 'men', 'kids', 'unisex'].includes(restoreRequest.audience) ? restoreRequest.audience : '')
     setFile(restoredFile)
     if (restoredFile) saveSearchFile(restoredFile)
     else clearSearchFile()
@@ -114,16 +121,17 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
       language,
       topK,
       file,
+      audience,
     }
     try {
       if (hasImage && hasText) {
-        const result = await searchByCombined({ file, query, language, topK })
+        const result = await searchByCombined({ file, query, language, topK, audience })
         onSearchSuccess(result, 'combined', requestContext)
       } else if (hasImage) {
-        const result = await searchByImage({ file, topK })
+        const result = await searchByImage({ file, topK, audience })
         onSearchSuccess(result, 'image', requestContext)
       } else {
-        const result = await searchByText({ query, language, topK })
+        const result = await searchByText({ query, language, topK, audience })
         onSearchSuccess(result, 'text', requestContext)
       }
     } catch (error) {
@@ -186,21 +194,63 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
         </div>
       )}
 
-      <details className="search-options">
-        <summary><span>{t('search.options')}</span><Icon name="chevron" size={14} /></summary>
-        <div className="search-options-content">
-          {hasText && (
-            <label>{t('search.queryLanguage')}
-              <select value={language} onChange={(event) => setLanguage(event.target.value)}>
-                <option value="vi">Tiếng Việt</option><option value="en">English</option>
-              </select>
-            </label>
-          )}
-          <label>{t('search.resultCount')}
-            <select value={topK} onChange={(event) => setTopK(Number(event.target.value))}>
-              {RESULT_COUNTS.map((value) => <option key={value} value={value}>{t('search.products', { count: value })}</option>)}
-            </select>
-          </label>
+      <details className="search-preferences">
+        <summary className="search-preferences-toggle">
+          <span className="search-preferences-heading">
+            <strong>{t('search.settingsTitle')}</strong>
+            <span>{settingsSummary}</span>
+          </span>
+          <span className="search-preferences-toggle-action">
+            <span className="settings-expand-label">{t('search.settingsExpand')}</span>
+            <span className="settings-collapse-label">{t('search.settingsCollapse')}</span>
+            <Icon name="chevron" size={17} />
+          </span>
+        </summary>
+
+        <div className="search-preferences-panel">
+          <p className="search-preferences-intro">{t('search.settingsIntro')}</p>
+
+          <div className="search-preferences-layout">
+            <div className="search-basic-preferences">
+              {hasText && (
+                <label>{t('search.queryLanguage')}
+                  <select value={language} onChange={(event) => setLanguage(event.target.value)}>
+                    <option value="vi">Tiếng Việt</option><option value="en">English</option>
+                  </select>
+                </label>
+              )}
+              <label>{t('search.resultCount')}
+                <select value={topK} onChange={(event) => setTopK(Number(event.target.value))}>
+                  {RESULT_COUNTS.map((value) => <option key={value} value={value}>{t('search.products', { count: value })}</option>)}
+                </select>
+              </label>
+            </div>
+
+            <fieldset className="audience-preference-fieldset">
+              <legend>{t('search.audiencePreference')}</legend>
+              <div className="audience-preference-options">
+                {['', 'women', 'men', 'kids', 'unisex'].map((value) => (
+                  <button
+                    className={audience === value ? 'active' : ''}
+                    type="button"
+                    aria-pressed={audience === value}
+                    key={value || 'default'}
+                    onClick={() => { setAudience(value); onClearResult() }}
+                  >
+                    {value ? t(`audience.${value}`) : t('audience.any')}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          </div>
+
+          <div className="audience-manual-notice" role="note">
+            <span><Icon name="spark" size={17} /></span>
+            <div>
+              <strong>{t('search.audienceManualTitle')}</strong>
+              <p>{t('search.audienceHint')}</p>
+            </div>
+          </div>
         </div>
       </details>
     </form>

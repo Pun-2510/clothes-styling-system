@@ -24,7 +24,7 @@ sys.path.append(
 )
 
 from src.clip_data import file_sha256
-from src.audit_dataset import write_category_audit
+from src.audit_dataset import write_audience_audit, write_category_audit
 from src.config import (
     IMAGE_DIR,
     CSV_FILE,
@@ -817,6 +817,11 @@ def prepare_catalog(csv_path=CSV_FILE, image_dir=IMAGE_DIR, output_path=PROCESSE
         audit_path,
         minimum=min_per_category,
     )
+    audience_audit_path = output_path.with_suffix(".audience_audit.csv")
+    audience_audit, audience_audit_metadata = write_audience_audit(
+        output,
+        audience_audit_path,
+    )
 
     summary = {"source_csv": str(csv_path.resolve()), "source_csv_sha256": file_sha256(csv_path),
                "image_dir": str(image_dir.resolve()), "requested_products": num_products,
@@ -834,6 +839,8 @@ def prepare_catalog(csv_path=CSV_FILE, image_dir=IMAGE_DIR, output_path=PROCESSE
                "category_counts": output.category.value_counts().to_dict(),
                "category_audit_csv": str(audit_path.resolve()),
                "category_audit": audit_metadata,
+               "audience_audit_csv": str(audience_audit_path.resolve()),
+               "audience_audit": audience_audit_metadata,
                "products_sha256": file_sha256(output_path)}
     output_path.with_suffix(".preparation.json").write_text(
         json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -868,6 +875,10 @@ def prepare_catalog(csv_path=CSV_FILE, image_dir=IMAGE_DIR, output_path=PROCESSE
     print(
         f"Category audit: {audit_path} "
         f"({int(category_audit.status.ne('ok').sum())} categories flagged)"
+    )
+    print(
+        f"Audience audit: {audience_audit_path} "
+        f"({int(audience_audit.review_required.sum())} products need review)"
     )
 
     print(

@@ -15,9 +15,40 @@ from tokenizers.pre_tokenizers import ByteLevel
 
 from src.clip_data import prepare_splits, load_experiment_data
 from src.clip_runtime import (model_identity, validate_embedding_metadata, write_embedding_metadata)
+from src.category_prompts import (
+    CATEGORY_PROMPT_TEMPLATES,
+    aggregate_category_prompt_embeddings,
+    category_prompt_ensemble,
+)
 from src.evaluation import evaluate_retrieval, recall_at_k
 from src.finetune_clip import configure_trainable, contrastive_loss, main as train_main
 from src.generate_clip_embeddings import main as embeddings_main
+
+
+class CategoryPromptEnsembleTests(unittest.TestCase):
+    def test_prompt_groups_are_category_major_and_keep_the_legacy_prompt(self):
+        groups = category_prompt_ensemble(["Caps", "Shirts"])
+        self.assertEqual(len(groups), 2)
+        self.assertEqual(len(groups[0]), len(CATEGORY_PROMPT_TEMPLATES))
+        self.assertEqual(groups[0][0], "a catalog product photo of Caps")
+        self.assertTrue(all("Shirts" in prompt for prompt in groups[1]))
+
+    def test_prompt_embeddings_are_averaged_and_renormalized_per_category(self):
+        prompt_count = len(CATEGORY_PROMPT_TEMPLATES)
+        values = np.vstack(
+            [np.array([[1.0, 0.0]], dtype=np.float32)] * prompt_count
+            + [np.array([[0.0, 2.0]], dtype=np.float32)] * prompt_count
+        )
+        prototypes = aggregate_category_prompt_embeddings(values, 2)
+        np.testing.assert_allclose(
+            prototypes,
+            np.array([[1.0, 0.0], [0.0, 1.0]], dtype=np.float32),
+        )
+        np.testing.assert_allclose(np.linalg.norm(prototypes, axis=1), 1.0)
+
+    def test_prompt_embedding_shape_must_match_category_count(self):
+        with self.assertRaises(ValueError):
+            aggregate_category_prompt_embeddings(np.ones((3, 2)), 1)
 
 
 class RecallTests(unittest.TestCase):
@@ -230,6 +261,46 @@ class CombinedRecommendationTests(unittest.TestCase):
             )
 
         self.assertEqual(list(results.product_id), ["second", "first"])
+
+    def test_explicit_audience_limits_candidates_without_changing_scores(self):
+        from src.recommend import FashionRecommender
+
+        recommender = FashionRecommender.__new__(FashionRecommender)
+        recommender.products = pd.DataFrame({
+            "product_id": ["mens-winner", "womens-first", "womens-second"],
+            "product_name": ["Men's Shirt", "Women's Shirt", "Women's Blouse"],
+            "category": ["Shirts", "Shirts", "Tops"],
+            "description": ["", "", ""],
+            "image_reference": ["men.jpg", "women-1.jpg", "women-2.jpg"],
+            "audience": ["men", "women", "women"],
+        })
+        recommender.categories = ["Shirts", "Tops"]
+        recommender.embeddings = np.eye(3, dtype=np.float32)
+        recommender.text_embeddings = None
+        recommender.audience_indices = {
+            "women": np.array([1, 2], dtype=np.int64),
+            "men": np.array([0], dtype=np.int64),
+            "kids": np.array([], dtype=np.int64),
+            "unisex": np.array([], dtype=np.int64),
+        }
+        encoded_queries = []
+        recommender.encode_text = lambda text: (
+            encoded_queries.append(text) or np.ones(3, dtype=np.float32)
+        )
+
+        with patch(
+            "src.recommend.cosine_similarity",
+            return_value=np.array([0.99, 0.70, 0.60], dtype=np.float32),
+        ):
+            results, _, _ = recommender.recommend_by_text(
+                "blue product",
+                top_k=3,
+                audience="women",
+            )
+
+        self.assertEqual(list(results.product_id), ["womens-first", "womens-second"])
+        self.assertEqual(set(results.audience), {"women"})
+        self.assertIn("women's fashion product", encoded_queries[0])
 
     def test_category_confidence_strength_and_bonus_are_gradual(self):
         from src.category_ranking import (

@@ -10,11 +10,11 @@ const COPY = {
     modes: {
       image: {
         tab: 'IMAGE QUERY',
-        summary: 'Ảnh luôn được so với toàn bộ catalog. Category được suy ra từ láng giềng ảnh và CLIP prototype; quan hệ Top-2 chỉ điều chỉnh bonus, không lọc cứng sản phẩm.',
+        summary: 'Ảnh luôn được so với toàn bộ catalog. Category được suy ra từ láng giềng ảnh và CLIP prompt-ensemble prototype; quan hệ Top-2 chỉ điều chỉnh bonus, không lọc cứng sản phẩm.',
         steps: [
           ['01', 'CROP ẢNH', 'Chọn vùng trang phục cần tìm'],
           ['02', 'CLIP + SII', 'Mã hóa ảnh và tính cosine với catalog'],
-          ['03', 'CATEGORY EVIDENCE', 'Láng giềng cân bằng + CLIP prototype'],
+          ['03', 'CATEGORY EVIDENCE', 'Láng giềng cân bằng + CLIP prompt ensemble'],
           ['04', 'CONFIDENCE ROUTE', 'Đánh giá h và quan hệ Top-2'],
           ['05', 'SOFT TOP-K', 'Cộng bonus có trọng số rồi xếp hạng'],
         ],
@@ -69,11 +69,11 @@ const COPY = {
     modes: {
       image: {
         tab: 'IMAGE QUERY',
-        summary: 'The image is always compared with the full catalog. Category evidence combines visual neighbours and CLIP prototypes; the Top-2 relation only adjusts bonuses and never hard-filters products.',
+        summary: 'The image is always compared with the full catalog. Category evidence combines visual neighbours and CLIP prompt-ensemble prototypes; the Top-2 relation only adjusts bonuses and never hard-filters products.',
         steps: [
           ['01', 'IMAGE CROP', 'Select the target garment'],
           ['02', 'CLIP + SII', 'Encode the image and score the catalog'],
-          ['03', 'CATEGORY EVIDENCE', 'Balanced neighbours + CLIP prototype'],
+          ['03', 'CATEGORY EVIDENCE', 'Balanced neighbours + CLIP prompt ensemble'],
           ['04', 'CONFIDENCE ROUTE', 'Evaluate h and the Top-2 relation'],
           ['05', 'SOFT TOP-K', 'Apply weighted bonuses and rank'],
         ],

@@ -63,6 +63,7 @@ export default function Header({ serverStatus, onRetry }) {
   }, [])
 
   const categoryActive = path === '/categories' || path.startsWith('/category/')
+  const audienceActive = path.startsWith('/audience/')
 
   return (
     <header className="site-header">
@@ -109,6 +110,15 @@ export default function Header({ serverStatus, onRetry }) {
       <div className="header-navigation-row">
         <nav className="main-nav" aria-label={t('header.navigation')}>
           <a className={path === '/' ? 'active' : ''} href="/">{t('header.home')}</a>
+          {['women', 'men', 'kids'].map((audience) => (
+            <a
+              className={audienceActive && path === `/audience/${audience}` ? 'active' : ''}
+              href={`/audience/${audience}`}
+              key={audience}
+            >
+              {t(`audience.${audience}`)}
+            </a>
+          ))}
           <div className="category-menu" ref={categoryMenuRef}>
             <button
               className={categoryActive || categoryMenuOpen ? 'active' : ''}

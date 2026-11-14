@@ -28,9 +28,14 @@ export function getCategories() {
   return getJson('/api/catalog/categories')
 }
 
-export function getProducts({ category, page = 1, pageSize = 24 } = {}) {
+export function getAudiences() {
+  return getJson('/api/catalog/audiences')
+}
+
+export function getProducts({ category, audience, page = 1, pageSize = 24 } = {}) {
   const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) })
   if (category) params.set('category', category)
+  if (audience) params.set('audience', audience)
   return getJson(`/api/catalog/products?${params}`)
 }
 
@@ -40,6 +45,10 @@ export function getProduct(productId) {
 
 export function categoryUrl(name) {
   return `/category/${encodeURIComponent(name)}`
+}
+
+export function audienceUrl(name) {
+  return `/audience/${encodeURIComponent(name)}`
 }
 
 export function productUrl(id) {

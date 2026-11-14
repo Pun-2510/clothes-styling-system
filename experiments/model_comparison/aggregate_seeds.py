@@ -29,10 +29,12 @@ METRIC_COLUMNS = (
     "recall",
     "f1",
     "ndcg",
+    "map",
     "category_macro_precision",
     "category_macro_recall",
     "category_macro_f1",
     "category_macro_ndcg",
+    "category_macro_map",
 )
 COUNT_COLUMNS = ("evaluated_queries", "skipped_queries", "gallery_size")
 
@@ -116,7 +118,9 @@ def main():
         seen_seeds.add(metadata["seed"])
 
         frame = pd.read_csv(csv_path)
-        required = {"system", "task", "k", "precision", "recall", "f1", "ndcg"}
+        required = {
+            "system", "task", "k", "precision", "recall", "f1", "ndcg", "map"
+        }
         missing = required - set(frame.columns)
         if missing:
             raise ValueError(f"{csv_path} is missing columns: {sorted(missing)}")

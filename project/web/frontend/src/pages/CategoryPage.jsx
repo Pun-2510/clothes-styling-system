@@ -6,22 +6,34 @@ import { useLanguage } from '../i18n'
 
 export default function CategoryPage({ name }) {
   const { language, t } = useLanguage()
-  const requestedPage = Number(new URLSearchParams(window.location.search).get('page'))
+  const searchParams = new URLSearchParams(window.location.search)
+  const requestedPage = Number(searchParams.get('page'))
   const page = Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1
+  const audience = searchParams.get('audience') || ''
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let active = true
-    getProducts({ category: name, page, pageSize: 24 })
+    getProducts({ category: name, audience, page, pageSize: 24 })
       .then((response) => { if (active) setData(response) })
       .catch((failure) => { if (active) setError(failure.message) })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [name, page])
+  }, [name, audience, page])
 
-  const pageUrl = (number) => `/category/${encodeURIComponent(name)}?page=${number}`
+  const pageUrl = (number) => {
+    const params = new URLSearchParams({ page: String(number) })
+    if (audience) params.set('audience', audience)
+    return `/category/${encodeURIComponent(name)}?${params}`
+  }
+  const audienceUrl = (value) => {
+    const params = new URLSearchParams()
+    if (value) params.set('audience', value)
+    const query = params.toString()
+    return `/category/${encodeURIComponent(name)}${query ? `?${query}` : ''}`
+  }
 
   return (
     <section className="listing-page">
@@ -31,6 +43,12 @@ export default function CategoryPage({ name }) {
         <h1>{name}</h1>
         <p>{data ? t('search.products', { count: data.total.toLocaleString(language === 'en' ? 'en-US' : 'vi-VN') }) : t('category.loading')}</p>
       </div>
+      <nav className="audience-filter" aria-label={t('audience.filterLabel')}>
+        <a className={!audience ? 'active' : ''} href={audienceUrl('')}>{t('audience.all')}</a>
+        {['women', 'men', 'kids', 'unisex'].map((value) => (
+          <a className={audience === value ? 'active' : ''} href={audienceUrl(value)} key={value}>{t(`audience.${value}`)}</a>
+        ))}
+      </nav>
       {error && <div className="state-message" role="alert">{error}</div>}
       {loading && <ProductGridSkeleton count={8} className="category-product-grid" />}
       {data && <div className="product-grid category-product-grid">{data.items.map((item) => <ProductCard key={item.product_id} item={item} />)}</div>}

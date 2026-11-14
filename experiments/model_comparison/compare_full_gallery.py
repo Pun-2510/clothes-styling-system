@@ -226,14 +226,15 @@ def _markdown_table(title, rows):
     lines = [
         f"## {title}",
         "",
-        "| System | Role | Input | Formula | K | Precision | Recall | F1 | NDCG |",
-        "|---|---|---|---|---:|---:|---:|---:|---:|",
+        "| System | Role | Input | Formula | K | Precision | Recall | F1 | NDCG | MAP |",
+        "|---|---|---|---|---:|---:|---:|---:|---:|---:|",
     ]
     for row in rows:
         lines.append(
             f"| {row['system']} | {row['role']} | {row['input']} | "
             f"`{row['formula']}` | {row['k']} | {row['precision']:.4f} | "
-            f"{row['recall']:.4f} | {row['f1']:.4f} | {row['ndcg']:.4f} |"
+            f"{row['recall']:.4f} | {row['f1']:.4f} | {row['ndcg']:.4f} | "
+            f"{row['map']:.4f} |"
         )
     return lines
 
@@ -279,6 +280,7 @@ def self_test():
     assert metrics["evaluated_queries"] == 1
     assert metrics["skipped_queries"] == 1
     assert metrics["ndcg@1"] == 1.0
+    assert metrics["map@1"] == 1.0
     fused = clip_query_gallery_score_fusion(
         queries, queries, gallery, gallery, query_ids, gallery_ids
     )
@@ -299,6 +301,7 @@ def self_test():
     )
     assert paired_metrics["recall@1"] == 1.0
     assert paired_metrics["ndcg@1"] == 1.0
+    assert paired_metrics["map@1"] == 1.0
     tfidf_rankings, tfidf_metadata = rank_tfidf(
         ["red cotton shirt", "blue cotton shirt", "black leather shoe", "wide brim hat"],
         [0, 3],

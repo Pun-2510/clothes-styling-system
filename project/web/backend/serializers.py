@@ -37,6 +37,7 @@ def serialize_text_results(
                 image_reference=optional_string(
                     row.get("image_reference")
                 ),
+                audience=optional_string(row.get("audience")),
                 text_to_image_score=float(
                     row["cross_modal_similarity"]
                 ),
@@ -83,6 +84,7 @@ def serialize_image_results(
                 image_reference=optional_string(
                     row.get("image_reference")
                 ),
+                audience=optional_string(row.get("audience")),
                 visual_similarity=float(
                     row["visual_similarity"]
                 ),
@@ -117,6 +119,7 @@ def serialize_combined_results(
                 product_name=optional_string(row.get("product_name")),
                 category=optional_string(row.get("category")),
                 image_reference=optional_string(row.get("image_reference")),
+                audience=optional_string(row.get("audience")),
                 visual_similarity=float(row["visual_similarity"]),
                 text_to_image_score=float(row["text_to_image_similarity"]),
                 text_to_text_score=optional_float(

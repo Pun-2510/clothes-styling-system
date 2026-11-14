@@ -10,7 +10,7 @@ embeddings, cache validation và retrieval weights đều được tạo bên tr
 ```text
 <repository>/
 ├── project/                         Hệ thống chạy thật
-│   ├── data/processed/              Catalog đã chuẩn bị và category audit
+│   ├── data/processed/              Catalog, category audit và audience audit
 │   ├── runs/clip_finetune/          Split, log huấn luyện và best checkpoint
 │   ├── embeddings/                  Image/text embeddings của catalog
 │   ├── validation/                  Cache và bảng thử trọng số validation
@@ -81,7 +81,7 @@ Không bắt buộc chạy `Activate.ps1`; các lệnh dưới đây gọi trự
 
 ## 5. OFFLINE PIPELINE TỪ ĐẦU
 
-### 5.1. Chuẩn bị catalog và category audit
+### 5.1. Chuẩn bị catalog, category audit và audience audit
 
 ```powershell
 .\.venv\Scripts\python.exe -m src.prepare_dataset `
@@ -114,7 +114,16 @@ products.csv
 products.preparation.json
 products.category_audit.csv
 products.category_audit.json
+products.audience_audit.csv
+products.audience_audit.json
 ```
+
+`audience_audit` tách riêng `age_group` và `gender_group`, đồng thời ghi nguồn,
+độ tin cậy và bằng chứng của từng nhãn. Hệ thống ưu tiên tên sản phẩm, sau đó
+đến category; mô tả dài chỉ được dùng khi có cụm từ chỉ đối tượng rõ ràng.
+Những trường hợp thiếu hoặc mâu thuẫn bằng chứng được giữ ở `unknown` để tránh
+đưa nhầm sản phẩm người lớn vào trang Trẻ em. Audit này không thay đổi
+`products.csv`, checkpoint CLIP hoặc embeddings.
 
 ### 5.2. Fine-tune CLIP
 
@@ -137,8 +146,8 @@ Giải thích tham số chính:
 - `--epochs 3`: số lần model đi qua tập train. Tăng có thể cải thiện hoặc gây
   overfitting và luôn làm thời gian chạy dài hơn.
 - `--batch-size 16`: số cặp ảnh–text xử lý trong một bước. Giảm xuống 8 hoặc 4
-  nếu thiếu VRAM/RAM; tăng nếu phần cứng cho phép.
-- `--learning-rate 1e-6`: mức cập nhật trọng số mỗi bước.
+  nếu thiếu VRAM/RAM; tăng nếu phần cứng cho số mỗi bư phép.
+- `--learning-rate 1e-6`: mức cập nhật trọngớc.
 - `--trainable full`: cập nhật toàn bộ CLIP. Dùng `projections` để chỉ cập nhật
   projection layers và `logit_scale`, nhanh và nhẹ hơn.
 - Hai tham số category balance giảm ảnh hưởng của category quá lớn khi train.
@@ -332,6 +341,13 @@ Website vẫn không được trỏ tới `experiments/`.
   nêu category, hệ thống dùng confidence và quan hệ Top-2 của ảnh để cộng soft
   bonus động giống Image-only, không loại sản phẩm ngoài category.
 - Tất cả nhánh dùng raw cosine similarity; percentile không được dùng.
+- Catalog browsing có thêm bộ lọc metadata `Women / Men / Kids / Unisex`.
+  Nhãn này được suy ra bảo thủ từ tên sản phẩm và category; mô tả chỉ là nguồn
+  dự phòng khi có cụm từ rõ ràng. Hệ thống không đoán
+  giới tính từ ảnh. Mặc định nó không thay đổi kết quả truy xuất. Nếu người dùng
+  chủ động chọn một nhóm trong `Tùy chọn tìm kiếm`, hệ thống giới hạn tập ứng
+  viên theo nhóm đó nhưng vẫn giữ nguyên embedding, cosine similarity và công
+  thức category-aware ranking.
 
 ## 10. THÍ NGHIỆM NGHIÊN CỨU RIÊNG
 

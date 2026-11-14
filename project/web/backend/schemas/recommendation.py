@@ -3,6 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+AudiencePreference = Literal["women", "men", "kids", "unisex"]
 
 class CategoryMode(str, Enum):
     NO_CATEGORY = "no_category"
@@ -65,6 +66,7 @@ class TextRecommendationRequest(BaseModel):
         le=1.0,
     )
     language: Literal["vi", "en"] = "en"
+    audience: AudiencePreference | None = None
 
 
 class ProductRecommendation(BaseModel):
@@ -72,6 +74,7 @@ class ProductRecommendation(BaseModel):
     product_name: str | None
     category: str | None
     image_reference: str | None
+    audience: str | None = None
     text_to_image_score: float
     text_to_text_score: float | None
     final_score: float
@@ -102,6 +105,7 @@ class TextRecommendationResponse(BaseModel):
     language: Literal["vi", "en"]
     top_k: int
     image_weight: float
+    audience: AudiencePreference | None = None
     elapsed_seconds: float
     guidance: TextQueryGuidance
     items: list[ProductRecommendation]
@@ -113,6 +117,7 @@ class ImageProductRecommendation(BaseModel):
     product_name: str | None
     category: str | None
     image_reference: str | None
+    audience: str | None = None
 
     visual_similarity: float
     category_bonus: float | None
@@ -131,6 +136,7 @@ class ImageRecommendationResponse(BaseModel):
     predicted_category: str | None
     category_confidence: float | None
     candidate_categories: list[str] = Field(default_factory=list)
+    audience: AudiencePreference | None = None
     processing_times: ImageProcessingTimes
     items: list[ImageProductRecommendation]
     explanation: RankingExplanation
@@ -141,6 +147,7 @@ class CombinedProductRecommendation(BaseModel):
     product_name: str | None
     category: str | None
     image_reference: str | None
+    audience: str | None = None
     visual_similarity: float
     text_to_image_score: float
     text_to_text_score: float | None
@@ -159,6 +166,7 @@ class CombinedRecommendationResponse(BaseModel):
     top_k: int
     image_weight: float
     text_weight: float
+    audience: AudiencePreference | None = None
     elapsed_seconds: float
     guidance: TextQueryGuidance
     items: list[CombinedProductRecommendation]

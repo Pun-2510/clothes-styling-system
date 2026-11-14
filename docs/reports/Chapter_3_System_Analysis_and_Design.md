@@ -1,314 +1,268 @@
 # CHAPTER 3. SYSTEM ANALYSIS AND DESIGN
 
-This chapter defines the requirements and design of the proposed fashion
-product retrieval system. The system separates offline machine-learning tasks
-from online recommendation. The offline pipeline prepares data, fine-tunes and
-evaluates CLIP, and generates catalog embeddings. The online application uses
-these artifacts to process image, text, or combined image-text queries.
+## 3.1. Problem analysis
 
-## 3.1. Problem Analysis
+The system must help a user find products when the available information is incomplete. The user may have a photograph but not know the product name, may have only a written description, or may use text to clarify an image. Therefore, the system supports three situations:
 
-Online shoppers may know the appearance of a desired product without knowing
-its exact name, or they may only be able to describe it in words. A useful
-retrieval system should therefore support three input situations:
+- **Image-only query:** find products with visual characteristics similar to an uploaded image.
+- **Text-only query:** find products related to a written description.
+- **Combined image–text query:** use an image as the visual reference and text to refine the same target product.
 
-1. **Image-only query:** retrieve products with similar visual characteristics.
-2. **Text-only query:** retrieve products that match a written description.
-3. **Combined query:** use an image as the visual reference and text to express
-   additional or corrective information such as category, color, or pattern.
+The output is a ranked Top-*K* list from an existing catalog. It is not only a category prediction. Category is supporting evidence that can improve ranking, but an uncertain prediction must not remove every product from the correct class. For this reason, image category evidence is applied softly and includes an unrestricted fallback. An exact category explicitly written by the user can be treated more strongly because it is a direct instruction.
 
-The output is a ranked Top-K list rather than a single class prediction. The
-system is content-based: it ranks catalog products from their images and
-descriptions and does not require user purchase history.
+The selected data contain imbalanced categories, short descriptions, repeated visual styles, and images with different backgrounds or viewpoints. The design must therefore include data auditing, diversity-aware sampling, category-balanced training, confidence-aware ranking, and clear fallback behavior.
 
-Category information must be used carefully. An incorrect category prediction
-should not remove visually relevant products. For image-only search, category
-is therefore an automatic soft preference controlled by a confidence
-threshold. In a combined query, an explicitly written category may be treated
-as a stronger constraint because it comes directly from the user.
+## 3.2. System requirements
 
-The dataset also presents practical challenges. Categories are imbalanced,
-descriptions may be short, and product images vary in background, viewpoint,
-color, and style. The design consequently includes data auditing, balanced
-training sampling, reproducible evaluation, and fallback behavior during
-online retrieval.
+### 3.2.1. Functional requirements
 
-## 3.2. System Requirements
-
-### 3.2.1. Functional Requirements
-
-| ID | Requirement |
+| Requirement | Description |
 |---|---|
-| FR-01 | Prepare a configurable number of valid products and report their category distribution. |
-| FR-02 | Create reproducible training, validation, and test assignments. |
-| FR-03 | Fine-tune CLIP and retain the checkpoint with the best validation retrieval score. |
-| FR-04 | Generate compatible image and text embeddings for the active catalog. |
-| FR-05 | Accept image-only, text-only, or combined image-text queries. |
-| FR-06 | Apply automatic soft-category preference to image search only when its confidence is sufficient. |
-| FR-07 | Combine text-to-image and text-to-text similarity for text search when both catalog embeddings are available. |
-| FR-08 | Use weighted raw cosine fusion for combined image-text retrieval. |
-| FR-09 | Support English input and optional Vietnamese-to-English translation. |
-| FR-10 | Return a configurable Top-K ranked list with product and score information. |
-| FR-11 | Compare models and retrieval configurations under recorded experimental settings. |
-| FR-12 | Expose service readiness and support requests through a load-balanced web deployment with centralized rate limiting. |
+| Data preparation | Validate metadata and images, remove exact duplicates, select a configurable and diverse catalog, and audit category distribution. |
+| Model preparation | Fine-tune CLIP and retain the best validation checkpoint. |
+| Embedding generation | Generate compatible image and text embeddings for the active serving catalog. |
+| Unified query processing | Accept an image, text, or both through one search area and route the request automatically. |
+| Category-aware ranking | Apply image category evidence according to confidence and category relationships; apply an exact textual category as a direct candidate constraint. |
+| Product ranking | Calculate raw cosine-based scores and return a configurable Top-*K* list. |
+| Query assistance | Suggest category corrections or refinements for misspelled, broad, or ambiguous text. |
+| Result explanation | Explain the main score components, category candidates, confidence, and ranking decisions for the current query. |
+| Catalog browsing | Browse categories and paginated products and open a product detail page. |
+| Local user utilities | Store recent searches and Favorites in the browser without requiring an account. |
+| System inspection | Display model, artifact, backend, pipeline, formula, and runtime status on a read-only Developer page. |
+| Deployment | Serve the website through Nginx and distribute API requests across two FastAPI instances. |
 
-### 3.2.2. Non-Functional Requirements
+### 3.2.2. Non-functional requirements
 
-- **Reproducibility:** dataset hashes, random seeds, split assignments,
-  hyperparameters, checkpoints, and evaluation settings must be recorded.
-- **Consistency:** catalog rows, embeddings, and model identity must belong to
-  the same configuration.
-- **Usability:** users are not required to understand or manually select an
-  internal category strategy.
-- **Performance:** catalog embeddings are generated offline so that an online
-  request only encodes its query and ranks existing vectors.
-- **Reliability:** invalid inputs and unavailable model instances must produce
-  clear errors, while health checks and restart policies support recovery.
-- **Maintainability:** data processing, model training, evaluation, serving,
-  frontend, and deployment configuration remain separate modules.
+The system must be reproducible. Dataset selections, random seeds, split assignments, model settings, checkpoints, embedding metadata, validation-selected weights, and evaluation settings are recorded. The catalog, checkpoint, and embedding arrays must belong to the same configuration.
 
-## 3.3. Overall System Architecture
+The online path must avoid repeating expensive catalog computation. Product embeddings are generated offline, while an online request only encodes the new query and compares it with stored vectors.
 
-The architecture contains an offline pipeline and an online web application.
-The website does not train a model when it starts; it loads a prepared catalog,
-compatible embeddings, and a selected CLIP checkpoint.
+The interface must hide unnecessary model complexity. Users are not asked to choose a retrieval branch, category strategy, or fusion weight. The system determines these choices from the supplied inputs and validation-selected configuration.
 
-**[Figure 3.1. Overall architecture of the proposed system]**
+The deployment must provide clear input errors and basic availability controls. Health checks, request-size limits, bounded retries, rate limits, two backend instances, and Docker restart policies provide reliability suitable for a local research prototype.
+
+## 3.3. Overall system architecture
+
+The design separates offline preparation from online retrieval. This distinction prevents model training or catalog encoding from running during a user request.
+
+### 3.3.1. Offline project pipeline
+
+The project-local offline flow is:
 
 ```text
 Raw metadata and images
-          |
-          v
-Preparation and category audit ---> Processed catalog
-          |                               |
-          v                               v
-Train/validation/test split          Embedding generation
-          |                               |
-          v                               v
-CLIP fine-tuning ---> Best checkpoint + image/text embeddings
-          |
-          +--------------------> Model comparisons
-
-User ---> Web reverse proxy ---> React frontend
-                  |
-                  +---> API Gateway ---> FastAPI backend 1/2
-                                               |
-                                               v
-                             Catalog + model + embeddings
-                                               |
-                                               v
-                                    Ranked Top-K products
+        ↓
+Validation, duplicate removal and diversity-aware sampling
+        ↓
+Processed catalog and category audit
+        ↓
+Grouped train/validation/test split
+        ↓
+CLIP fine-tuning and best-checkpoint selection
+        ↓
+Catalog image/text embeddings
+        ↓
+Validation-based retrieval weights
+        ↓
+Serving artifacts under project/
 ```
 
-| Component | Technology | Main responsibility |
-|---|---|---|
-| Frontend | React and Vite | Collect query inputs and display ranked products. |
-| Web reverse proxy | Nginx | Provide the public port 80 entry point and route website and API paths. |
-| API Gateway and load balancer | Nginx | Apply API rate limits, bounded retries, and least-connection backend distribution. |
-| Recommendation API | FastAPI | Validate requests, translate text when requested, and serialize results. |
-| Recommendation engine | PyTorch, Transformers, NumPy | Encode queries, calculate scores, and rank products. |
-| Artifact storage | CSV, JSON, NumPy arrays, safetensors | Store the catalog, embeddings, metadata, and checkpoint. |
+The training subset updates CLIP. The validation subset selects the best checkpoint and ranking parameters. The test subset remains separate for evaluation. After selection, the checkpoint generates embeddings for the active serving catalog.
 
-The two backend containers use the same mounted artifacts but load separate
-in-memory model instances. This provides basic load distribution and request
-failover, although both instances still depend on the same Docker host.
+The repository-level `experiments/` directory is independent from the application artifacts in `project/`. Experimental seeds may create different catalogs, checkpoints, embeddings, and result files without changing the deployed website.
 
-## 3.4. Data and Artifact Design
+### 3.3.2. Online retrieval pipeline
 
-The processed catalog contains one validated row per selected product. Its main
-fields are `product_id`, `image_reference`, `product_name`, `description`,
-`category`, `image_path`, and `image_sha256`. Exact duplicate image content is
-removed before sampling.
+The online flow is:
 
-| Artifact | Purpose |
+```text
+Browser
+   ↓
+Public Nginx reverse proxy
+   ├──→ React frontend
+   └──→ Internal Nginx API load balancer
+                     ├──→ FastAPI backend 1
+                     └──→ FastAPI backend 2
+                                  ↓
+                Fine-tuned CLIP + catalog embeddings
+                                  ↓
+                  Ranking, explanation and Top-K
+```
+
+When a backend starts, it loads the processed catalog, checkpoint, embeddings, translator, category configuration, and retrieval weights. The request route is selected automatically from the available image and text inputs.
+
+## 3.4. Data and model processing design
+
+### 3.4.1. Data preparation
+
+The preparation stage normalizes product fields, validates image files, calculates image hashes, and removes exact duplicate images. It then selects the requested number of products.
+
+The default selection method is diversity-aware. Within each category, the method uses lightweight image color/shape information together with hashed text metadata. It starts with a deterministic product and repeatedly selects a product far from those already chosen. This encourages variation without running the full CLIP model during data preparation. A random strategy remains available for controlled comparison.
+
+A category audit records source count, selected count, coverage, split distribution, and warning state for every category. The minimum-per-category value is a target, not a guarantee, because the source data may contain fewer products than requested.
+
+Related records are grouped during splitting to reduce leakage. The saved split assignments allow training and evaluation to reuse the same data.
+
+### 3.4.2. Fine-tuning and embedding generation
+
+CLIP is fine-tuned using fashion image–text pairs and symmetric contrastive learning. A category-balanced sampler changes how often existing training products are observed so that common categories do not dominate every batch. It does not generate synthetic products.
+
+After each epoch, validation retrieval is calculated. The checkpoint with the best average Recall@1 across text-to-image and image-to-text directions is retained. The selected model generates normalized catalog image and text embeddings in the same row order as the processed catalog.
+
+Metadata checks verify that the checkpoint, catalog, and embeddings are compatible. Validation then selects serving weights, which are stored in a project-local JSON file and loaded automatically by both backend instances.
+
+## 3.5. Recommendation design
+
+### 3.5.1. Input routing and notation
+
+At least one input must be provided:
+
+- image without text → image-only retrieval;
+- text without image → text-only retrieval;
+- image and text → combined retrieval.
+
+Let \(q\) be the current query and \(p_i\) the \(i\)-th catalog product. The main symbols are:
+
+| Symbol | Meaning |
 |---|---|
-| `data/processed/products.csv` | Active product catalog used for embedding generation and serving. |
-| `products.category_audit.csv/.json` | Category counts, coverage, and warnings after preparation. |
-| `runs/<run>/dataset.csv` | Exact training, validation, and test assignments. |
-| `runs/<run>/training.json` | Training configuration, epoch history, and selected checkpoint metadata. |
-| `runs/<run>/best/` | Best validation checkpoint and processor files. |
-| `embeddings/image_embeddings.npy` | Precomputed product image vectors. |
-| `embeddings/text_embeddings.npy` | Precomputed product text vectors. |
-| Embedding metadata | Catalog hash, model identity, shape, and row-order information. |
+| \(S_{II}(q,p_i)\) | Similarity between the query image and product image. |
+| \(S_{TI}(q,p_i)\) | Similarity between the query text and product image. |
+| \(S_{TT}(q,p_i)\) | Similarity between the query text and product text. |
+| \(S_T(q,p_i)\) | Fused text-branch score. |
+| \(S_{base}(q,p_i)\) | Initial image–text fusion score. |
+| \(A(p_i)\) | Metadata attribute match for supported colors or patterns. |
+| \(V_c\) | Visual-neighbor evidence for category \(c\). |
+| \(P_c\) | CLIP prompt evidence for category \(c\). |
+| \(R_c\) | Combined category evidence. |
+| \(h\) | Confidence of the strongest category. |
+| \(g(h)\) | Confidence strength between 0 and 1. |
+| \(W(c_i)\) | Dynamic support assigned to the category of product \(p_i\). |
+| \(\beta\) | Text-to-image contribution in the text branch. |
+| \(\omega_I\) | Image contribution in combined retrieval. |
+| \(\omega_A\) | Attribute contribution. |
+| \(\lambda_I,\lambda_C\) | Maximum image-only and combined category contributions. |
 
-The order of each embedding array must match the order of `products.csv`.
-Metadata validation prevents an embedding array from being used with a changed
-catalog or a different model checkpoint.
+The numeric parameter values are selected from validation data and reported with the experimental settings rather than embedded permanently in the formulas.
 
-## 3.5. Offline Machine-Learning Pipeline
+### 3.5.2. Image-only retrieval
 
-### 3.5.1. Data Preparation and Audit
+The submitted image is converted into a normalized CLIP image embedding. A manual crop, when used, simply becomes the submitted image; it does not create another score. The initial score is \(S_{II}(q,p_i)\).
 
-The preparation stage validates image files, normalizes metadata fields,
-calculates image hashes, removes exact duplicates, and selects the requested
-catalog size. It also produces a category audit. A minimum per category is a
-sampling target rather than a guarantee: when the source itself contains too
-few products, the shortage is reported instead of creating artificial data.
+Category evidence is calculated from two complementary sources.
 
-### 3.5.2. CLIP Fine-Tuning
+**Visual-neighbor evidence.** Catalog products are grouped by category. The system takes the same maximum number of strongest non-negative similarities from each category and emphasizes strong matches before averaging them. The equal limit reduces the advantage of categories that contain many more products. The resulting evidence is \(V_c\).
 
-The prepared products are divided into training, validation, and test subsets.
-Related records are grouped before splitting to reduce leakage. Fine-tuning
-uses image-text pairs, a symmetric contrastive objective, AdamW, gradient
-clipping, and category-balanced sampling for the training subset.
+**CLIP prompt evidence.** Each catalog category is represented by a short prompt such as “a catalog product photo of shirts.” The query image embedding is compared with the prompt embedding. Its non-negative score is \(P_c\).
 
-After each epoch, the model is evaluated on validation data. The checkpoint is
-selected by the mean of text-to-image Recall@1 and image-to-text Recall@1. Test
-data are reserved for final comparison and do not affect checkpoint selection.
-
-### 3.5.3. Catalog Embedding Generation
-
-The selected model encodes catalog images and constructed product text in
-batches. The normalized vectors and their provenance metadata are saved for
-online retrieval. Starting the website does not regenerate these embeddings.
-
-## 3.6. Online Recommendation Design
-
-### 3.6.1. Input Routing
-
-The frontend includes a combined form that accepts optional image and text
-fields. It automatically calls image search when only an image is present,
-text search when only text is present, and combined search when both are
-provided. Dedicated image and text tabs are also retained in the current
-interface.
-
-### 3.6.2. Image-Only Recommendation
-
-An uploaded image is validated, converted to RGB, and encoded by the CLIP image
-encoder. Its vector is compared with every catalog image vector using cosine
-similarity, producing the image-to-image score \(S_{II}\).
-
-The backend estimates a category from balanced groups of the strongest visual
-neighbors. Category influence increases gradually between a confidence floor
-of 0.50 and the full-strength threshold of 0.60:
+The evidence is combined as:
 
 \[
-s_{image}(q,p_i)=S_{II}(q,p_i)
-+\lambda g(h)\,\mathbf{1}[category_i=\hat{c}],
+R_c=V_c+\alpha P_c
 \]
 
-where \(h\) is the heuristic confidence, \(g(h)\) maps confidence to a strength
-between 0 and 1, and the default maximum bonus is \(\lambda=0.05\). Products
-from other categories remain candidates. Confidence at or below 0.50 produces
-no category bonus, while confidence at or above 0.60 produces the full bonus.
-
-### 3.6.3. Text-Only Recommendation
-
-English text is encoded directly. Vietnamese input can first be translated to
-English. The query is compared with catalog image vectors and, when available,
-catalog text vectors. The final text score is
+where \(\alpha\) controls the prompt contribution. Let \(r_1\) and \(r_2\) be the two strongest supporting category scores. Confidence is:
 
 \[
-s_{text}(q,p_i)=\beta S_{TI}(q,p_i)
-+(1-\beta)S_{TT}(q,p_i),
+h=\frac{r_1}{r_1+r_2}
 \]
 
-where \(S_{TI}\) is text-to-image similarity, \(S_{TT}\) is text-to-text
-similarity, and the default \(\beta\) is 0.50. If text embeddings are missing,
-the system falls back to \(S_{TI}\). Text-only search does not apply automatic
-category filtering.
-
-### 3.6.4. Combined Image-Text Recommendation
-
-For a combined query, CLIP independently encodes the image and the processed
-text. The system calculates three cosine score families:
-
-- \(S_{II}\): query image to product image;
-- \(S_{TI}\): query text to product image;
-- \(S_{TT}\): query text to product text.
-
-The deployed system combines the raw cosine scores directly. The text branch
-and final score are
+The confidence-strength function is:
 
 \[
-s_T=\gamma S_{TI}+(1-\gamma)S_{TT},
+g(h)=
+\begin{cases}
+0, & h\le h_0,\\
+\dfrac{h-h_0}{h_1-h_0}, & h_0<h<h_1,\\
+1, & h\ge h_1.
+\end{cases}
 \]
+
+Here, \(h_0\) is the confidence floor and \(h_1\) is the full-confidence threshold.
+
+The system does not manually declare related category pairs. It compares category prompt embeddings and builds a mutual-neighbor graph. Categories \(c_a\) and \(c_b\) are considered related only when each occurs among the other's nearest category neighbors.
+
+The dynamic support \(W(c_i)\) follows three cases:
+
+- At low confidence, \(W(c_i)=0\) for every product and ranking is unrestricted.
+- At high confidence, products from the strongest category receive full support.
+- At intermediate confidence, the two strongest categories receive different partial supports only when they are mutual neighbors. If they are unrelated, only the strongest category receives a small support.
+
+The final image score is:
 
 \[
-s_{combined}=\alpha S_{II}+(1-\alpha)s_T.
+S_{image}(q,p_i)=S_{II}(q,p_i)+\lambda_I g(h)W(c_i)
 \]
 
-With the default \(\alpha=\gamma=0.50\), the contributions are 0.50 for
-image-to-image and 0.25 for each text component. The system uses these weighted
-raw cosine scores directly for ranking.
+This is a ranking bonus, not a probability and not a hard filter. Products from other categories remain eligible.
 
-Text attributes such as color or pattern can provide an additional metadata
-match signal. Category handling follows the origin of the evidence: a category
-inferred only from the image remains a soft preference, while a category stated
-explicitly in the text may restrict the candidate set. This lets text correct
-or refine information from the reference image.
+### 3.5.3. Text-only retrieval
 
-## 3.7. API and User Interface Design
+English text is encoded directly. Vietnamese text can first be translated into English. The query is compared with both image and text catalog embeddings:
 
-| Endpoint | Input | Main output |
-|---|---|---|
-| `POST /api/recommendations/image` | Multipart image, `top_k`, automatic category mode | Ranked products, visual score, applied category information, and timing. |
-| `POST /api/recommendations/text` | JSON text, language, `top_k`, and image weight | Processed query, text component scores, final score, and timing. |
-| `POST /api/recommendations/combined` | Multipart image and text, language, `top_k`, and image weight | Component scores, fusion score, applied category and attributes, and timing. |
-| `GET /api/health/ready` | No query input | Backend model and artifact readiness. |
+\[
+S_T(q,p_i)=\beta S_{TI}(q,p_i)+(1-\beta)S_{TT}(q,p_i)
+\]
 
-The frontend validates required fields and supported image types before sending
-a request. Results from all modes use a common product-card presentation. The
-combined form accepts one or both inputs and routes the request according to
-what the user provides.
+If catalog text embeddings are unavailable, the backend falls back to \(S_{TI}\).
 
-## 3.8. Deployment and Reliability Design
+Text category handling is deliberately different from image prediction. If the query contains one exact catalog category, for example “red shirts,” the user has explicitly stated the product type, so products are ranked within that category. If the query contains multiple categories, a spelling error, or only a broad fashion phrase, the system keeps the full catalog available and returns suggestions instead of applying an uncertain filter.
 
-Docker Compose builds and starts the React frontend, a public Nginx web reverse
-proxy, an internal Nginx API Gateway, and two FastAPI backend instances. The processed catalog, embeddings, and selected
-checkpoint must already exist or be downloaded before the web stack starts.
+### 3.5.4. Combined image–text retrieval
 
-The web reverse proxy publishes port 80 and routes frontend and API traffic by
-path. The API Gateway applies the `least_conn` strategy, centrally limits API
-traffic per client, and retries eligible connection errors, timeouts, and selected upstream failures.
-Requests that exceed the configured rate receive HTTP 429. Health checks distinguish a running
-container from a backend that has successfully loaded its model and artifacts.
-Docker restart policies provide basic service recovery. This design improves a
-local demonstration deployment but does not provide automatic scaling or
-protection from failure of the shared host.
+The image and text are encoded separately. The text branch first uses the same formula as text-only retrieval. The base combined score is:
 
-## 3.9. Experimental Design and Reproducibility
+\[
+S_{base}(q,p_i)=\omega_I S_{II}(q,p_i)+(1-\omega_I)S_T(q,p_i)
+\]
 
-The current unified comparison protocol uses the same 473 held-out test queries
-and the same catalog of 5,000 products at \(K=1,5,10\). Category labels are
-omitted from evaluation text to reduce target-label leakage. Embeddings are
-cached only when their catalog and model identities match.
+If a supported color or pattern is found in the text, the attribute-adjusted score is:
 
-The experiment is divided into three groups:
+\[
+S_{attr}(q,p_i)=(1-\omega_A)S_{base}(q,p_i)+\omega_A A(p_i)
+\]
 
-1. **Controlled modality baselines:** SBERT and CLIP text representations,
-   ResNet18 and CLIP image representations, and SBERT-ResNet18 rank fusion.
-2. **CLIP fine-tuning comparison:** pretrained and fine-tuned CLIP on paired
-   text-to-image and image-to-text retrieval.
-3. **Serving ablation:** individual \(S_{II}\), \(S_{TI}\), and \(S_{TT}\)
-   components, text fusion, and raw multimodal fusion.
+Otherwise, \(S_{attr}=S_{base}\).
 
-A separate system-level category-aware ablation compares unrestricted image
-ranking, the earlier binary-threshold strategy, and confidence-weighted soft
-category ranking while keeping the same queries, gallery, checkpoint, and K
-values.
+When the text contains one exact category, that explicit instruction defines the candidate set. The system does not add a competing image category bonus. When no exact text category is available, the combined route reuses the image evidence, confidence function, and dynamic category-relation policy:
 
-The final system-level experiment follows the deployed query paths. It compares
-image-only, text-only, and combined image-text retrieval, then evaluates the
-combined ranking in four stages: raw score fusion, fusion with text attributes,
-fusion with category handling, and the full pipeline with both mechanisms.
-Attribute matching is reported separately because same-category relevance does
-not by itself measure whether a requested color or pattern was satisfied.
+\[
+S_{final}(q,p_i)=S_{attr}(q,p_i)+\lambda_C g(h)W(c_i)
+\]
 
-For same-category retrieval, the query product is excluded and products sharing
-its ground-truth category are relevant. For paired cross-modal retrieval, the
-matching product remains in the gallery and exact `product_id` defines
-relevance. Precision@K, Recall@K, and F1@K are reported together with evaluated
-and skipped query counts. These category-based measures are retrieval proxies;
-they do not fully represent detailed style similarity or user satisfaction.
+All similarity components are raw cosine similarities. Percentile normalization is not used. Combined retrieval assumes that the image and text describe the same desired product. It does not interpret two different product types as an outfit-matching request.
 
-## 3.10. Chapter Summary
+### 3.5.5. Ranking explanation
 
-This chapter presented the requirements and architecture of the fashion product
-retrieval system. The offline pipeline prepares and audits data, fine-tunes
-CLIP, generates compatible embeddings, and supports reproducible comparisons.
-The online application supports image-only, text-only, and combined queries.
-Image search uses confidence-controlled category preference, text search
-combines text-to-image and text-to-text similarity, and combined search applies
-weighted raw cosine fusion with optional category and attribute evidence. The next
-chapter presents the corresponding implementation details.
+Every successful response can include a compact explanation. It identifies the selected query route, similarity components, category candidates, confidence state, applied bonuses or filters, and reason codes. A query-scoped graph displays only the relevant category nodes and relationships instead of exposing the complete internal graph.
+
+The explanation describes why the current system returned a result; it does not claim that a product is objectively correct. This distinction is important because the final score is a relative ranking value, not a probability of user satisfaction.
+
+## 3.6. Interface and deployment design
+
+The React interface provides one search area, category browsing, product details, local history, local Favorites, Vietnamese–English switching, manual crop, result guidance, and a Developer dashboard. Search state may be retained after refresh, while “New Search” clears the current query and results.
+
+The navigation and product cards are designed for retrieval rather than commerce. There are no payment or purchasing actions. Favorites are a browser-local collection and do not change model ranking.
+
+The public Nginx service is the only service exposed on port 80. It sends page requests to the frontend and API/image requests to the internal API layer. The internal Nginx service distributes API traffic between two equivalent FastAPI instances using `least_conn`, applies endpoint-specific rate limits, forwards headers, and performs bounded retries. This separation makes the external reverse-proxy role and the internal API load-balancing role explicit.
+
+## 3.7. Evaluation design
+
+Validation is used for checkpoint and parameter selection; test data are used for final assessment. The controlled experiments use three independently prepared catalogs of 5,000 products with seeds 42, 123, and 2026. Every comparison within a seed uses the same catalog, queries, relevance rule, and values of \(K\). The final report presents the mean and standard deviation across the three seeds.
+
+The experiment groups are:
+
+1. **Controlled modality baselines:** TF-IDF, BERT, SBERT, and CLIP for text; ResNet18, EfficientNet-B0, ViT-B/16, and CLIP for images; and rank-level SBERT–ResNet18 fusion as an independent multimodal baseline.
+2. **CLIP fine-tuning comparison:** pretrained CLIP versus fine-tuned CLIP for matched image, text, and cross-modal tasks.
+3. **Serving-component comparison:** individual cosine components, text fusion, image–text fusion, and pretrained/fine-tuned serving variants.
+4. **Category-ranking comparison:** unrestricted ranking, hard category filtering, confidence-weighted ranking, and dynamic relation-aware category ranking.
+5. **Full-pipeline ablation:** base similarity, attribute adjustment, category handling, and the complete deployed pipeline.
+
+The measurements are Precision@*K*, Recall@*K*, F1@*K*, NDCG@*K*, category-macro results, evaluated-query count, and skipped-query count at \(K\in\{1,5,10\}\). Chapter 5 presents the numeric results and error analysis.
+
+## 3.8. Design limitations
+
+The system retrieves only products contained in the prepared catalog. It assumes one principal target product per request. Manual cropping can reduce background influence, but the system does not automatically detect or segment all garments.
+
+Category relationships are inferred from CLIP prompt representations and are therefore model-dependent. Closely related categories may still be visually confused, especially when source categories are scarce or inconsistently labeled. Text suggestions reduce uncertain filtering but do not fully understand every free-form sentence.
+
+Category-based relevance is a practical evaluation proxy. Products in the same category may differ in style, material, price, or user preference. The system therefore requires both quantitative evaluation and qualitative error analysis.

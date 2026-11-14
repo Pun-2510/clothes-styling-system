@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from src.audience import infer_audience
 from src.config import MIN_PRODUCTS_PER_CATEGORY, PROCESSED_CSV
 
 
@@ -116,6 +117,68 @@ def write_category_audit(source, selected, output_csv, minimum=MIN_PRODUCTS_PER_
     output_json = output_csv.with_suffix(".json")
     payload = audit_summary(audit)
     payload.update(minimum_target=int(minimum), report_csv=str(output_csv.resolve()))
+    output_json.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+    return audit, payload
+
+
+def audit_audiences(selected):
+    """Return product-level audience evidence for manual quality review."""
+    rows = []
+    for _, product in selected.fillna("").iterrows():
+        inferred = infer_audience(
+            str(product.get("product_name", "")),
+            str(product.get("description", "")),
+            str(product.get("category", "")),
+        )
+        review_required = (
+            inferred.audience == "unknown"
+            or inferred.confidence < 0.8
+            or inferred.source.startswith("conflicting_")
+        )
+        rows.append({
+            "product_id": str(product.get("product_id", "")),
+            "product_name": str(product.get("product_name", "")),
+            "category": str(product.get("category", "")),
+            "audience": inferred.audience,
+            "age_group": inferred.age_group,
+            "gender_group": inferred.gender_group,
+            "source": inferred.source,
+            "confidence": inferred.confidence,
+            "evidence": ";".join(inferred.evidence),
+            "review_required": review_required,
+        })
+    return pd.DataFrame(rows)
+
+
+def audience_audit_summary(audit):
+    """Summarize audience coverage without hiding uncertain products."""
+    def counts(column):
+        return {
+            str(key): int(value)
+            for key, value in audit[column].value_counts().to_dict().items()
+        }
+
+    return {
+        "products": int(len(audit)),
+        "audience_counts": counts("audience"),
+        "age_group_counts": counts("age_group"),
+        "gender_group_counts": counts("gender_group"),
+        "source_counts": counts("source"),
+        "review_required": int(audit["review_required"].sum()),
+    }
+
+
+def write_audience_audit(selected, output_csv):
+    """Write a reviewable audience CSV and its compact JSON summary."""
+    output_csv = Path(output_csv)
+    output_csv.parent.mkdir(parents=True, exist_ok=True)
+    audit = audit_audiences(selected)
+    audit.to_csv(output_csv, index=False, encoding="utf-8-sig")
+    output_json = output_csv.with_suffix(".json")
+    payload = audience_audit_summary(audit)
+    payload["report_csv"] = str(output_csv.resolve())
     output_json.write_text(
         json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8"
     )

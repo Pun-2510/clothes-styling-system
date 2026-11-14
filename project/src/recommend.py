@@ -61,6 +61,19 @@ from src.category_ranking import (
     rank_category_candidates,
 )
 
+from src.category_prompts import (
+    CATEGORY_PROMPT_TEMPLATES,
+    aggregate_category_prompt_embeddings,
+    category_prompt_ensemble,
+)
+
+from src.audience import (
+    AUDIENCE_PREFERENCES,
+    add_audience_context,
+    infer_audience,
+    normalise_audience_preference,
+)
+
 from src.query_signals import (
     ATTRIBUTE_RULES,
     categories_are_related,
@@ -151,6 +164,36 @@ class FashionRecommender:
         self.products = pd.read_csv(
             PROCESSED_CSV
         )
+
+        audience_inferences = [
+            infer_audience(
+                str(row.get("product_name", "")),
+                str(row.get("description", "")),
+                str(row.get("category", "")),
+            )
+            for _, row in self.products.iterrows()
+        ]
+        self.products["audience"] = [
+            inference.audience for inference in audience_inferences
+        ]
+        self.products["age_group"] = [
+            inference.age_group for inference in audience_inferences
+        ]
+        self.products["gender_group"] = [
+            inference.gender_group for inference in audience_inferences
+        ]
+        self.products["audience_source"] = [
+            inference.source for inference in audience_inferences
+        ]
+        self.products["audience_confidence"] = [
+            inference.confidence for inference in audience_inferences
+        ]
+        self.audience_indices = {
+            audience: np.flatnonzero(
+                self.products["audience"].astype(str).eq(audience).to_numpy()
+            )
+            for audience in AUDIENCE_PREFERENCES
+        }
 
         searchable_columns = [
             column
@@ -390,12 +433,10 @@ class FashionRecommender:
         return features.detach().cpu().numpy()[0].astype(np.float32)
 
     def _encode_category_prototypes(self):
-        """Encode one normalized CLIP text prototype for every category."""
-        prompts = [
-            f"a catalog product photo of {category}"
-            for category in self.categories
-        ]
-        if not prompts:
+        """Encode an averaged CLIP prompt ensemble for every category."""
+        prompt_groups = category_prompt_ensemble(self.categories)
+        prompts = [prompt for group in prompt_groups for prompt in group]
+        if not prompt_groups:
             raise RuntimeError("Cannot encode category prototypes without categories.")
 
         max_length = self.model.config.text_config.max_position_embeddings
@@ -423,11 +464,26 @@ class FashionRecommender:
                 keepdim=True,
             ).clamp_min(1e-12)
 
-        return features.detach().cpu().numpy().astype(np.float32)
+        prototypes = aggregate_category_prompt_embeddings(
+            features.detach().cpu().numpy(),
+            len(self.categories),
+        )
+        log_info(
+            "Category prompt ensemble encoded | "
+            f"categories={len(self.categories)} | "
+            f"prompts_per_category={len(CATEGORY_PROMPT_TEMPLATES)}"
+        )
+        return prototypes
 
     @property
     def has_text_embeddings(self):
         return self.text_embeddings is not None
+
+    def _eligible_audience_indices(self, audience=None):
+        audience = normalise_audience_preference(audience)
+        if audience is None:
+            return None, None
+        return self.audience_indices[audience], audience
 
     def recommend_by_text(
         self,
@@ -435,6 +491,7 @@ class FashionRecommender:
         top_k=TOP_K,
         image_weight=TEXT_RETRIEVAL_IMAGE_WEIGHT,
         return_guidance=False,
+        audience=None,
     ):
         """Search with text scores and honor an explicitly named category.
 
@@ -444,7 +501,11 @@ class FashionRecommender:
         catalog.
         """
         start_time = time.perf_counter()
-        query_embedding = self.encode_text(text)
+        eligible_indices, audience = self._eligible_audience_indices(audience)
+        if eligible_indices is None:
+            eligible_indices = np.arange(len(self.products), dtype=np.int64)
+        contextual_text = add_audience_context(text, audience)
+        query_embedding = self.encode_text(contextual_text)
         cross_modal_scores = cosine_similarity(query_embedding, self.embeddings)
 
         image_weight = float(np.clip(image_weight, 0.0, 1.0))
@@ -472,7 +533,6 @@ class FashionRecommender:
             if explicit_categories
             else fuzzy_category_suggestions(text, self.categories)
         )
-        eligible_indices = np.arange(len(final_scores))
         if applied_category is not None:
             category_matches = (
                 self.products["category"]
@@ -480,7 +540,11 @@ class FashionRecommender:
                 .eq(applied_category)
                 .to_numpy()
             )
-            category_indices = np.flatnonzero(category_matches)
+            category_indices = np.intersect1d(
+                eligible_indices,
+                np.flatnonzero(category_matches),
+                assume_unique=True,
+            )
             # A stale or externally supplied category list must never produce
             # an empty response; fall back to unrestricted retrieval instead.
             if len(category_indices) > 0:
@@ -544,6 +608,7 @@ class FashionRecommender:
         log_info(
             f"TEXT_SEARCH | query={str(text)[:80]!r} | top_k={actual_k} | "
             f"category={applied_category or 'not_used'} | "
+            f"audience={audience or 'not_used'} | "
             f"candidate_count={len(eligible_indices)} | "
             f"image_weight={image_weight:.2f} | elapsed={elapsed:.4f}s"
         )
@@ -618,12 +683,16 @@ class FashionRecommender:
         image_weight=COMBINED_IMAGE_WEIGHT,
         text_image_weight=TEXT_RETRIEVAL_IMAGE_WEIGHT,
         request_id=None,
+        audience=None,
     ):
         """Apply category-aware, attribute-aware image and text fusion."""
         if request_id is None:
             request_id = uuid.uuid4().hex[:8]
 
         total_start = time.perf_counter()
+        eligible_indices, audience = self._eligible_audience_indices(audience)
+        if eligible_indices is None:
+            eligible_indices = np.arange(len(self.products), dtype=np.int64)
         image_query = self.encode_image(image)
         predicted_category, category_confidence, visual_scores = (
             self.predict_category(image_query, request_id)
@@ -656,12 +725,12 @@ class FashionRecommender:
             applied_category = text_category
             category_source = "text"
             category_route = "explicit_text"
-            contextual_text = str(text).strip()
+            contextual_text = add_audience_context(text, audience)
         elif len(explicit_text_categories) > 1:
             applied_category = None
             category_source = None
             category_route = "multiple_text_categories"
-            contextual_text = str(text).strip()
+            contextual_text = add_audience_context(text, audience)
         elif image_category_strength > 0.0:
             category_evidence = self._rank_category_evidence(
                 image_query,
@@ -698,12 +767,12 @@ class FashionRecommender:
                         applied_category: UNRELATED_TOP1_BONUS_FACTOR,
                     }
                     category_route = "ambiguous_unrelated_top1"
-            contextual_text = str(text).strip()
+            contextual_text = add_audience_context(text, audience)
         else:
             applied_category = None
             category_source = None
             category_route = "low_confidence"
-            contextual_text = str(text).strip()
+            contextual_text = add_audience_context(text, audience)
 
         text_query = self.encode_text(contextual_text)
         text_to_image_scores = cosine_similarity(text_query, self.embeddings)
@@ -778,11 +847,16 @@ class FashionRecommender:
             category_strength = 0.0
             effective_category_bonus = 0.0
 
-        eligible_indices = np.arange(len(final_scores))
         if category_source == "text":
             category_indices = np.flatnonzero(category_scores)
             if len(category_indices) > 0:
-                eligible_indices = category_indices
+                constrained_indices = np.intersect1d(
+                    eligible_indices,
+                    category_indices,
+                    assume_unique=True,
+                )
+                if len(constrained_indices) > 0:
+                    eligible_indices = constrained_indices
 
         actual_k = min(int(top_k), len(eligible_indices))
         local_indices = top_k_indices(
@@ -837,6 +911,7 @@ class FashionRecommender:
             f"category_strength={category_strength:.4f} | "
             f"category_bonus={effective_category_bonus:.4f} | "
             f"attributes={attributes or 'not_used'} | top_k={actual_k} | "
+            f"audience={audience or 'not_used'} | "
             "fusion=raw_cosine | "
             f"image_weight={image_weight:.2f} | text_weight={text_weight:.2f} | "
             f"elapsed={elapsed:.4f}s"
@@ -852,6 +927,7 @@ class FashionRecommender:
             "candidate_categories": candidate_categories,
             "category_strength": category_strength,
             "detected_attributes": attributes,
+            "audience": audience,
             "guidance": guidance,
             "elapsed": elapsed,
         }
@@ -979,7 +1055,8 @@ class FashionRecommender:
     def recommend_no_category(
         self,
         query_embedding,
-        top_k=TOP_K
+        top_k=TOP_K,
+        eligible_indices=None,
     ):
 
         start_time = time.perf_counter()
@@ -989,15 +1066,17 @@ class FashionRecommender:
             self.embeddings
         )
 
-        actual_k = min(
-            top_k,
-            len(visual_scores)
-        )
+        if eligible_indices is None:
+            eligible_indices = np.arange(len(visual_scores), dtype=np.int64)
+        eligible_indices = np.asarray(eligible_indices, dtype=np.int64)
 
-        top_indices = top_k_indices(
-            visual_scores,
+        actual_k = min(top_k, len(eligible_indices))
+
+        local_indices = top_k_indices(
+            visual_scores[eligible_indices],
             k=actual_k
         )
+        top_indices = eligible_indices[local_indices]
 
         results = (
             self.products
@@ -1027,6 +1106,7 @@ class FashionRecommender:
         category_confidence,
         category_factors,
         top_k=TOP_K,
+        eligible_indices=None,
     ):
         """Apply weighted category evidence while retaining the full catalog."""
         start_time = time.perf_counter()
@@ -1054,8 +1134,14 @@ class FashionRecommender:
                 CATEGORY_CONFIDENCE_THRESHOLD,
             )
         )
-        actual_k = min(int(top_k), len(final_scores))
-        top_indices = top_k_indices(final_scores, k=actual_k)
+        if eligible_indices is None:
+            eligible_indices = np.arange(len(final_scores), dtype=np.int64)
+        eligible_indices = np.asarray(eligible_indices, dtype=np.int64)
+        actual_k = min(int(top_k), len(eligible_indices))
+        local_indices = top_k_indices(
+            final_scores[eligible_indices], k=actual_k
+        )
+        top_indices = eligible_indices[local_indices]
         results = self.products.iloc[top_indices].copy().reset_index(drop=True)
         results["visual_similarity"] = visual_scores[top_indices]
         results["category_bonus"] = (
@@ -1073,7 +1159,8 @@ class FashionRecommender:
         self,
         query_embedding,
         predicted_category,
-        top_k=TOP_K
+        top_k=TOP_K,
+        eligible_indices=None,
     ):
 
         start_time = time.perf_counter()
@@ -1088,6 +1175,12 @@ class FashionRecommender:
         category_indices = np.where(
             category_mask
         )[0]
+        if eligible_indices is not None:
+            category_indices = np.intersect1d(
+                category_indices,
+                np.asarray(eligible_indices, dtype=np.int64),
+                assume_unique=True,
+            )
 
         # Không có sản phẩm cùng category
         if len(category_indices) == 0:
@@ -1156,7 +1249,8 @@ class FashionRecommender:
         query_embedding,
         predicted_category,
         category_confidence,
-        top_k=TOP_K
+        top_k=TOP_K,
+        eligible_indices=None,
     ):
 
         start_time = time.perf_counter()
@@ -1201,15 +1295,17 @@ class FashionRecommender:
         # Top-K
         # -------------------------------------------------
 
-        actual_k = min(
-            top_k,
-            len(final_scores)
-        )
+        if eligible_indices is None:
+            eligible_indices = np.arange(len(final_scores), dtype=np.int64)
+        eligible_indices = np.asarray(eligible_indices, dtype=np.int64)
 
-        top_indices = top_k_indices(
-            final_scores,
+        actual_k = min(top_k, len(eligible_indices))
+
+        local_indices = top_k_indices(
+            final_scores[eligible_indices],
             k=actual_k
         )
+        top_indices = eligible_indices[local_indices]
 
         results = (
             self.products
@@ -1249,6 +1345,7 @@ class FashionRecommender:
         category_mode="no_category",
         top_k=TOP_K,
         request_id=None,
+        audience=None,
     ):
 
         if request_id is None:
@@ -1265,6 +1362,12 @@ class FashionRecommender:
         )
 
         category_mode = requested_category_mode
+        audience_indices, audience = self._eligible_audience_indices(audience)
+        audience_kwargs = (
+            {}
+            if audience is None
+            else {"eligible_indices": audience_indices}
+        )
 
         valid_modes = {
             "no_category",
@@ -1296,7 +1399,8 @@ class FashionRecommender:
             results, ranking_time = (
                 self.recommend_no_category(
                     query_embedding,
-                    top_k
+                    top_k,
+                    **audience_kwargs,
                 )
             )
 
@@ -1317,7 +1421,8 @@ class FashionRecommender:
                     self.recommend_hard_category(
                         query_embedding,
                         predicted_category,
-                        top_k
+                        top_k,
+                        **audience_kwargs,
                     )
                 )
 
@@ -1343,7 +1448,8 @@ class FashionRecommender:
                     results, ranking_time = (
                         self.recommend_no_category(
                             query_embedding,
-                            top_k
+                            top_k,
+                            **audience_kwargs,
                         )
                     )
 
@@ -1382,6 +1488,7 @@ class FashionRecommender:
                                         leading_categories[1]: RELATED_TOP2_BONUS_FACTOR,
                                     },
                                     top_k,
+                                    **audience_kwargs,
                                 )
                             )
                             log_info(
@@ -1401,6 +1508,7 @@ class FashionRecommender:
                                         leading_categories[0]: UNRELATED_TOP1_BONUS_FACTOR,
                                     },
                                     top_k,
+                                    **audience_kwargs,
                                 )
                             )
                             log_info(
@@ -1417,7 +1525,8 @@ class FashionRecommender:
                                 query_embedding,
                                 predicted_category,
                                 confidence,
-                                top_k
+                                top_k,
+                                **audience_kwargs,
                             )
                         )
 
@@ -1439,6 +1548,7 @@ class FashionRecommender:
             f"mode={category_mode} | "
             f"category={predicted_category or 'not_used'} | "
             f"candidate_categories={candidate_categories or 'not_used'} | "
+            f"audience={audience or 'not_used'} | "
             f"confidence={confidence_log} | "
             f"category_strength={category_confidence_strength(confidence, CATEGORY_CONFIDENCE_FLOOR, CATEGORY_CONFIDENCE_THRESHOLD) if confidence is not None else 0.0:.4f} | "
             f"ranking={ranking_time:.4f}s | "
@@ -1450,6 +1560,7 @@ class FashionRecommender:
             "predicted_category": predicted_category,
             "category_confidence": confidence,
             "candidate_categories": candidate_categories,
+            "audience": audience,
             "results": results,
             "ranking_time": ranking_time,
             "total_time": total_time,

@@ -28,7 +28,7 @@ from .encoders import (
     encode_resnet18,
     encode_sbert,
 )
-from .evaluation import evaluate_category_rankings, rank_by_cosine
+from .evaluation import _average_precision, evaluate_category_rankings, rank_by_cosine
 from .fusion import clip_score_fusion, reciprocal_rank_fusion
 
 
@@ -159,10 +159,12 @@ def _metric_rows(
                 "recall": metrics[f"recall@{k}"],
                 "f1": metrics[f"f1@{k}"],
                 "ndcg": metrics[f"ndcg@{k}"],
+                "map": metrics[f"map@{k}"],
                 "category_macro_precision": metrics["category_macro"][f"precision@{k}"],
                 "category_macro_recall": metrics["category_macro"][f"recall@{k}"],
                 "category_macro_f1": metrics["category_macro"][f"f1@{k}"],
                 "category_macro_ndcg": metrics["category_macro"][f"ndcg@{k}"],
+                "category_macro_map": metrics["category_macro"][f"map@{k}"],
                 "evaluated_queries": metrics["evaluated_queries"],
                 "skipped_queries": metrics["skipped_queries"],
                 "gallery_size": metrics["gallery_size"],
@@ -184,6 +186,7 @@ def _category_rows(system, metrics, ks):
                     "recall": values[f"recall@{k}"],
                     "f1": values[f"f1@{k}"],
                     "ndcg": values[f"ndcg@{k}"],
+                    "map": values[f"map@{k}"],
                     "query_count": values["query_count"],
                     "evaluated_queries": values["evaluated_queries"],
                     "skipped_queries": values["skipped_queries"],
@@ -199,14 +202,14 @@ def _summary(rows, products, settings):
         f"The benchmark used {len(products)} held-out products and {products.category.nunique()} categories.",
         "The query product was excluded, and category labels were not included in any text-encoder input.",
         "",
-        "| System | Input | K | Precision | Recall | F1 | NDCG | Evaluated | Skipped |",
-        "|---|---|---:|---:|---:|---:|---:|---:|---:|",
+        "| System | Input | K | Precision | Recall | F1 | NDCG | MAP | Evaluated | Skipped |",
+        "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for row in rows:
         lines.append(
             f"| {row['system']} | {row['input']} | {row['k']} | "
             f"{row['precision']:.4f} | {row['recall']:.4f} | {row['f1']:.4f} | "
-            f"{row['ndcg']:.4f} | "
+            f"{row['ndcg']:.4f} | {row['map']:.4f} | "
             f"{row['evaluated_queries']} | {row['skipped_queries']} |"
         )
     lines += [
@@ -228,6 +231,9 @@ def _summary(rows, products, settings):
 def self_test():
     from .fusion import reciprocal_rank_fusion
 
+    expected_ap = ((1 / 2) + (2 / 3)) / 2
+    assert np.isclose(_average_precision([3, 1, 2], [1, 2], 3), expected_ap)
+
     ids = np.array(["a", "b", "c", "d"])
     categories = np.array(["shoe", "shoe", "shoe", "hat"])
     rankings = [np.array([1, 2, 3]), np.array([0, 2, 3]), np.array([1, 0, 3]), np.array([0, 1, 2])]
@@ -237,6 +243,7 @@ def self_test():
     assert result["precision@1"] == 1.0
     assert result["recall@2"] == 1.0
     assert result["ndcg@2"] == 1.0
+    assert result["map@2"] == 1.0
     fused = reciprocal_rank_fusion([rankings, rankings], len(ids), 60)
     assert all(np.array_equal(left, right) for left, right in zip(fused, rankings))
     clip_images = np.eye(4, dtype=np.float32)

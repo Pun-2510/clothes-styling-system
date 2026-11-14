@@ -7,7 +7,7 @@ import ProductImage from '../components/results/ProductImage'
 import ResultsSection from '../components/results/ResultsSection'
 import CombinedSearchForm from '../components/search/CombinedSearchForm'
 import RetrievalPipelinePanel from '../components/home/RetrievalPipelinePanel'
-import { categoryUrl, featuredCategories, getCategories, getProducts } from '../services/catalogApi'
+import { audienceUrl, categoryUrl, featuredCategories, getAudiences, getCategories, getProducts } from '../services/catalogApi'
 import { addSearchHistory, loadSearchHistoryEntry, loadSearchHistoryFile } from '../services/searchHistory'
 import { clearSearchFile, clearSearchQueryState, clearSearchResult, loadSearchResult, saveSearchResult } from '../services/searchPersistence'
 import { useLanguage } from '../i18n'
@@ -16,6 +16,7 @@ export default function StoreHomePage() {
   const { language, t } = useLanguage()
   const [restoredSearch] = useState(loadSearchResult)
   const [categories, setCategories] = useState([])
+  const [audiences, setAudiences] = useState([])
   const [sections, setSections] = useState([])
   const [catalogError, setCatalogError] = useState('')
   const [catalogLoading, setCatalogLoading] = useState(true)
@@ -31,7 +32,7 @@ export default function StoreHomePage() {
 
   useEffect(() => {
     let active = true
-    getCategories().then(async ({ categories: all }) => {
+    Promise.all([getCategories(), getAudiences()]).then(async ([{ categories: all }, { audiences: audienceGroups }]) => {
       const featured = featuredCategories(all, 5)
       const lists = await Promise.all(featured.map(async (category) => ({
         category,
@@ -39,6 +40,7 @@ export default function StoreHomePage() {
       })))
       if (active) {
         setCategories(all)
+        setAudiences(audienceGroups.filter((item) => item.name !== 'unknown' && item.count > 0))
         setSections(lists)
       }
     }).catch((failure) => { if (active) setCatalogError(failure.message) })
@@ -221,6 +223,31 @@ export default function StoreHomePage() {
       {catalogError && <div className="state-message" role="alert">{catalogError}</div>}
       {catalogLoading && <CatalogSkeleton />}
       {!catalogError && !catalogLoading && categories.length === 0 && <div className="state-message">{t('catalog.empty')}</div>}
+
+      {audiences.length > 0 && (
+        <section className="audience-showcase">
+          <div className="section-heading">
+            <div>
+              <span className="eyebrow">{t('audience.eyebrow')}</span>
+              <h2>{t('audience.title')}</h2>
+              <p>{t('audience.metadataNotice')}</p>
+            </div>
+          </div>
+          <div className="audience-showcase-grid">
+            {audiences.map((audience) => (
+              <a className={`audience-tile audience-tile--${audience.name}`} key={audience.name} href={audienceUrl(audience.name)}>
+                <div className="audience-tile-copy">
+                  <span>{t('audience.browse')}</span>
+                  <strong>{t(`audience.${audience.name}`)}</strong>
+                  <small>{t('audience.productCount', { count: audience.count.toLocaleString(language === 'en' ? 'en-US' : 'vi-VN') })}</small>
+                </div>
+                <div className="audience-tile-image"><ProductImage reference={audience.image_reference} name={t(`audience.${audience.name}`)} /></div>
+                <Icon name="arrow" size={18} />
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
 
       {featured.length > 0 && (
         <section className="category-showcase">

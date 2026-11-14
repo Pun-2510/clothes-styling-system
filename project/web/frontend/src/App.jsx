@@ -7,6 +7,7 @@ import ProductPage from './pages/ProductPage'
 import StoreHomePage from './pages/StoreHomePage'
 import DeveloperPage from './pages/DeveloperPage'
 import FavoritesPage from './pages/FavoritesPage'
+import AudiencePage from './pages/AudiencePage'
 import { useLanguage } from './i18n'
 
 function App() {
@@ -19,6 +20,9 @@ function App() {
   else if (path === '/categories') page = <CategoriesPage />
   else if (path === '/developer') page = <DeveloperPage />
   else if (path === '/favorites') page = <FavoritesPage />
+  else if (path.startsWith('/audience/')) {
+    page = <AudiencePage key={path} name={decodeURIComponent(path.slice(10))} />
+  }
   else if (path.startsWith('/category/')) {
     page = <CategoryPage key={path} name={decodeURIComponent(path.slice(10))} />
   } else if (path.startsWith('/product/')) {

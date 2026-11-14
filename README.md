@@ -31,7 +31,7 @@ trước khi chạy các lệnh hệ thống.
 ```text
 Raw metadata + images
         ↓
-Prepare catalog + category audit
+Prepare catalog + category audit + audience audit
         ↓
 Fine-tune CLIP; select best epoch on validation
         ↓
@@ -47,7 +47,15 @@ Website hỗ trợ:
 - Một form cho image-only, text-only và combined query.
 - Crop thủ công vùng trang phục.
 - Category-aware soft ranking cho ảnh và explicit category routing cho text.
-- Duyệt catalog, trang chi tiết, lịch sử cục bộ và Developer Dashboard.
+- Duyệt catalog theo category hoặc nhóm metadata `Women / Men / Kids / Unisex`,
+  trang chi tiết, lịch sử cục bộ và Developer Dashboard.
+- Nhóm người dùng được suy ra bảo thủ từ tên sản phẩm và category; mô tả chỉ
+  được dùng khi có bằng chứng rõ ràng. `age_group` và `gender_group` được audit
+  riêng, còn trường hợp không chắc chắn được giữ ở `unknown`. Hệ thống không đoán
+  giới tính từ ảnh. Mặc định nhãn này không tác động đến truy xuất. Khi người
+  dùng chủ động chọn `Nữ / Nam / Trẻ em / Unisex` trong tùy chọn tìm kiếm, hệ
+  thống chỉ xếp hạng các ứng viên thuộc nhóm đã chọn; cosine similarity và
+  category-aware scoring vẫn được giữ nguyên.
 - Nginx reverse proxy, least-connection load balancing và rate limiting.
 
 ## Bắt đầu
