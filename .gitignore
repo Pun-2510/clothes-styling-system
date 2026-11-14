@@ -118,8 +118,6 @@ experiments/model_comparison/cache/**
 project/datasets/**
 !project/datasets/.gitkeep
 !project/datasets/README.md
-project/outfit_recommendation/artifacts/**
-!project/outfit_recommendation/artifacts/.gitkeep
 
 # Model weights, vector arrays and exported archives
 *.npy
