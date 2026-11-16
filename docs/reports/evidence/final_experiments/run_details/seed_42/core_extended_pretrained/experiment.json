@@ -1,0 +1,48 @@
+{
+  "protocol": "held-out test queries against full catalog gallery",
+  "run_dir": "D:\\dacntt\\project\\runs\\clip_finetune_diverse_seed_42",
+  "catalog_csv": "D:\\dacntt\\project\\data\\processed_diverse\\products.csv",
+  "dataset_sha256": "ed83c128a870a3dcc6fc5b4ca3615a0c7db7263e0d31421f68f20c446785f7ab",
+  "training_json_sha256": "ae540b648f3b616cd67bc8c96f2c5c0d26e0c9f7dfbfe01e6f4649040aa353f5",
+  "catalog_sha256": "133247fe4ce60f2d3f4c26a5901cf89e263267c1f5df14a8e17e3b5a07849842",
+  "query_split": "test",
+  "query_count": 460,
+  "gallery_size": 5000,
+  "ks": [
+    1,
+    5,
+    10
+  ],
+  "rrf_k": 60,
+  "clip_image_weight": 0.5,
+  "clip_text_image_weight": 0.5,
+  "batch_size": 16,
+  "device": "cpu",
+  "resnet_source": "imagenet",
+  "resnet_checkpoint": "D:\\dacntt\\model\\Web_Test\\models\\resnet_outfit.pth",
+  "sbert_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+  "bert_model": "google-bert/bert-base-uncased",
+  "bert_max_length": 128,
+  "tfidf_max_features": 20000,
+  "pretrained_image_baselines": [
+    "ResNet18",
+    "EfficientNet-B0",
+    "ViT-B/16"
+  ],
+  "clip_base_model": "openai/clip-vit-base-patch32",
+  "clip_checkpoint": "D:\\dacntt\\project\\runs\\clip_finetune_diverse_seed_42\\best",
+  "category_in_text": false,
+  "shared_context": {
+    "query_rows": "held-out test split",
+    "gallery_rows": "the same complete 5,000-product catalog",
+    "ranking": "unrestricted before relevance labels are applied"
+  },
+  "category_retrieval": {
+    "self_match": "all gallery rows with the query product_id excluded",
+    "relevance": "same ground-truth category after ranking"
+  },
+  "paired_cross_modal_retrieval": {
+    "self_match": "paired product retained as the exact target",
+    "relevance": "same product_id across image and text modalities"
+  }
+}

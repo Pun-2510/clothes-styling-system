@@ -1,0 +1,465 @@
+product_id,actual_category,predicted_category,second_category,confidence,confidence_source,category_strength,category_route,related_top2,threshold_applied,weighted_applied,correct
+product_013915,Accessory Gift Set,Accessory Gift Set,Wallets,0.7197057849787684,visual_neighbors,1.0,confident_top1,False,True,True,True
+product_013662,Accessory Gift Set,Accessory Gift Set,Wallets,0.5551982143054512,visual_neighbors,0.5519821430545125,ambiguous_unrelated_top1,False,False,True,True
+product_043396,Accessory Gift Set,Accessory Gift Set,Cufflinks,0.6938955110861813,visual_neighbors,1.0,confident_top1,False,True,True,True
+product_003635,Baby Dolls,Shapewear,Baby Dolls,0.5024142930659818,combined,0.024142930659818436,ambiguous_unrelated_top1,False,False,True,False
+product_009632,Backpacks,Backpacks,Laptop Bag,0.5102584450678216,prototype,0.1025844506782159,ambiguous_related_top2,True,False,True,True
+product_024406,Backpacks,Backpacks,Travel Accessory,0.5184120056846855,prototype,0.18412005684685487,ambiguous_unrelated_top1,False,False,True,True
+product_043621,Backpacks,Backpacks,Rucksacks,0.5203362570761966,prototype,0.2033625707619658,ambiguous_related_top2,True,False,True,True
+product_013743,Backpacks,Backpacks,Rucksacks,0.5085393751309093,prototype,0.085393751309093,ambiguous_related_top2,True,False,True,True
+product_008430,Backpacks,Backpacks,Rucksacks,0.5019594704087955,prototype,0.019594704087955165,ambiguous_related_top2,True,False,True,True
+product_031538,Backpacks,Rucksacks,Backpacks,0.5155291565374829,visual_neighbors,0.15529156537482883,ambiguous_related_top2,True,False,True,False
+product_000362,Bangle,Bangle,Bracelet,0.5098444418560929,prototype,0.09844441856092903,ambiguous_related_top2,True,False,True,True
+product_032987,Bangle,Bracelet,Bangle,0.5120527512951195,prototype,0.12052751295119515,ambiguous_related_top2,True,False,True,False
+product_043985,Basketballs,Basketballs,Footballs,0.586304967961543,prototype,0.8630496796154299,ambiguous_related_top2,True,False,True,True
+product_027349,Bath Robe,Bath Robe,Nightdress,0.5766567792923923,visual_neighbors,0.7665677929239236,ambiguous_unrelated_top1,False,False,True,True
+product_023470,Beauty Accessory,Accessory Gift Set,Cufflinks,0.5164152169974774,combined,0.16415216997477391,ambiguous_unrelated_top1,False,False,True,False
+product_040393,Belts,Belts,Free Gifts,0.5161501202344733,prototype,0.16150120234473267,ambiguous_unrelated_top1,False,False,True,True
+product_002404,Belts,Belts,Free Gifts,0.5189456843164112,prototype,0.189456843164112,ambiguous_unrelated_top1,False,False,True,True
+product_012694,Belts,Belts,Bangle,0.6548098560163635,visual_neighbors,1.0,confident_top1,False,True,True,True
+product_013656,Belts,Belts,Bangle,0.5039150966276132,prototype,0.039150966276132466,ambiguous_unrelated_top1,False,False,True,True
+product_023874,Belts,Belts,Free Gifts,0.539344994475703,prototype,0.39344994475703066,ambiguous_unrelated_top1,False,False,True,True
+product_020251,Belts,Belts,Bangle,0.5329249977329557,visual_neighbors,0.3292499773295566,ambiguous_unrelated_top1,False,False,True,True
+product_015644,Belts,Belts,Free Gifts,0.5427893228788508,prototype,0.42789322878850855,ambiguous_unrelated_top1,False,False,True,True
+product_018091,Blazers,Blazers,Shirts,0.5732335754632143,visual_neighbors,0.7323357546321431,ambiguous_unrelated_top1,False,False,True,True
+product_020163,Body Lotion,Face Wash and Cleanser,Body Lotion,0.5187792935573773,visual_neighbors,0.1877929355737729,ambiguous_unrelated_top1,False,False,True,False
+product_019106,Booties,Booties,Socks,0.5928638946992179,visual_neighbors,0.9286389469921787,ambiguous_related_top2,True,False,True,True
+product_032388,Boxers,Boxers,Lounge Shorts,0.5515863056472815,visual_neighbors,0.5158630564728152,ambiguous_related_top2,True,False,True,True
+product_036062,Boxers,Boxers,Lounge Pants,0.5255449277498584,prototype,0.255449277498584,ambiguous_unrelated_top1,False,False,True,True
+product_036350,Boxers,Boxers,Shorts,0.5160866405258124,prototype,0.16086640525812437,ambiguous_related_top2,True,False,True,True
+product_013935,Bra,Bra,Briefs,0.5395419894567519,prototype,0.39541989456751925,ambiguous_related_top2,True,False,True,True
+product_032968,Bra,Bra,Briefs,0.5478169306739176,prototype,0.4781693067391758,ambiguous_related_top2,True,False,True,True
+product_003334,Bra,Bra,Camisoles,0.5381008210410513,prototype,0.3810082104105129,ambiguous_unrelated_top1,False,False,True,True
+product_042600,Bra,Bra,Tops,0.5170048470957205,prototype,0.1700484709572048,ambiguous_unrelated_top1,False,False,True,True
+product_013358,Bra,Bra,Camisoles,0.5337148781054964,prototype,0.33714878105496454,ambiguous_unrelated_top1,False,False,True,True
+product_025500,Bracelet,Necklace and Chains,Bracelet,0.5049433801396238,prototype,0.04943380139623811,ambiguous_unrelated_top1,False,False,True,False
+product_032917,Bracelet,Bracelet,Bangle,0.5058997824913247,prototype,0.058997824913247246,ambiguous_related_top2,True,False,True,True
+product_003088,Briefs,Briefs,Trunk,0.5165319122477332,prototype,0.16531912247733208,ambiguous_unrelated_top1,False,False,True,True
+product_007753,Briefs,Briefs,Bra,0.5236726774460196,prototype,0.23672677446019647,ambiguous_related_top2,True,False,True,True
+product_005140,Briefs,Briefs,Trunk,0.5318864884884343,prototype,0.31886488488434345,ambiguous_unrelated_top1,False,False,True,True
+product_034887,Briefs,Briefs,Shapewear,0.5339677338337555,prototype,0.33967733833755515,ambiguous_unrelated_top1,False,False,True,True
+product_007559,Briefs,Briefs,Trunk,0.5300053387521572,prototype,0.3000533875215717,ambiguous_unrelated_top1,False,False,True,True
+product_038781,Briefs,Briefs,Trunk,0.5083370755126579,prototype,0.08337075512657945,ambiguous_unrelated_top1,False,False,True,True
+product_017150,Briefs,Briefs,Bra,0.5339524956069585,prototype,0.3395249560695846,ambiguous_related_top2,True,False,True,True
+product_017096,Camisoles,Shapewear,Camisoles,0.5591053689078546,prototype,0.5910536890785457,ambiguous_unrelated_top1,False,False,True,False
+product_017333,Camisoles,Camisoles,Swimwear,0.5260903329394248,visual_neighbors,0.2609033293942476,ambiguous_unrelated_top1,False,False,True,True
+product_021743,Capris,Jeans,Trousers,0.5121860491893303,prototype,0.12186049189330309,ambiguous_unrelated_top1,False,False,True,False
+product_043535,Capris,Lounge Pants,Lounge Shorts,0.5107232920390299,prototype,0.10723292039029889,ambiguous_related_top2,True,False,True,False
+product_026562,Capris,Lounge Pants,Trousers,0.522593741481353,prototype,0.22593741481352964,ambiguous_related_top2,True,False,True,False
+product_006338,Caps,Caps,Tshirts,0.6878438640906593,visual_neighbors,1.0,confident_top1,False,True,True,True
+product_023875,Caps,Caps,Headband,0.5625374108204644,visual_neighbors,0.6253741082046439,ambiguous_unrelated_top1,False,False,True,True
+product_012517,Caps,Caps,Hat,0.5006001853506131,prototype,0.006001853506131251,ambiguous_related_top2,True,False,True,True
+product_010337,Caps,Caps,Headband,0.5397748295140501,visual_neighbors,0.39774829514050103,ambiguous_unrelated_top1,False,False,True,True
+product_002534,Casual Shoes,Casual Shoes,Sandals,0.5143037538204157,combined,0.14303753820415713,ambiguous_related_top2,True,False,True,True
+product_000109,Casual Shoes,Casual Shoes,Sports Shoes,0.5625739849893211,visual_neighbors,0.6257398498932111,ambiguous_related_top2,True,False,True,True
+product_042688,Casual Shoes,Formal Shoes,Casual Shoes,0.5229759772421043,prototype,0.22975977242104323,ambiguous_related_top2,True,False,True,False
+product_020635,Casual Shoes,Casual Shoes,Sports Shoes,0.5530727331337707,visual_neighbors,0.5307273313377071,ambiguous_related_top2,True,False,True,True
+product_015566,Casual Shoes,Formal Shoes,Casual Shoes,0.5074120478166422,prototype,0.07412047816642177,ambiguous_related_top2,True,False,True,False
+product_009009,Casual Shoes,Casual Shoes,Sports Shoes,0.5034871792091836,prototype,0.034871792091836225,ambiguous_related_top2,True,False,True,True
+product_017965,Casual Shoes,Sandals,Flip Flops,0.5162729375873326,visual_neighbors,0.16272937587332617,ambiguous_related_top2,True,False,True,False
+product_027810,Casual Shoes,Sports Shoes,Casual Shoes,0.5121873427181962,prototype,0.12187342718196217,ambiguous_related_top2,True,False,True,False
+product_007771,Casual Shoes,Casual Shoes,Sports Shoes,0.503701079581413,prototype,0.0370107958141297,ambiguous_related_top2,True,False,True,True
+product_029218,Casual Shoes,Casual Shoes,Sports Shoes,0.5060115853972366,prototype,0.06011585397236564,ambiguous_related_top2,True,False,True,True
+product_036159,Casual Shoes,Sandals,Casual Shoes,0.5246030365960923,visual_neighbors,0.24603036596092315,ambiguous_related_top2,True,False,True,False
+product_023459,Casual Shoes,Casual Shoes,Sports Shoes,0.5118577809885216,visual_neighbors,0.1185778098852164,ambiguous_related_top2,True,False,True,True
+product_008721,Casual Shoes,Casual Shoes,Sports Shoes,0.5050500591678768,prototype,0.050500591678768206,ambiguous_related_top2,True,False,True,True
+product_026980,Casual Shoes,Sports Shoes,Casual Shoes,0.5144677352252692,prototype,0.14467735225269232,ambiguous_related_top2,True,False,True,False
+product_043304,Casual Shoes,Casual Shoes,Sports Shoes,0.5034070042044487,prototype,0.03407004204448728,ambiguous_related_top2,True,False,True,True
+product_025772,Casual Shoes,Casual Shoes,Sports Shoes,0.5345185011022354,visual_neighbors,0.34518501102235427,ambiguous_related_top2,True,False,True,True
+product_013344,Casual Shoes,Casual Shoes,Sports Shoes,0.5107574663391299,prototype,0.10757466339129887,ambiguous_related_top2,True,False,True,True
+product_022262,Casual Shoes,Casual Shoes,Flats,0.5131129333039331,prototype,0.13112933303933152,ambiguous_unrelated_top1,False,False,True,True
+product_007064,Churidar,Churidar,Salwar,0.5725840348320327,visual_neighbors,0.725840348320327,ambiguous_unrelated_top1,False,False,True,True
+product_028064,Churidar,Salwar,Patiala,0.5116378841740348,prototype,0.11637884174034777,ambiguous_related_top2,True,False,True,False
+product_028030,Clothing Set,Rompers,Clothing Set,0.5052272392922222,prototype,0.052272392922222424,ambiguous_unrelated_top1,False,False,True,False
+product_027415,Clutches,Clutches,Handbags,0.5037099952951127,prototype,0.03709995295112734,ambiguous_related_top2,True,False,True,True
+product_022230,Clutches,Mobile Pouch,Handbags,0.5186545232698352,visual_neighbors,0.1865452326983519,ambiguous_related_top2,True,False,True,False
+product_011127,Clutches,Clutches,Handbags,0.5153085034376644,prototype,0.15308503437664436,ambiguous_related_top2,True,False,True,True
+product_009498,Clutches,Wallets,Clutches,0.5331441628434004,visual_neighbors,0.3314416284340039,ambiguous_related_top2,True,False,True,False
+product_015804,Compact,Compact,Highlighter and Blush,0.6551390237837332,visual_neighbors,1.0,confident_top1,False,True,True,True
+product_010201,Compact,Compact,Highlighter and Blush,0.5676747869792002,visual_neighbors,0.6767478697920016,ambiguous_unrelated_top1,False,False,True,True
+product_022116,Concealer,Concealer,Lip Gloss,0.5046283797746861,prototype,0.046283797746861095,ambiguous_unrelated_top1,False,False,True,True
+product_015834,Cufflinks,Cufflinks,Earrings,0.5287287941500864,prototype,0.2872879415008645,ambiguous_unrelated_top1,False,False,True,True
+product_000939,Cufflinks,Earrings,Cufflinks,0.5276199278485797,visual_neighbors,0.276199278485797,ambiguous_unrelated_top1,False,False,True,False
+product_003713,Cufflinks,Cufflinks,Earrings,0.5132789418544433,prototype,0.1327894185444334,ambiguous_unrelated_top1,False,False,True,True
+product_025292,Deodorant,Deodorant,Sunscreen,0.5182042254314545,visual_neighbors,0.18204225431454504,ambiguous_related_top2,True,False,True,True
+product_044178,Deodorant,Fragrance Gift Set,Perfume and Body Mist,0.5108792932230847,prototype,0.10879293223084677,ambiguous_related_top2,True,False,True,False
+product_002101,Deodorant,Deodorant,Fragrance Gift Set,0.5195433016358876,visual_neighbors,0.19543301635887583,ambiguous_unrelated_top1,False,False,True,True
+product_038000,Deodorant,Deodorant,Face Wash and Cleanser,0.5258157990384222,visual_neighbors,0.25815799038422244,ambiguous_unrelated_top1,False,False,True,True
+product_005273,Dresses,Dresses,Tops,0.5007483317803298,prototype,0.007483317803298474,ambiguous_unrelated_top1,False,False,True,True
+product_032260,Dresses,Dresses,Nightdress,0.5297068500195676,prototype,0.2970685001956764,ambiguous_related_top2,True,False,True,True
+product_034028,Dresses,Dresses,Tops,0.5054174460030063,prototype,0.05417446003006311,ambiguous_unrelated_top1,False,False,True,True
+product_021876,Dresses,Dresses,Nightdress,0.5076655515971854,prototype,0.07665551597185406,ambiguous_related_top2,True,False,True,True
+product_027271,Duffel Bag,Duffel Bag,Laptop Bag,0.5093784120335899,prototype,0.09378412033589914,ambiguous_related_top2,True,False,True,True
+product_016237,Duffel Bag,Duffel Bag,Handbags,0.5455005660914265,prototype,0.4550056609142651,ambiguous_unrelated_top1,False,False,True,True
+product_033192,Dupatta,Nightdress,Dupatta,0.5034748709890098,combined,0.034748709890097824,ambiguous_unrelated_top1,False,False,True,False
+product_030197,Dupatta,Dupatta,Salwar and Dupatta,0.5159612833444587,prototype,0.1596128334445868,ambiguous_related_top2,True,False,True,True
+product_002099,Dupatta,Stoles,Dupatta,0.5239824245490712,visual_neighbors,0.23982424549071185,ambiguous_related_top2,True,False,True,False
+product_006377,Earrings,Earrings,Cufflinks,0.5265052033118526,prototype,0.2650520331185258,ambiguous_unrelated_top1,False,False,True,True
+product_007636,Earrings,Earrings,Jewellery Set,0.5181753003978791,prototype,0.1817530039787907,ambiguous_related_top2,True,False,True,True
+product_014750,Earrings,Earrings,Jewellery Set,0.542644232693041,prototype,0.42644232693040973,ambiguous_related_top2,True,False,True,True
+product_006532,Earrings,Earrings,Cufflinks,0.5193647000220132,prototype,0.19364700022013187,ambiguous_unrelated_top1,False,False,True,True
+product_001112,Eye Cream,Face Wash and Cleanser,Face Moisturisers,0.555343505796788,visual_neighbors,0.5534350579678805,ambiguous_related_top2,True,False,True,False
+product_033890,Eyeshadow,Eyeshadow,Compact,0.5363836472170429,visual_neighbors,0.3638364721704291,ambiguous_unrelated_top1,False,False,True,True
+product_012319,Eyeshadow,Eyeshadow,Bangle,0.6636911613621571,visual_neighbors,1.0,confident_top1,False,True,True,True
+product_021001,Face Moisturisers,Face Scrub and Exfoliator,Face Moisturisers,0.5033843915483335,visual_neighbors,0.03384391548333477,ambiguous_unrelated_top1,False,False,True,False
+product_034351,Face Moisturisers,Face Wash and Cleanser,Body Lotion,0.5277069736944998,visual_neighbors,0.2770697369449982,ambiguous_unrelated_top1,False,False,True,False
+product_020428,Face Scrub and Exfoliator,Mask and Peel,Sunscreen,0.5055411301708767,combined,0.05541130170876653,ambiguous_unrelated_top1,False,False,True,False
+product_028180,Face Wash and Cleanser,Mask and Peel,Face Wash and Cleanser,0.5123259278239131,visual_neighbors,0.12325927823913066,ambiguous_unrelated_top1,False,False,True,False
+product_007623,Face Wash and Cleanser,Face Wash and Cleanser,Face Moisturisers,0.5370412226765385,visual_neighbors,0.3704122267653854,ambiguous_related_top2,True,False,True,True
+product_030806,Flats,Flats,Heels,0.5115199857372006,prototype,0.11519985737200591,ambiguous_unrelated_top1,False,False,True,True
+product_035165,Flats,Sandals,Heels,0.510610987398699,prototype,0.10610987398699037,ambiguous_related_top2,True,False,True,False
+product_016204,Flats,Flats,Heels,0.5277068061336876,visual_neighbors,0.27706806133687595,ambiguous_unrelated_top1,False,False,True,True
+product_020458,Flats,Sandals,Flats,0.5067076880929007,prototype,0.06707688092900678,ambiguous_unrelated_top1,False,False,True,False
+product_027891,Flats,Heels,Formal Shoes,0.5337405760890076,visual_neighbors,0.33740576089007607,ambiguous_related_top2,True,False,True,False
+product_043995,Flip Flops,Flip Flops,Sandals,0.5121776936370884,prototype,0.1217769363708843,ambiguous_related_top2,True,False,True,True
+product_022170,Flip Flops,Flip Flops,Sandals,0.5041656163503656,combined,0.04165616350365609,ambiguous_related_top2,True,False,True,True
+product_012331,Flip Flops,Heels,Flats,0.5081049896911105,visual_neighbors,0.0810498969111051,ambiguous_unrelated_top1,False,False,True,False
+product_010447,Flip Flops,Sandals,Flats,0.5065849052603523,prototype,0.06584905260352271,ambiguous_unrelated_top1,False,False,True,False
+product_008365,Flip Flops,Flip Flops,Sandals,0.5182406923111519,prototype,0.18240692311151888,ambiguous_related_top2,True,False,True,True
+product_017914,Flip Flops,Flip Flops,Sports Shoes,0.50599585972679,prototype,0.05995859726789955,ambiguous_unrelated_top1,False,False,True,True
+product_016664,Flip Flops,Flip Flops,Sandals,0.5169381722579394,visual_neighbors,0.16938172257939368,ambiguous_related_top2,True,False,True,True
+product_011526,Footballs,Footballs,Basketballs,0.5253557996295055,prototype,0.2535579962950552,ambiguous_related_top2,True,False,True,True
+product_011642,Formal Shoes,Formal Shoes,Casual Shoes,0.5309616718742437,prototype,0.30961671874243707,ambiguous_related_top2,True,False,True,True
+product_000272,Formal Shoes,Formal Shoes,Casual Shoes,0.5254204580461589,prototype,0.25420458046158895,ambiguous_related_top2,True,False,True,True
+product_036619,Formal Shoes,Formal Shoes,Casual Shoes,0.5226882284007722,prototype,0.2268822840077223,ambiguous_related_top2,True,False,True,True
+product_002351,Formal Shoes,Formal Shoes,Casual Shoes,0.5328960418683271,prototype,0.3289604186832707,ambiguous_related_top2,True,False,True,True
+product_003817,Formal Shoes,Formal Shoes,Casual Shoes,0.5292488580108189,prototype,0.29248858010818896,ambiguous_related_top2,True,False,True,True
+product_032514,Formal Shoes,Formal Shoes,Casual Shoes,0.5317002757353338,prototype,0.31700275735333855,ambiguous_related_top2,True,False,True,True
+product_012885,Foundation and Primer,Foundation and Primer,Concealer,0.509936606165199,prototype,0.09936606165198983,ambiguous_related_top2,True,False,True,True
+product_023055,Foundation and Primer,Concealer,Foundation and Primer,0.5027437773017468,combined,0.027437773017467977,ambiguous_related_top2,True,False,True,False
+product_040504,Fragrance Gift Set,Deodorant,Perfume and Body Mist,0.5585942424531449,visual_neighbors,0.5859424245314494,ambiguous_unrelated_top1,False,False,True,False
+product_003808,Fragrance Gift Set,Deodorant,Fragrance Gift Set,0.5069983407797417,combined,0.06998340779741709,ambiguous_unrelated_top1,False,False,True,False
+product_029606,Free Gifts,Sarees,Dupatta,0.540444640465732,prototype,0.4044464046573205,ambiguous_related_top2,True,False,True,False
+product_020583,Free Gifts,Watches,Free Gifts,0.5571695795799447,prototype,0.5716957957994474,ambiguous_unrelated_top1,False,False,True,False
+product_016644,Gloves,Gloves,Mufflers,0.5518143140458683,prototype,0.5181431404586835,ambiguous_unrelated_top1,False,False,True,True
+product_004312,Hair Colour,Hair Colour,Face Moisturisers,0.5466343064203487,prototype,0.46634306420348726,ambiguous_unrelated_top1,False,False,True,True
+product_023341,Handbags,Handbags,Clutches,0.5089381794737228,prototype,0.08938179473722775,ambiguous_related_top2,True,False,True,True
+product_042094,Handbags,Handbags,Clutches,0.5382639765747835,prototype,0.3826397657478354,ambiguous_related_top2,True,False,True,True
+product_001965,Handbags,Wallets,Mobile Pouch,0.5273055691995493,visual_neighbors,0.273055691995493,ambiguous_unrelated_top1,False,False,True,False
+product_001577,Handbags,Handbags,Duffel Bag,0.615868766680107,visual_neighbors,1.0,confident_top1,False,True,True,True
+product_013149,Handbags,Handbags,Clutches,0.5232757493181723,prototype,0.2327574931817234,ambiguous_related_top2,True,False,True,True
+product_013332,Handbags,Mobile Pouch,Handbags,0.5097045550451575,visual_neighbors,0.09704555045157551,ambiguous_related_top2,True,False,True,False
+product_033263,Handbags,Laptop Bag,Duffel Bag,0.5025436567081955,combined,0.025436567081954527,ambiguous_related_top2,True,False,True,False
+product_008241,Handbags,Mobile Pouch,Duffel Bag,0.531572106008663,visual_neighbors,0.3157210600866301,ambiguous_unrelated_top1,False,False,True,False
+product_003020,Handbags,Handbags,Duffel Bag,0.5028116156955018,prototype,0.02811615695501813,ambiguous_unrelated_top1,False,False,True,True
+product_037754,Handbags,Handbags,Laptop Bag,0.5282695682626171,visual_neighbors,0.2826956826261707,ambiguous_related_top2,True,False,True,True
+product_034102,Handbags,Handbags,Laptop Bag,0.5089528529295835,prototype,0.08952852929583478,ambiguous_related_top2,True,False,True,True
+product_043746,Handbags,Handbags,Clutches,0.5061483453611506,prototype,0.0614834536115061,ambiguous_related_top2,True,False,True,True
+product_034902,Hat,Caps,Socks,0.5021653632527056,prototype,0.021653632527055548,ambiguous_unrelated_top1,False,False,True,False
+product_028196,Headband,Headband,Ties,0.5137552657696729,prototype,0.137552657696729,ambiguous_unrelated_top1,False,False,True,True
+product_018780,Heels,Heels,Flats,0.5080347501678838,prototype,0.08034750167883799,ambiguous_unrelated_top1,False,False,True,True
+product_033229,Heels,Flats,Heels,0.5012837077646262,visual_neighbors,0.012837077646261633,ambiguous_unrelated_top1,False,False,True,False
+product_034753,Heels,Heels,Sports Sandals,0.5064083326780608,prototype,0.06408332678060848,ambiguous_unrelated_top1,False,False,True,True
+product_011993,Heels,Flats,Heels,0.506557162730308,visual_neighbors,0.06557162730308043,ambiguous_unrelated_top1,False,False,True,False
+product_012706,Heels,Formal Shoes,Casual Shoes,0.5321158020249613,prototype,0.32115802024961343,ambiguous_related_top2,True,False,True,False
+product_027871,Heels,Formal Shoes,Casual Shoes,0.5130666960448139,prototype,0.13066696044813922,ambiguous_related_top2,True,False,True,False
+product_027480,Heels,Flats,Heels,0.511544466776975,visual_neighbors,0.11544466776974963,ambiguous_unrelated_top1,False,False,True,False
+product_016229,Heels,Flats,Heels,0.5043345038642689,visual_neighbors,0.043345038642689245,ambiguous_unrelated_top1,False,False,True,False
+product_038253,Heels,Heels,Flats,0.5047991488602611,prototype,0.04799148860261117,ambiguous_unrelated_top1,False,False,True,True
+product_016405,Heels,Formal Shoes,Casual Shoes,0.514685608364393,prototype,0.14685608364393035,ambiguous_related_top2,True,False,True,False
+product_028725,Highlighter and Blush,Compact,Highlighter and Blush,0.516699006640788,prototype,0.16699006640788053,ambiguous_unrelated_top1,False,False,True,False
+product_016277,Highlighter and Blush,Highlighter and Blush,Concealer,0.5086630206534184,prototype,0.08663020653418398,ambiguous_unrelated_top1,False,False,True,True
+product_028865,Innerwear Vests,Innerwear Vests,Tops,0.5028157367197906,prototype,0.028157367197906298,ambiguous_unrelated_top1,False,False,True,True
+product_041039,Innerwear Vests,Innerwear Vests,Tshirts,0.534269695893246,prototype,0.34269695893246027,ambiguous_unrelated_top1,False,False,True,True
+product_015418,Innerwear Vests,Innerwear Vests,Tshirts,0.557292348115957,prototype,0.5729234811595697,ambiguous_unrelated_top1,False,False,True,True
+product_037862,Jackets,Tshirts,Shirts,0.7662360789445829,visual_neighbors,1.0,confident_top1,True,True,True,False
+product_014420,Jackets,Blazers,Jackets,0.5089715098834723,visual_neighbors,0.08971509883472285,ambiguous_related_top2,True,False,True,False
+product_042426,Jackets,Rain Jacket,Jackets,0.5157378416969367,prototype,0.15737841696936708,ambiguous_related_top2,True,False,True,False
+product_017440,Jeans,Trousers,Jeans,0.5224584219794353,visual_neighbors,0.22458421979435267,ambiguous_unrelated_top1,False,False,True,False
+product_021006,Jeans,Trousers,Lounge Pants,0.5089899847662984,prototype,0.08989984766298421,ambiguous_related_top2,True,False,True,False
+product_026818,Jeans,Jeans,Capris,0.512589327590282,prototype,0.12589327590281976,ambiguous_unrelated_top1,False,False,True,True
+product_010869,Jeans,Jeans,Jeggings,0.5173755822671806,prototype,0.17375582267180614,ambiguous_related_top2,True,False,True,True
+product_008006,Jeans,Jeans,Jeggings,0.5012563561683335,prototype,0.012563561683335282,ambiguous_related_top2,True,False,True,True
+product_023687,Jeggings,Jeans,Jeggings,0.5057623795253895,prototype,0.05762379525389495,ambiguous_related_top2,True,False,True,False
+product_011223,Jeggings,Jeggings,Leggings,0.5193795892610689,visual_neighbors,0.1937958926106887,ambiguous_related_top2,True,False,True,True
+product_036680,Jewellery Set,Jewellery Set,Pendant,0.516643392069671,visual_neighbors,0.16643392069671029,ambiguous_unrelated_top1,False,False,True,True
+product_007458,Jewellery Set,Jewellery Set,Necklace and Chains,0.5225286166430493,prototype,0.22528616643049287,ambiguous_related_top2,True,False,True,True
+product_002136,Jumpsuit,Lounge Pants,Jumpsuit,0.5020585766740988,combined,0.020585766740988113,ambiguous_unrelated_top1,False,False,True,False
+product_032352,Kajal and Eyeliner,Kajal and Eyeliner,Lip Liner,0.5081595401266045,prototype,0.08159540126604471,ambiguous_unrelated_top1,False,False,True,True
+product_024823,Kajal and Eyeliner,Kajal and Eyeliner,Lip Liner,0.5127025602937765,prototype,0.1270256029377648,ambiguous_unrelated_top1,False,False,True,True
+product_039114,Kurta Sets,Kurta Sets,Dupatta,0.5136734771135223,visual_neighbors,0.13673477113522295,ambiguous_unrelated_top1,False,False,True,True
+product_041747,Kurta Sets,Kurta Sets,Dupatta,0.5076141525590859,prototype,0.07614152559085931,ambiguous_unrelated_top1,False,False,True,True
+product_032055,Kurtas,Kurtas,Tunics,0.530615744263367,visual_neighbors,0.30615744263367,ambiguous_related_top2,True,False,True,True
+product_043473,Kurtas,Tunics,Kurtas,0.500395334193935,combined,0.003953341939350042,ambiguous_related_top2,True,False,True,False
+product_015296,Kurtas,Dresses,Shirts,0.502953577843074,prototype,0.029535778430740407,ambiguous_unrelated_top1,False,False,True,False
+product_003462,Kurtas,Kurtas,Dresses,0.5600029039636087,visual_neighbors,0.6000290396360876,ambiguous_unrelated_top1,False,False,True,True
+product_020551,Kurtas,Nightdress,Bath Robe,0.5060927011238633,visual_neighbors,0.06092701123863288,ambiguous_unrelated_top1,False,False,True,False
+product_009431,Kurtas,Kurtas,Kurta Sets,0.5417401355223029,visual_neighbors,0.41740135522302946,ambiguous_related_top2,True,False,True,True
+product_033354,Kurtas,Kurtas,Kurtis,0.5028451093678731,combined,0.028451093678730784,ambiguous_unrelated_top1,False,False,True,True
+product_020686,Kurtas,Kurtas,Tunics,0.5232217454036936,visual_neighbors,0.232217454036936,ambiguous_related_top2,True,False,True,True
+product_012568,Kurtas,Kurtas,Tunics,0.5164795800287308,visual_neighbors,0.16479580028730847,ambiguous_related_top2,True,False,True,True
+product_027895,Kurtas,Kurtas,Tunics,0.5276452898587022,visual_neighbors,0.2764528985870219,ambiguous_related_top2,True,False,True,True
+product_020721,Kurtas,Kurtas,Tunics,0.5285228124256078,visual_neighbors,0.2852281242560784,ambiguous_related_top2,True,False,True,True
+product_007536,Kurtas,Kurtas,Kurtis,0.5205703570014321,visual_neighbors,0.20570357001432066,ambiguous_unrelated_top1,False,False,True,True
+product_039677,Kurtas,Kurtas,Tunics,0.5287387889744716,visual_neighbors,0.2873878897447158,ambiguous_related_top2,True,False,True,True
+product_030825,Kurtis,Kurtas,Kurta Sets,0.5340867551646047,visual_neighbors,0.34086755164604693,ambiguous_related_top2,True,False,True,False
+product_002346,Kurtis,Tops,Kurtas,0.5081382593779782,visual_neighbors,0.08138259377978187,ambiguous_unrelated_top1,False,False,True,False
+product_018761,Kurtis,Kurtas,Dupatta,0.5127659752556408,visual_neighbors,0.1276597525564083,ambiguous_unrelated_top1,False,False,True,False
+product_042892,Laptop Bag,Laptop Bag,Trolley Bag,0.5282790293259813,prototype,0.2827902932598126,ambiguous_related_top2,True,False,True,True
+product_026198,Laptop Bag,Laptop Bag,Mobile Pouch,0.5028616195669102,prototype,0.028616195669102236,ambiguous_unrelated_top1,False,False,True,True
+product_002614,Leggings,Leggings,Churidar,0.5094408285922846,prototype,0.0944082859228457,ambiguous_unrelated_top1,False,False,True,True
+product_029791,Leggings,Jeggings,Leggings,0.5146628060827755,visual_neighbors,0.14662806082775484,ambiguous_related_top2,True,False,True,False
+product_025928,Leggings,Rain Trousers,Track Pants,0.5147517275202772,combined,0.14751727520277205,ambiguous_related_top2,True,False,True,False
+product_041966,Lehenga Choli,Dresses,Bath Robe,0.5050969135468422,prototype,0.05096913546842165,ambiguous_unrelated_top1,False,False,True,False
+product_021567,Lip Care,Lip Care,Face Wash and Cleanser,0.6098006070122005,visual_neighbors,1.0,confident_top1,False,True,True,True
+product_007647,Lip Gloss,Lip Gloss,Lipstick,0.5039769686670739,prototype,0.039769686670738665,ambiguous_related_top2,True,False,True,True
+product_027956,Lip Gloss,Lip Gloss,Lipstick,0.508349092753032,prototype,0.08349092753031974,ambiguous_related_top2,True,False,True,True
+product_016798,Lip Gloss,Lip Gloss,Lipstick,0.539058010833112,prototype,0.3905801083311201,ambiguous_related_top2,True,False,True,True
+product_001109,Lip Liner,Lip Liner,Kajal and Eyeliner,0.5401093386441613,prototype,0.4010933864416134,ambiguous_unrelated_top1,False,False,True,True
+product_041468,Lip Liner,Lip Liner,Kajal and Eyeliner,0.5216628218755273,prototype,0.21662821875527266,ambiguous_unrelated_top1,False,False,True,True
+product_030803,Lip Plumper,Lip Plumper,Concealer,0.5547712974249225,visual_neighbors,0.5477129742492249,ambiguous_unrelated_top1,False,False,True,True
+product_043154,Lipstick,Lipstick,Lip Gloss,0.5134311974473409,visual_neighbors,0.13431197447340895,ambiguous_related_top2,True,False,True,True
+product_031080,Lipstick,Lipstick,Lip Gloss,0.5243118521864343,prototype,0.24311852186434285,ambiguous_related_top2,True,False,True,True
+product_031117,Lipstick,Lipstick,Lip Gloss,0.5333150260776043,prototype,0.3331502607760429,ambiguous_related_top2,True,False,True,True
+product_003825,Lipstick,Lipstick,Lip Gloss,0.51864387662398,prototype,0.1864387662398004,ambiguous_related_top2,True,False,True,True
+product_040006,Lounge Pants,Track Pants,Lounge Pants,0.5474408874265111,visual_neighbors,0.474408874265111,ambiguous_related_top2,True,False,True,False
+product_037101,Lounge Pants,Lounge Pants,Track Pants,0.5253533581389914,prototype,0.2535335813899143,ambiguous_related_top2,True,False,True,True
+product_038546,Lounge Shorts,Shorts,Lounge Shorts,0.5101470603918056,prototype,0.10147060391805576,ambiguous_related_top2,True,False,True,False
+product_002045,Lounge Shorts,Lounge Pants,Track Pants,0.5059353306963393,visual_neighbors,0.059353306963393374,ambiguous_related_top2,True,False,True,False
+product_022512,Lounge Tshirts,Lounge Pants,Night suits,0.5984332320273511,visual_neighbors,0.9843323202735113,ambiguous_unrelated_top1,False,False,True,False
+product_043138,Makeup Remover,Sunscreen,Face Wash and Cleanser,0.5777885583929171,visual_neighbors,0.7778855839291712,ambiguous_unrelated_top1,False,False,True,False
+product_044303,Mascara,Mascara,Kajal and Eyeliner,0.5599451986473649,prototype,0.5994519864736493,ambiguous_unrelated_top1,False,False,True,True
+product_012958,Mask and Peel,Mask and Peel,Face Moisturisers,0.5798387106519769,visual_neighbors,0.7983871065197692,ambiguous_unrelated_top1,False,False,True,True
+product_013926,Messenger Bag,Handbags,Messenger Bag,0.5419519361436972,visual_neighbors,0.419519361436972,ambiguous_unrelated_top1,False,False,True,False
+product_017705,Messenger Bag,Messenger Bag,Laptop Bag,0.5025953426939098,prototype,0.025953426939098197,ambiguous_related_top2,True,False,True,True
+product_039922,Mobile Pouch,Laptop Bag,Wallets,0.5096778199241581,visual_neighbors,0.09677819924158063,ambiguous_unrelated_top1,False,False,True,False
+product_000881,Mobile Pouch,Mobile Pouch,Handbags,0.5124340667128587,combined,0.1243406671285874,ambiguous_related_top2,True,False,True,True
+product_037942,Mufflers,Scarves,Mufflers,0.5253513893270302,prototype,0.2535138932703019,ambiguous_unrelated_top1,False,False,True,False
+product_023267,Mufflers,Scarves,Mufflers,0.5598409362206245,prototype,0.5984093622062449,ambiguous_unrelated_top1,False,False,True,False
+product_017118,Nail Essentials,Foundation and Primer,Perfume and Body Mist,0.581338287379315,visual_neighbors,0.8133828737931506,ambiguous_unrelated_top1,False,False,True,False
+product_022832,Nail Polish,Nail Polish,Foundation and Primer,0.6668481231572931,visual_neighbors,1.0,confident_top1,False,True,True,True
+product_029426,Nail Polish,Nail Polish,Foundation and Primer,0.5468419058469434,prototype,0.46841905846943377,ambiguous_unrelated_top1,False,False,True,True
+product_020069,Nail Polish,Nail Polish,Lip Gloss,0.5439548743472277,prototype,0.4395487434722768,ambiguous_unrelated_top1,False,False,True,True
+product_015012,Nail Polish,Nail Polish,Lip Gloss,0.6616214904247615,visual_neighbors,1.0,confident_top1,False,True,True,True
+product_026128,Necklace and Chains,Necklace and Chains,Jewellery Set,0.519540619416071,prototype,0.19540619416070998,ambiguous_related_top2,True,False,True,True
+product_023616,Necklace and Chains,Necklace and Chains,Pendant,0.5098818558905348,prototype,0.0988185589053481,ambiguous_related_top2,True,False,True,True
+product_024298,Necklace and Chains,Necklace and Chains,Jewellery Set,0.5223398853935031,prototype,0.22339885393503073,ambiguous_related_top2,True,False,True,True
+product_005807,Nehru Jackets,Nehru Jackets,Waistcoat,0.5377545067869319,prototype,0.3775450678693194,ambiguous_related_top2,True,False,True,True
+product_043980,Night suits,Kurtas,Tunics,0.5077659471741571,visual_neighbors,0.0776594717415713,ambiguous_related_top2,True,False,True,False
+product_023350,Night suits,Shirts,Tshirts,0.5146899320377043,prototype,0.14689932037704304,ambiguous_related_top2,True,False,True,False
+product_014366,Night suits,Tshirts,Tops,0.5619794518347073,visual_neighbors,0.6197945183470733,ambiguous_unrelated_top1,False,False,True,False
+product_033365,Nightdress,Nightdress,Kurtas,0.5017364119838089,prototype,0.01736411983808917,ambiguous_unrelated_top1,False,False,True,True
+product_041139,Nightdress,Nightdress,Kurtas,0.5271524414506259,visual_neighbors,0.271524414506259,ambiguous_unrelated_top1,False,False,True,True
+product_037696,Nightdress,Jumpsuit,Nightdress,0.5360121675158167,visual_neighbors,0.3601216751581671,ambiguous_unrelated_top1,False,False,True,False
+product_028692,Patiala,Patiala,Salwar,0.5123527921374716,visual_neighbors,0.12352792137471649,ambiguous_related_top2,True,False,True,True
+product_041819,Patiala,Salwar,Patiala,0.5123638903886802,prototype,0.12363890388680246,ambiguous_related_top2,True,False,True,False
+product_030915,Pendant,Pendant,Necklace and Chains,0.5056118201118278,prototype,0.05611820111827816,ambiguous_related_top2,True,False,True,True
+product_042072,Pendant,Necklace and Chains,Pendant,0.5178898478541857,visual_neighbors,0.17889847854185684,ambiguous_related_top2,True,False,True,False
+product_028298,Pendant,Earrings,Cufflinks,0.5065952744524701,visual_neighbors,0.06595274452470103,ambiguous_unrelated_top1,False,False,True,False
+product_004961,Perfume and Body Mist,Fragrance Gift Set,Perfume and Body Mist,0.5270952377629706,visual_neighbors,0.2709523776297063,ambiguous_related_top2,True,False,True,False
+product_009798,Perfume and Body Mist,Perfume and Body Mist,Mens Grooming Kit,0.545552969083731,visual_neighbors,0.45552969083730976,ambiguous_unrelated_top1,False,False,True,True
+product_025480,Perfume and Body Mist,Deodorant,Fragrance Gift Set,0.5953265331871418,visual_neighbors,0.9532653318714182,ambiguous_unrelated_top1,False,False,True,False
+product_007801,Perfume and Body Mist,Perfume and Body Mist,Fragrance Gift Set,0.6655602736838356,visual_neighbors,1.0,confident_top1,True,True,True,True
+product_017709,Perfume and Body Mist,Fragrance Gift Set,Perfume and Body Mist,0.5253103526110904,prototype,0.25310352611090386,ambiguous_related_top2,True,False,True,False
+product_035810,Rain Jacket,Rain Jacket,Jackets,0.5057739098357964,prototype,0.057739098357963994,ambiguous_related_top2,True,False,True,True
+product_002990,Ring,Ring,Bracelet,0.5093899741434617,prototype,0.09389974143461657,ambiguous_related_top2,True,False,True,True
+product_038449,Ring,Ring,Bracelet,0.5125069535855201,prototype,0.12506953585520122,ambiguous_related_top2,True,False,True,True
+product_022246,Ring,Ring,Bracelet,0.5259880395250881,prototype,0.2598803952508811,ambiguous_related_top2,True,False,True,True
+product_002951,Robe,Bath Robe,Nightdress,0.5028141682108191,prototype,0.028141682108191464,ambiguous_unrelated_top1,False,False,True,False
+product_005801,Rompers,Rompers,Tops,0.681026622192596,visual_neighbors,1.0,confident_top1,False,True,True,True
+product_022337,Rompers,Rompers,Tops,0.6779654975010823,visual_neighbors,1.0,confident_top1,False,True,True,True
+product_024554,Rucksacks,Rucksacks,Backpacks,0.545242934756245,visual_neighbors,0.4524293475624498,ambiguous_related_top2,True,False,True,True
+product_005382,Salwar,Patiala,Salwar,0.5090558647844732,visual_neighbors,0.09055864784473179,ambiguous_related_top2,True,False,True,False
+product_032143,Salwar,Salwar,Kurta Sets,0.5115651390078162,prototype,0.11565139007816197,ambiguous_unrelated_top1,False,False,True,True
+product_024039,Salwar,Patiala,Salwar,0.512136732464978,visual_neighbors,0.12136732464978042,ambiguous_related_top2,True,False,True,False
+product_036804,Salwar and Dupatta,Salwar and Dupatta,Kurta Sets,0.5312087261677844,visual_neighbors,0.3120872616778437,ambiguous_unrelated_top1,False,False,True,True
+product_017870,Sandals,Sandals,Flats,0.5068404168836922,prototype,0.06840416883692192,ambiguous_unrelated_top1,False,False,True,True
+product_007447,Sandals,Heels,Sandals,0.5408801686427798,visual_neighbors,0.4088016864277978,ambiguous_related_top2,True,False,True,False
+product_022383,Sandals,Sandals,Sports Sandals,0.5650330060584319,visual_neighbors,0.6503300605843189,ambiguous_related_top2,True,False,True,True
+product_007485,Sandals,Casual Shoes,Sandals,0.5069975316744365,visual_neighbors,0.0699753167443651,ambiguous_related_top2,True,False,True,False
+product_006276,Sandals,Sandals,Flip Flops,0.5025626737525465,prototype,0.025626737525464856,ambiguous_related_top2,True,False,True,True
+product_014896,Sandals,Sandals,Flip Flops,0.5017007078067786,prototype,0.017007078067785567,ambiguous_related_top2,True,False,True,True
+product_024394,Sandals,Sandals,Flip Flops,0.50276863034412,prototype,0.02768630344120005,ambiguous_related_top2,True,False,True,True
+product_030717,Sarees,Sarees,Dupatta,0.5227287265280884,prototype,0.22728726528088444,ambiguous_related_top2,True,False,True,True
+product_031688,Sarees,Sarees,Stoles,0.5416672345900231,visual_neighbors,0.41667234590023094,ambiguous_unrelated_top1,False,False,True,True
+product_004311,Sarees,Sarees,Stoles,0.544179073498107,prototype,0.44179073498107024,ambiguous_unrelated_top1,False,False,True,True
+product_024066,Sarees,Sarees,Dupatta,0.5193739053102562,prototype,0.19373905310256184,ambiguous_related_top2,True,False,True,True
+product_022969,Scarves,Scarves,Mufflers,0.555493242726739,prototype,0.5549324272673896,ambiguous_unrelated_top1,False,False,True,True
+product_043013,Scarves,Scarves,Stoles,0.5187232942962489,prototype,0.18723294296248863,ambiguous_related_top2,True,False,True,True
+product_028446,Scarves,Scarves,Tops,0.500972902051117,prototype,0.009729020511169974,ambiguous_unrelated_top1,False,False,True,True
+product_040809,Shapewear,Camisoles,Swimwear,0.5083416484415826,visual_neighbors,0.08341648441582585,ambiguous_unrelated_top1,False,False,True,False
+product_001645,Shirts,Shirts,Tshirts,0.5176925464836797,prototype,0.17692546483679686,ambiguous_related_top2,True,False,True,True
+product_025648,Shirts,Shirts,Tshirts,0.5131498887314032,prototype,0.13149888731403217,ambiguous_related_top2,True,False,True,True
+product_035716,Shirts,Shirts,Tshirts,0.5187277105369531,prototype,0.18727710536953104,ambiguous_related_top2,True,False,True,True
+product_027265,Shirts,Shirts,Tshirts,0.5102602315780576,prototype,0.10260231578057558,ambiguous_related_top2,True,False,True,True
+product_018253,Shirts,Shirts,Tshirts,0.5282929492014441,prototype,0.282929492014441,ambiguous_related_top2,True,False,True,True
+product_014925,Shirts,Shirts,Tshirts,0.5202114369572713,prototype,0.2021143695727135,ambiguous_related_top2,True,False,True,True
+product_015492,Shirts,Shirts,Tshirts,0.5264849970831096,prototype,0.2648499708310959,ambiguous_related_top2,True,False,True,True
+product_000394,Shirts,Tshirts,Shirts,0.5149352402880997,visual_neighbors,0.14935240288099674,ambiguous_related_top2,True,False,True,False
+product_036365,Shirts,Shirts,Blazers,0.54490403627167,visual_neighbors,0.44904036271669956,ambiguous_unrelated_top1,False,False,True,True
+product_042875,Shirts,Shirts,Tshirts,0.5296993462262038,prototype,0.29699346226203854,ambiguous_related_top2,True,False,True,True
+product_017437,Shirts,Shirts,Tshirts,0.5254401041315417,prototype,0.25440104131541746,ambiguous_related_top2,True,False,True,True
+product_000327,Shirts,Shirts,Kurtis,0.5087232361278592,prototype,0.08723236127859192,ambiguous_unrelated_top1,False,False,True,True
+product_022566,Shirts,Shirts,Tshirts,0.5263631523118932,prototype,0.2636315231189324,ambiguous_related_top2,True,False,True,True
+product_004788,Shirts,Shirts,Tunics,0.5071255366446888,prototype,0.07125536644688847,ambiguous_unrelated_top1,False,False,True,True
+product_011330,Shirts,Shirts,Tshirts,0.5237353276363803,prototype,0.23735327636380316,ambiguous_related_top2,True,False,True,True
+product_015119,Shirts,Shirts,Tshirts,0.5290303543176561,prototype,0.2903035431765611,ambiguous_related_top2,True,False,True,True
+product_022741,Shirts,Shirts,Kurtas,0.5196049604885943,prototype,0.19604960488594286,ambiguous_unrelated_top1,False,False,True,True
+product_010907,Shirts,Shirts,Tshirts,0.5204427588591564,prototype,0.20442758859156368,ambiguous_related_top2,True,False,True,True
+product_015311,Shirts,Shirts,Tshirts,0.5277799538282956,prototype,0.2777995382829557,ambiguous_related_top2,True,False,True,True
+product_009811,Shoe Accessories,Shoe Accessories,Belts,0.5305906420101442,visual_neighbors,0.3059064201014417,ambiguous_unrelated_top1,False,False,True,True
+product_022217,Shoe Accessories,Shoe Accessories,Shoe Laces,0.6498084050781702,visual_neighbors,1.0,confident_top1,False,True,True,True
+product_029976,Shoe Accessories,Shoe Accessories,Belts,0.6080892277587662,visual_neighbors,1.0,confident_top1,False,True,True,True
+product_043772,Shorts,Shorts,Skirts,0.5598218900090538,visual_neighbors,0.5982189000905381,ambiguous_related_top2,True,False,True,True
+product_024875,Shorts,Lounge Shorts,Shorts,0.5372618260762448,visual_neighbors,0.37261826076244847,ambiguous_related_top2,True,False,True,False
+product_018479,Shorts,Shorts,Skirts,0.5619466224316743,visual_neighbors,0.6194662243167427,ambiguous_related_top2,True,False,True,True
+product_013390,Shorts,Lounge Shorts,Shorts,0.5218187682046498,visual_neighbors,0.2181876820464979,ambiguous_related_top2,True,False,True,False
+product_015996,Shorts,Trousers,Lounge Shorts,0.5382877993776173,visual_neighbors,0.38287799377617293,ambiguous_unrelated_top1,False,False,True,False
+product_035304,Shrug,Waistcoat,Shrug,0.528261196357486,prototype,0.28261196357486035,ambiguous_unrelated_top1,False,False,True,False
+product_025055,Skirts,Skirts,Shorts,0.5522482160400906,prototype,0.5224821604009057,ambiguous_related_top2,True,False,True,True
+product_012489,Skirts,Skirts,Dresses,0.5489240742424758,prototype,0.4892407424247581,ambiguous_unrelated_top1,False,False,True,True
+product_000591,Skirts,Shorts,Skirts,0.5036362763593836,prototype,0.03636276359383573,ambiguous_related_top2,True,False,True,False
+product_008862,Socks,Socks,Gloves,0.5565480847606092,prototype,0.5654808476060925,ambiguous_unrelated_top1,False,False,True,True
+product_008441,Socks,Socks,Stockings,0.5050294227046186,prototype,0.05029422704618593,ambiguous_related_top2,True,False,True,True
+product_012453,Socks,Socks,Gloves,0.533287043485087,prototype,0.3328704348508705,ambiguous_unrelated_top1,False,False,True,True
+product_034465,Socks,Socks,Stockings,0.509064852904715,prototype,0.09064852904715039,ambiguous_related_top2,True,False,True,True
+product_009018,Socks,Socks,Track Pants,0.5319640659683459,prototype,0.31964065968345895,ambiguous_unrelated_top1,False,False,True,True
+product_026732,Socks,Socks,Track Pants,0.5380073492243324,prototype,0.38007349224332365,ambiguous_unrelated_top1,False,False,True,True
+product_032940,Sports Sandals,Sandals,Sports Sandals,0.5009196480025693,prototype,0.009196480025692734,ambiguous_related_top2,True,False,True,False
+product_013571,Sports Sandals,Sports Sandals,Sandals,0.5082992079293533,prototype,0.08299207929353349,ambiguous_related_top2,True,False,True,True
+product_005694,Sports Shoes,Sports Shoes,Casual Shoes,0.5103919569669638,prototype,0.10391956966963825,ambiguous_related_top2,True,False,True,True
+product_011337,Sports Shoes,Sports Shoes,Casual Shoes,0.5144391970264868,prototype,0.14439197026486775,ambiguous_related_top2,True,False,True,True
+product_034449,Sports Shoes,Sports Shoes,Casual Shoes,0.5110305371510974,prototype,0.11030537151097367,ambiguous_related_top2,True,False,True,True
+product_006320,Sports Shoes,Casual Shoes,Sports Shoes,0.5062848657027581,visual_neighbors,0.06284865702758104,ambiguous_related_top2,True,False,True,False
+product_028280,Sports Shoes,Sports Shoes,Casual Shoes,0.5548986861293342,prototype,0.5489868612933425,ambiguous_related_top2,True,False,True,True
+product_043069,Sports Shoes,Sports Shoes,Casual Shoes,0.5400038594831692,prototype,0.40003859483169213,ambiguous_related_top2,True,False,True,True
+product_030245,Sports Shoes,Sports Shoes,Sports Sandals,0.5192064797940503,prototype,0.1920647979405033,ambiguous_related_top2,True,False,True,True
+product_011835,Sports Shoes,Sports Shoes,Casual Shoes,0.5492536374170564,prototype,0.4925363741705636,ambiguous_related_top2,True,False,True,True
+product_010595,Sports Shoes,Shirts,Tshirts,0.5133100302239734,prototype,0.1331003022397337,ambiguous_related_top2,True,False,True,False
+product_008775,Sports Shoes,Sports Shoes,Casual Shoes,0.5358546698097942,prototype,0.35854669809794243,ambiguous_related_top2,True,False,True,True
+product_020196,Sports Shoes,Sports Shoes,Casual Shoes,0.5199531843999722,prototype,0.19953184399972185,ambiguous_related_top2,True,False,True,True
+product_037822,Sports Shoes,Sports Shoes,Casual Shoes,0.5233299032133887,prototype,0.23329903213388686,ambiguous_related_top2,True,False,True,True
+product_019303,Sports Shoes,Sports Shoes,Casual Shoes,0.546493693599766,prototype,0.46493693599765973,ambiguous_related_top2,True,False,True,True
+product_037085,Sports Shoes,Sports Shoes,Casual Shoes,0.5252904799954073,prototype,0.2529047999540735,ambiguous_related_top2,True,False,True,True
+product_043663,Stockings,Stockings,Tights,0.6230037158773342,visual_neighbors,1.0,confident_top1,True,True,True,True
+product_034772,Stockings,Stockings,Tights,0.5552641059186028,visual_neighbors,0.5526410591860277,ambiguous_related_top2,True,False,True,True
+product_035485,Stoles,Dupatta,Stoles,0.5194250009338196,prototype,0.19425000933819608,ambiguous_related_top2,True,False,True,False
+product_017641,Stoles,Dupatta,Stoles,0.5106966771877545,combined,0.10696677187754469,ambiguous_related_top2,True,False,True,False
+product_043960,Sunglasses,Sunglasses,Ties and Cufflinks,0.5582573065503282,prototype,0.5825730655032825,ambiguous_unrelated_top1,False,False,True,True
+product_032548,Sunglasses,Sunglasses,Ties and Cufflinks,0.5867635873180391,prototype,0.8676358731803915,ambiguous_unrelated_top1,False,False,True,True
+product_000466,Sunglasses,Sunglasses,Ties and Cufflinks,0.577013487263479,prototype,0.7701348726347903,ambiguous_unrelated_top1,False,False,True,True
+product_032206,Sunglasses,Sunglasses,Ties and Cufflinks,0.5845517982691889,prototype,0.8455179826918893,ambiguous_unrelated_top1,False,False,True,True
+product_040125,Sunglasses,Sunglasses,Ties and Cufflinks,0.5777248252260191,prototype,0.7772482522601911,ambiguous_unrelated_top1,False,False,True,True
+product_016425,Sunglasses,Sunglasses,Ties and Cufflinks,0.5612971942711367,prototype,0.6129719427113668,ambiguous_unrelated_top1,False,False,True,True
+product_019553,Sunglasses,Sunglasses,Ties and Cufflinks,0.556798862820738,prototype,0.5679886282073799,ambiguous_unrelated_top1,False,False,True,True
+product_006052,Sunglasses,Sunglasses,Ties and Cufflinks,0.5798946873796709,prototype,0.7989468737967089,ambiguous_unrelated_top1,False,False,True,True
+product_032248,Sunscreen,Mask and Peel,Eye Cream,0.518439016874046,visual_neighbors,0.18439016874046035,ambiguous_unrelated_top1,False,False,True,False
+product_043590,Sunscreen,Sunscreen,Lip Care,0.6289947299728892,visual_neighbors,1.0,confident_top1,False,True,True,True
+product_033921,Suspenders,Suspenders,Belts,0.5361879674717204,prototype,0.3618796747172038,ambiguous_unrelated_top1,False,False,True,True
+product_028182,Suspenders,Suspenders,Belts,0.5288098213437658,prototype,0.28809821343765757,ambiguous_unrelated_top1,False,False,True,True
+product_033924,Sweaters,Sweatshirts,Jackets,0.5162216340583828,prototype,0.16221634058382842,ambiguous_related_top2,True,False,True,False
+product_018212,Sweaters,Sweaters,Sweatshirts,0.5009802924627244,prototype,0.009802924627243527,ambiguous_related_top2,True,False,True,True
+product_014571,Sweaters,Sweaters,Tshirts,0.5023940813846316,visual_neighbors,0.023940813846315974,ambiguous_unrelated_top1,False,False,True,True
+product_035541,Sweaters,Tops,Shirts,0.5007768903264487,combined,0.007768903264486761,ambiguous_related_top2,True,False,True,False
+product_001716,Sweatshirts,Sweatshirts,Tshirts,0.5224540941779537,prototype,0.22454094177953748,ambiguous_unrelated_top1,False,False,True,True
+product_008555,Sweatshirts,Sweatshirts,Jackets,0.5123886422291345,prototype,0.12388642229134497,ambiguous_related_top2,True,False,True,True
+product_031963,Sweatshirts,Sweaters,Innerwear Vests,0.5103246355398495,combined,0.10324635539849528,ambiguous_unrelated_top1,False,False,True,False
+product_008237,Sweatshirts,Tshirts,Sweatshirts,0.5675286266742368,visual_neighbors,0.6752862667423677,ambiguous_unrelated_top1,False,False,True,False
+product_028684,Swimwear,Sunglasses,Ties and Cufflinks,0.5814796125461135,prototype,0.8147961254611349,ambiguous_unrelated_top1,False,False,True,False
+product_039594,Tablet Sleeve,Wallets,Mobile Pouch,0.5147054173984663,visual_neighbors,0.14705417398466317,ambiguous_unrelated_top1,False,False,True,False
+product_029565,Ties,Ties,Free Gifts,0.5380373652328353,prototype,0.3803736523283531,ambiguous_unrelated_top1,False,False,True,True
+product_004849,Ties,Ties,Free Gifts,0.5399504814679725,prototype,0.39950481467972543,ambiguous_unrelated_top1,False,False,True,True
+product_041727,Ties,Ties,Free Gifts,0.5501183232893436,prototype,0.5011832328934364,ambiguous_unrelated_top1,False,False,True,True
+product_038688,Tights,Stockings,Tights,0.5368821830321745,visual_neighbors,0.36882183032174504,ambiguous_related_top2,True,False,True,False
+product_024034,Toner,Face Wash and Cleanser,Face Moisturisers,0.537009517038788,visual_neighbors,0.3700951703878797,ambiguous_related_top2,True,False,True,False
+product_016571,Tops,Swimwear,Tops,0.5244953576771286,visual_neighbors,0.24495357677128632,ambiguous_unrelated_top1,False,False,True,False
+product_043424,Tops,Tops,Tunics,0.5414873981261804,visual_neighbors,0.4148739812618042,ambiguous_unrelated_top1,False,False,True,True
+product_008155,Tops,Bra,Handbags,0.5110956124569009,prototype,0.11095612456900941,ambiguous_unrelated_top1,False,False,True,False
+product_008833,Tops,Tops,Tshirts,0.5137217793192765,visual_neighbors,0.13721779319276542,ambiguous_unrelated_top1,False,False,True,True
+product_026884,Tops,Shirts,Tops,0.5201644478731544,visual_neighbors,0.20164447873154417,ambiguous_related_top2,True,False,True,False
+product_028184,Tops,Camisoles,Tops,0.5137669831017211,prototype,0.1376698310172109,ambiguous_related_top2,True,False,True,False
+product_020006,Tops,Tshirts,Tops,0.6068637943503227,visual_neighbors,1.0,confident_top1,False,True,True,False
+product_016039,Tops,Tops,Shirts,0.5027844328949242,visual_neighbors,0.0278443289492425,ambiguous_related_top2,True,False,True,True
+product_042348,Tops,Kurtis,Kurtas,0.5033484037742354,visual_neighbors,0.033484037742353985,ambiguous_unrelated_top1,False,False,True,False
+product_036842,Tops,Tops,Tshirts,0.5009327967431519,visual_neighbors,0.009327967431519426,ambiguous_unrelated_top1,False,False,True,True
+product_031412,Tops,Tops,Tshirts,0.5189814423326322,visual_neighbors,0.1898144233263222,ambiguous_unrelated_top1,False,False,True,True
+product_007408,Tops,Tops,Tunics,0.5501367719314232,visual_neighbors,0.501367719314232,ambiguous_unrelated_top1,False,False,True,True
+product_037770,Track Pants,Trousers,Track Pants,0.5072179197222586,prototype,0.07217919722258605,ambiguous_related_top2,True,False,True,False
+product_031820,Track Pants,Track Pants,Lounge Pants,0.504609426220451,prototype,0.04609426220451019,ambiguous_related_top2,True,False,True,True
+product_006025,Track Pants,Track Pants,Capris,0.517477669685171,prototype,0.17477669685170952,ambiguous_unrelated_top1,False,False,True,True
+product_019033,Track Pants,Tracksuits,Jumpsuit,0.5273315689536114,prototype,0.27331568953611446,ambiguous_unrelated_top1,False,False,True,False
+product_021415,Tracksuits,Tracksuits,Track Pants,0.527692554018817,prototype,0.2769255401881699,ambiguous_related_top2,True,False,True,True
+product_034223,Tracksuits,Tracksuits,Track Pants,0.5409669472330348,prototype,0.40966947233034856,ambiguous_related_top2,True,False,True,True
+product_019941,Travel Accessory,Backpacks,Handbags,0.5107368097209352,visual_neighbors,0.10736809720935162,ambiguous_related_top2,True,False,True,False
+product_015334,Trolley Bag,Laptop Bag,Duffel Bag,0.5317510802057147,prototype,0.31751080205714716,ambiguous_related_top2,True,False,True,False
+product_007370,Trousers,Jeggings,Leggings,0.5079742738413463,prototype,0.07974273841346304,ambiguous_related_top2,True,False,True,False
+product_000976,Trousers,Jeggings,Lounge Pants,0.5217218266556604,visual_neighbors,0.21721826655660365,ambiguous_unrelated_top1,False,False,True,False
+product_003232,Trousers,Trousers,Track Pants,0.5158281633635426,prototype,0.1582816336354265,ambiguous_related_top2,True,False,True,True
+product_037059,Trousers,Trousers,Lounge Pants,0.5152886832824691,prototype,0.15288683282469132,ambiguous_related_top2,True,False,True,True
+product_014961,Trousers,Trousers,Lounge Pants,0.5743885621564587,visual_neighbors,0.7438856215645874,ambiguous_related_top2,True,False,True,True
+product_026836,Trunk,Briefs,Boxers,0.5269507675037429,prototype,0.2695076750374293,ambiguous_unrelated_top1,False,False,True,False
+product_025095,Trunk,Briefs,Trunk,0.5248771480465465,prototype,0.2487714804654651,ambiguous_unrelated_top1,False,False,True,False
+product_023088,Trunk,Briefs,Trunk,0.5468664767125531,visual_neighbors,0.46866476712553073,ambiguous_unrelated_top1,False,False,True,False
+product_032336,Tshirts,Tshirts,Innerwear Vests,0.501017894186891,prototype,0.01017894186891022,ambiguous_unrelated_top1,False,False,True,True
+product_029616,Tshirts,Tshirts,Shirts,0.5676162342655692,visual_neighbors,0.6761623426556919,ambiguous_related_top2,True,False,True,True
+product_031902,Tshirts,Tshirts,Sweatshirts,0.6450071819735188,visual_neighbors,1.0,confident_top1,False,True,True,True
+product_030318,Tshirts,Tshirts,Tops,0.5079588280073652,prototype,0.0795882800736525,ambiguous_unrelated_top1,False,False,True,True
+product_015173,Tshirts,Innerwear Vests,Tshirts,0.556415135874684,prototype,0.5641513587468406,ambiguous_unrelated_top1,False,False,True,False
+product_022084,Tshirts,Tshirts,Tops,0.5094965091848423,visual_neighbors,0.09496509184842353,ambiguous_unrelated_top1,False,False,True,True
+product_031014,Tshirts,Tshirts,Sweatshirts,0.5850032680976663,visual_neighbors,0.8500326809766636,ambiguous_unrelated_top1,False,False,True,True
+product_023076,Tshirts,Tshirts,Tops,0.5074537310595747,prototype,0.07453731059574699,ambiguous_unrelated_top1,False,False,True,True
+product_025777,Tshirts,Tshirts,Tops,0.5126581953875896,prototype,0.12658195387589613,ambiguous_unrelated_top1,False,False,True,True
+product_007061,Tshirts,Innerwear Vests,Tshirts,0.5160541508071287,prototype,0.1605415080712869,ambiguous_unrelated_top1,False,False,True,False
+product_041322,Tshirts,Shirts,Tshirts,0.512153692827188,prototype,0.12153692827188037,ambiguous_related_top2,True,False,True,False
+product_031396,Tshirts,Sweatshirts,Tshirts,0.5082258683978793,combined,0.08225868397879312,ambiguous_unrelated_top1,False,False,True,False
+product_026482,Tshirts,Tshirts,Shirts,0.5207444288728004,prototype,0.20744428872800375,ambiguous_related_top2,True,False,True,True
+product_018389,Tshirts,Tops,Tshirts,0.5441955315424944,visual_neighbors,0.4419553154249446,ambiguous_unrelated_top1,False,False,True,False
+product_020988,Tshirts,Tshirts,Shirts,0.5116496589267853,prototype,0.1164965892678527,ambiguous_related_top2,True,False,True,True
+product_031930,Tshirts,Tshirts,Sweatshirts,0.6224611173739752,visual_neighbors,1.0,confident_top1,False,True,True,True
+product_008819,Tshirts,Tshirts,Shirts,0.5059876540147641,prototype,0.05987654014764089,ambiguous_related_top2,True,False,True,True
+product_006552,Tshirts,Tshirts,Shirts,0.5059225767510571,prototype,0.059225767510571195,ambiguous_related_top2,True,False,True,True
+product_004942,Tshirts,Tshirts,Shirts,0.53649715498632,visual_neighbors,0.3649715498632001,ambiguous_related_top2,True,False,True,True
+product_035530,Tshirts,Tshirts,Shirts,0.5341633461908945,visual_neighbors,0.34163346190894456,ambiguous_related_top2,True,False,True,True
+product_043550,Tshirts,Tshirts,Innerwear Vests,0.5438307592075355,visual_neighbors,0.4383075920753555,ambiguous_unrelated_top1,False,False,True,True
+product_011211,Tshirts,Tshirts,Innerwear Vests,0.5021342833932084,prototype,0.021342833932084252,ambiguous_unrelated_top1,False,False,True,True
+product_021788,Tshirts,Tshirts,Tops,0.5068728379419971,visual_neighbors,0.06872837941997113,ambiguous_unrelated_top1,False,False,True,True
+product_023458,Tshirts,Tshirts,Shirts,0.5725012211963992,visual_neighbors,0.7250122119639925,ambiguous_related_top2,True,False,True,True
+product_012483,Tshirts,Shirts,Tshirts,0.5089406867342975,prototype,0.08940686734297489,ambiguous_related_top2,True,False,True,False
+product_005920,Tshirts,Tshirts,Shirts,0.5063756465148714,prototype,0.06375646514871437,ambiguous_related_top2,True,False,True,True
+product_005452,Tshirts,Tshirts,Shirts,0.5413442531463569,visual_neighbors,0.41344253146356935,ambiguous_related_top2,True,False,True,True
+product_031470,Tshirts,Tshirts,Shirts,0.5154663392219252,prototype,0.154663392219252,ambiguous_related_top2,True,False,True,True
+product_014155,Tshirts,Tshirts,Innerwear Vests,0.5042643083040418,prototype,0.04264308304041787,ambiguous_unrelated_top1,False,False,True,True
+product_004357,Tshirts,Tshirts,Shirts,0.5397052671928797,visual_neighbors,0.3970526719287971,ambiguous_related_top2,True,False,True,True
+product_024471,Tshirts,Tshirts,Tops,0.5083747178983433,visual_neighbors,0.08374717898343322,ambiguous_unrelated_top1,False,False,True,True
+product_028070,Tshirts,Tshirts,Shirts,0.5162379776295678,visual_neighbors,0.16237977629567804,ambiguous_related_top2,True,False,True,True
+product_037590,Tshirts,Tshirts,Shirts,0.5133479607127935,prototype,0.1334796071279354,ambiguous_related_top2,True,False,True,True
+product_003133,Tshirts,Tshirts,Shirts,0.5151256160337513,prototype,0.1512561603375129,ambiguous_related_top2,True,False,True,True
+product_007270,Tshirts,Tshirts,Innerwear Vests,0.5714776613217482,visual_neighbors,0.7147766132174816,ambiguous_unrelated_top1,False,False,True,True
+product_017398,Tshirts,Tshirts,Tops,0.5690085766482713,visual_neighbors,0.6900857664827132,ambiguous_unrelated_top1,False,False,True,True
+product_002763,Tshirts,Tshirts,Clothing Set,0.5101659635305186,prototype,0.10165963530518576,ambiguous_unrelated_top1,False,False,True,True
+product_022422,Tshirts,Tshirts,Shirts,0.5001878762160074,prototype,0.0018787621600735442,ambiguous_related_top2,True,False,True,True
+product_002734,Tshirts,Tshirts,Tops,0.5734647569284865,visual_neighbors,0.7346475692848654,ambiguous_unrelated_top1,False,False,True,True
+product_008765,Tshirts,Tshirts,Sweatshirts,0.6237158254301752,visual_neighbors,1.0,confident_top1,False,True,True,True
+product_035356,Tshirts,Tshirts,Tunics,0.5364153884284348,visual_neighbors,0.3641538842843484,ambiguous_unrelated_top1,False,False,True,True
+product_015810,Tunics,Kurtas,Dresses,0.5268090221350258,visual_neighbors,0.2680902213502579,ambiguous_unrelated_top1,False,False,True,False
+product_023870,Tunics,Shirts,Tunics,0.5004974213762623,prototype,0.004974213762622971,ambiguous_unrelated_top1,False,False,True,False
+product_034204,Tunics,Kurtas,Kurtis,0.5015109297361778,visual_neighbors,0.015109297361778355,ambiguous_unrelated_top1,False,False,True,False
+product_003474,Umbrellas,Umbrellas,Ties,0.5564004360561557,prototype,0.5640043605615576,ambiguous_unrelated_top1,False,False,True,True
+product_009409,Waist Pouch,Waist Pouch,Messenger Bag,0.5747708865690165,visual_neighbors,0.7477088656901655,ambiguous_unrelated_top1,False,False,True,True
+product_001108,Waistcoat,Tops,Shirts,0.5033292494080382,combined,0.03329249408038249,ambiguous_related_top2,True,False,True,False
+product_040864,Wallets,Wallets,Mobile Pouch,0.5192636898258798,visual_neighbors,0.19263689825879787,ambiguous_unrelated_top1,False,False,True,True
+product_036561,Wallets,Wallets,Tablet Sleeve,0.6339513425669584,visual_neighbors,1.0,confident_top1,True,True,True,True
+product_042789,Wallets,Wallets,Accessory Gift Set,0.5326819405887749,prototype,0.32681940588774944,ambiguous_unrelated_top1,False,False,True,True
+product_015148,Wallets,Shirts,Tshirts,0.5256099614292654,prototype,0.2560996142926542,ambiguous_related_top2,True,False,True,False
+product_015082,Wallets,Wallets,Mobile Pouch,0.5307040943352348,prototype,0.30704094335234805,ambiguous_unrelated_top1,False,False,True,True
+product_013301,Wallets,Wallets,Laptop Bag,0.5076115539092783,prototype,0.07611553909278258,ambiguous_unrelated_top1,False,False,True,True
+product_023832,Wallets,Wallets,Mobile Pouch,0.5356277791347663,prototype,0.3562777913476634,ambiguous_unrelated_top1,False,False,True,True
+product_029093,Watches,Watches,Free Gifts,0.5413502132979239,prototype,0.4135021329792389,ambiguous_unrelated_top1,False,False,True,True
+product_042775,Watches,Watches,Free Gifts,0.5550179403446486,prototype,0.5501794034464859,ambiguous_unrelated_top1,False,False,True,True
+product_033336,Watches,Watches,Free Gifts,0.541702641338658,prototype,0.41702641338657986,ambiguous_unrelated_top1,False,False,True,True
+product_035193,Watches,Watches,Free Gifts,0.5695249806294127,prototype,0.6952498062941271,ambiguous_unrelated_top1,False,False,True,True
+product_034030,Watches,Watches,Free Gifts,0.569811174848389,prototype,0.6981117484838896,ambiguous_unrelated_top1,False,False,True,True
+product_009853,Watches,Watches,Free Gifts,0.5487125332310699,prototype,0.48712533231069954,ambiguous_unrelated_top1,False,False,True,True
+product_035804,Watches,Watches,Free Gifts,0.5567167138386887,prototype,0.5671671383868871,ambiguous_unrelated_top1,False,False,True,True
+product_043803,Watches,Watches,Free Gifts,0.5615420882607619,prototype,0.6154208826076192,ambiguous_unrelated_top1,False,False,True,True
+product_032073,Watches,Watches,Free Gifts,0.5462676873237196,prototype,0.46267687323719564,ambiguous_unrelated_top1,False,False,True,True
+product_021303,Watches,Watches,Free Gifts,0.5602871772157849,prototype,0.6028717721578493,ambiguous_unrelated_top1,False,False,True,True
+product_035748,Watches,Watches,Free Gifts,0.550399384713056,prototype,0.5039938471305606,ambiguous_unrelated_top1,False,False,True,True
+product_024530,Watches,Stoles,Dupatta,0.5101078085073301,visual_neighbors,0.10107808507330066,ambiguous_related_top2,True,False,True,False
+product_034937,Watches,Watches,Free Gifts,0.5530787663511172,prototype,0.530787663511172,ambiguous_unrelated_top1,False,False,True,True
+product_040150,Watches,Watches,Free Gifts,0.5526044351883834,prototype,0.5260443518838344,ambiguous_unrelated_top1,False,False,True,True
+product_002023,Watches,Watches,Free Gifts,0.5546539814142184,prototype,0.5465398141421841,ambiguous_unrelated_top1,False,False,True,True
+product_041417,Watches,Watches,Free Gifts,0.5587152128346339,prototype,0.5871521283463389,ambiguous_unrelated_top1,False,False,True,True
+product_024159,Watches,Watches,Free Gifts,0.5587795487515055,prototype,0.587795487515055,ambiguous_unrelated_top1,False,False,True,True
+product_037766,Water Bottle,Water Bottle,Deodorant,0.5330690764496407,prototype,0.3306907644964075,ambiguous_unrelated_top1,False,False,True,True
+product_012171,Wristbands,Wallets,Accessory Gift Set,0.5278225413231363,visual_neighbors,0.27822541323136335,ambiguous_unrelated_top1,False,False,True,False

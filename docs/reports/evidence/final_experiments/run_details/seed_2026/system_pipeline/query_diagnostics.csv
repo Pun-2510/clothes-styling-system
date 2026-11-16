@@ -1,0 +1,463 @@
+product_id,actual_category,image_predicted_category,image_second_category,image_confidence,image_confidence_source,image_category_strength,image_category_route,image_related_top2,text_category,explicit_text_categories,applied_category,category_source,attributes
+product_001313,Accessory Gift Set,Accessory Gift Set,Wallets,0.5106134535116938,prototype,0.10613453511693852,ambiguous_unrelated_top1,False,Cufflinks,Cufflinks,Cufflinks,text,red;grey;checked
+product_029060,Accessory Gift Set,Accessory Gift Set,Wallets,0.5034955920472904,prototype,0.03495592047290442,ambiguous_unrelated_top1,False,,Accessory Gift Set;Wallets;Jackets,Accessory Gift Set,image,white;striped
+product_036819,Accessory Gift Set,Accessory Gift Set,Ties,0.7617214075057439,visual_neighbors,1.0,confident_top1,False,Cufflinks,Cufflinks,Cufflinks,text,blue;patterned
+product_041140,Baby Dolls,Nightdress,Baby Dolls,0.5367311904462698,prototype,0.3673119044626983,ambiguous_unrelated_top1,False,,Nightdress;Briefs,Nightdress,image,black;red
+product_035057,Backpacks,Backpacks,Rucksacks,0.5019638537376275,prototype,0.019638537376275304,ambiguous_related_top2,True,Backpacks,Backpacks,Backpacks,text_image,green
+product_024406,Backpacks,Backpacks,Travel Accessory,0.530716879775859,prototype,0.30716879775859024,ambiguous_unrelated_top1,False,Backpacks,Backpacks,Backpacks,text_image,blue
+product_039325,Backpacks,Backpacks,Waist Pouch,0.5254822397687865,visual_neighbors,0.254822397687865,ambiguous_unrelated_top1,False,Backpacks,Backpacks,Backpacks,text_image,blue;patterned
+product_031941,Backpacks,Backpacks,Rucksacks,0.5218524042944418,prototype,0.21852404294441802,ambiguous_related_top2,True,Backpacks,Backpacks,Backpacks,text_image,black
+product_006911,Backpacks,Handbags,Duffel Bag,0.502073584314082,prototype,0.020735843140820002,ambiguous_unrelated_top1,False,,,Handbags,image,blue
+product_010294,Backpacks,Backpacks,Messenger Bag,0.5257572262944342,prototype,0.25757226294434227,ambiguous_unrelated_top1,False,,Backpacks;Shorts;Tops,Backpacks,image,white;blue;patterned;striped
+product_009544,Bangle,Bracelet,Bangle,0.5048386461726315,prototype,0.048386461726315236,ambiguous_related_top2,True,Bangle,Bangle,Bangle,text,silver
+product_009764,Bangle,Bangle,Bracelet,0.5113116796228172,prototype,0.11311679622817208,ambiguous_related_top2,True,Bangle,Bangle,Bangle,text_image,orange
+product_001769,Basketballs,Basketballs,Footballs,0.5556554938837939,prototype,0.5565549388379388,ambiguous_related_top2,True,Basketballs,Basketballs,Basketballs,text_image,black
+product_033647,Bath Robe,Bath Robe,Nightdress,0.5079229305421612,prototype,0.07922930542161201,ambiguous_unrelated_top1,False,,Bath Robe;Shorts;Belts,Bath Robe,image,white;red;pink
+product_033380,Beauty Accessory,Concealer,Highlighter and Blush,0.5404986843803922,visual_neighbors,0.4049868438039218,ambiguous_related_top2,True,,,Concealer,image,
+product_015242,Belts,Belts,Free Gifts,0.553676603432701,prototype,0.5367660343270099,ambiguous_unrelated_top1,False,Belts,Belts,Belts,text_image,brown
+product_028540,Belts,Belts,Bracelet,0.604717109072925,visual_neighbors,1.0,confident_top1,False,Belts,Belts,Belts,text_image,brown
+product_036270,Belts,Belts,Bracelet,0.5405837793211441,prototype,0.4058377932114411,ambiguous_unrelated_top1,False,,Capris;Belts,Belts,image,white
+product_013659,Belts,Belts,Free Gifts,0.5406635778151737,prototype,0.40663577815173724,ambiguous_unrelated_top1,False,Belts,Belts,Belts,text_image,brown
+product_021417,Belts,Belts,Bracelet,0.5109867924049789,prototype,0.1098679240497891,ambiguous_unrelated_top1,False,Belts,Belts,Belts,text_image,orange
+product_042135,Belts,Belts,Bracelet,0.5135778734277661,prototype,0.13577873427766066,ambiguous_unrelated_top1,False,Belts,Belts,Belts,text_image,black
+product_024240,Belts,Belts,Free Gifts,0.5347679872696195,prototype,0.347679872696195,ambiguous_unrelated_top1,False,Belts,Belts,Belts,text_image,brown
+product_005004,Blazers,Shirts,Jackets,0.5152963011410182,visual_neighbors,0.15296301141018212,ambiguous_unrelated_top1,False,,Blazers;Jackets,Shirts,image,black
+product_015350,Body Lotion,Face Moisturisers,Mask and Peel,0.50722345768605,visual_neighbors,0.0722345768605004,ambiguous_unrelated_top1,False,,,Face Moisturisers,image,
+product_020138,Booties,Booties,Gloves,0.508870575174191,prototype,0.08870575174190988,ambiguous_unrelated_top1,False,Booties,Booties,Booties,text_image,yellow
+product_043921,Booties,Booties,Gloves,0.5178225684459266,prototype,0.1782256844592656,ambiguous_unrelated_top1,False,Booties,Booties,Booties,text_image,yellow
+product_036350,Boxers,Boxers,Shorts,0.5248177910670903,prototype,0.2481779106709026,ambiguous_related_top2,True,Boxers,Boxers,Boxers,text_image,white;blue;patterned
+product_043222,Boxers,Boxers,Briefs,0.5364480166245315,prototype,0.3644801662453146,ambiguous_related_top2,True,,Boxers;Shorts,Boxers,image,black;white;patterned
+product_037195,Bra,Bra,Shapewear,0.5536174173274392,prototype,0.536174173274392,ambiguous_related_top2,True,Bra,Bra,Bra,text_image,blue
+product_012892,Bra,Bra,Briefs,0.5379660321711424,prototype,0.3796603217114237,ambiguous_related_top2,True,Bra,Bra,Bra,text_image,
+product_025173,Bra,Bra,Camisoles,0.5310122880314332,prototype,0.31012288031433194,ambiguous_related_top2,True,Bra,Bra,Bra,text_image,pink;grey
+product_012130,Bra,Bra,Camisoles,0.526833721619392,prototype,0.2683372161939202,ambiguous_related_top2,True,Bra,Bra,Bra,text_image,beige
+product_007722,Bra,Bra,Camisoles,0.5445080486598596,prototype,0.4450804865985959,ambiguous_related_top2,True,Bra,Bra,Bra,text_image,white
+product_039959,Bracelet,Bracelet,Bangle,0.5245820651358539,visual_neighbors,0.2458206513585393,ambiguous_related_top2,True,Bracelet,Bracelet,Bracelet,text_image,gold
+product_022651,Bracelet,Belts,Ties,0.5022597857708953,prototype,0.02259785770895251,ambiguous_related_top2,True,Bracelet,Bracelet,Bracelet,text,black;silver
+product_018187,Briefs,Briefs,Trunk,0.5758028401680391,visual_neighbors,0.7580284016803909,ambiguous_unrelated_top1,False,Briefs,Briefs,Briefs,text_image,
+product_011629,Briefs,Trunk,Briefs,0.5724026372679046,visual_neighbors,0.7240263726790465,ambiguous_unrelated_top1,False,,,Trunk,image,white
+product_020363,Briefs,Briefs,Bra,0.5491156641519652,prototype,0.4911566415196523,ambiguous_related_top2,True,Briefs,Briefs,Briefs,text_image,maroon
+product_007753,Briefs,Briefs,Trunk,0.5566915728849801,prototype,0.5669157288498007,ambiguous_unrelated_top1,False,Briefs,Briefs,Briefs,text_image,green
+product_022731,Briefs,Briefs,Trunk,0.5345755986680757,prototype,0.34575598668075697,ambiguous_unrelated_top1,False,Briefs,Briefs,Briefs,text_image,grey
+product_022022,Briefs,Briefs,Trunk,0.5271102572851797,prototype,0.2711025728517969,ambiguous_unrelated_top1,False,Briefs,Briefs,Briefs,text_image,red
+product_007982,Briefs,Briefs,Trunk,0.5430377805575952,prototype,0.4303778055759523,ambiguous_unrelated_top1,False,,Briefs;Tops,Briefs,image,pink;patterned
+product_040140,Camisoles,Camisoles,Tops,0.5270000564999454,visual_neighbors,0.2700005649994542,ambiguous_unrelated_top1,False,Camisoles,Camisoles,Camisoles,text_image,beige
+product_006737,Camisoles,Bra,Camisoles,0.5127658725411935,prototype,0.1276587254119355,ambiguous_related_top2,True,,Bra;Shorts;Camisoles,Bra,image,red
+product_004546,Capris,Capris,Trousers,0.5085448645498276,combined,0.08544864549827615,ambiguous_related_top2,True,,Capris;Belts,Capris,image,blue
+product_013251,Capris,Lounge Shorts,Capris,0.5307083705322784,visual_neighbors,0.3070837053227838,ambiguous_unrelated_top1,False,Capris,Capris,Capris,text,blue
+product_010600,Capris,Capris,Track Pants,0.5127702046032467,visual_neighbors,0.1277020460324674,ambiguous_unrelated_top1,False,Capris,Capris,Capris,text_image,black;green
+product_037198,Caps,Caps,Hat,0.5880091644471126,visual_neighbors,0.8800916444711262,ambiguous_unrelated_top1,False,,Caps;Flats,Caps,image,blue;striped
+product_010337,Caps,Caps,Headband,0.5588971996099018,visual_neighbors,0.5889719960990182,ambiguous_unrelated_top1,False,Caps,Caps,Caps,text_image,black
+product_027373,Caps,Headband,Wristbands,0.5291616035786278,prototype,0.29161603578627854,ambiguous_related_top2,True,,,Headband,image,black
+product_031732,Caps,Caps,Hat,0.629230646198176,visual_neighbors,1.0,confident_top1,False,,,Caps,image,blue;patterned
+product_024535,Casual Shoes,Casual Shoes,Formal Shoes,0.5156781818867604,prototype,0.15678181886760403,ambiguous_related_top2,True,Tops,Tops,Tops,text,brown
+product_013990,Casual Shoes,Flats,Casual Shoes,0.5139341532545988,prototype,0.13934153254598794,ambiguous_unrelated_top1,False,Flats,Flats,Flats,text_image,white
+product_038019,Casual Shoes,Sports Shoes,Casual Shoes,0.5447019562339297,prototype,0.44701956233929707,ambiguous_related_top2,True,,,Sports Shoes,image,red;brown;silver
+product_008697,Casual Shoes,Casual Shoes,Formal Shoes,0.5219062921026866,prototype,0.2190629210268658,ambiguous_related_top2,True,,,Casual Shoes,image,black
+product_029218,Casual Shoes,Casual Shoes,Sports Shoes,0.5560813133059264,visual_neighbors,0.5608131330592637,ambiguous_related_top2,True,,,Casual Shoes,image,grey
+product_041897,Casual Shoes,Casual Shoes,Sports Shoes,0.5565697052568189,visual_neighbors,0.5656970525681894,ambiguous_related_top2,True,Jeans,Jeans,Jeans,text,white
+product_030396,Casual Shoes,Casual Shoes,Sports Shoes,0.5504108906934292,visual_neighbors,0.504108906934292,ambiguous_related_top2,True,,,Casual Shoes,image,white;red
+product_020021,Casual Shoes,Formal Shoes,Casual Shoes,0.5280457978183539,prototype,0.2804579781835393,ambiguous_related_top2,True,Heels,Heels,Heels,text,black
+product_022784,Casual Shoes,Casual Shoes,Sports Shoes,0.5012854108690408,prototype,0.01285410869040771,ambiguous_related_top2,True,,,Casual Shoes,image,red;beige
+product_014068,Casual Shoes,Casual Shoes,Sports Shoes,0.5404419157830216,visual_neighbors,0.404419157830216,ambiguous_related_top2,True,,,Casual Shoes,image,green
+product_019663,Casual Shoes,Casual Shoes,Sports Shoes,0.5682833399615406,visual_neighbors,0.6828333996154058,ambiguous_related_top2,True,,,Casual Shoes,image,black
+product_044263,Casual Shoes,Casual Shoes,Formal Shoes,0.5006423140523067,prototype,0.006423140523067474,ambiguous_related_top2,True,Heels,Heels,Heels,text,
+product_005708,Casual Shoes,Casual Shoes,Formal Shoes,0.5127512669700097,prototype,0.12751266970009725,ambiguous_related_top2,True,Tops,Tops,Tops,text,black;blue;grey;checked
+product_022130,Casual Shoes,Formal Shoes,Casual Shoes,0.54609328098317,visual_neighbors,0.46093280983170015,ambiguous_related_top2,True,,Casual Shoes;Heels;Belts,Formal Shoes,image,brown
+product_034812,Casual Shoes,Formal Shoes,Casual Shoes,0.5157525665319406,visual_neighbors,0.15752566531940573,ambiguous_related_top2,True,,Tops;Heels,Formal Shoes,image,red;brown
+product_007737,Casual Shoes,Casual Shoes,Sports Shoes,0.5019164894469706,prototype,0.019164894469706487,ambiguous_related_top2,True,,,Casual Shoes,image,grey
+product_035605,Casual Shoes,Casual Shoes,Sports Shoes,0.5422236875406472,visual_neighbors,0.42223687540647215,ambiguous_related_top2,True,,Tops;Heels,Casual Shoes,image,blue;checked
+product_001223,Casual Shoes,Formal Shoes,Casual Shoes,0.5160576771833261,prototype,0.16057677183326072,ambiguous_related_top2,True,,,Formal Shoes,image,red;brown
+product_037359,Churidar,Leggings,Jeggings,0.5123037665714812,prototype,0.12303766571481248,ambiguous_related_top2,True,,Churidar;Flats;Kurtis;Flip Flops,Leggings,image,white
+product_007064,Churidar,Churidar,Trousers,0.5732516967933732,visual_neighbors,0.7325169679337319,ambiguous_unrelated_top1,False,Churidar,Churidar,Churidar,text_image,blue;green;navy
+product_015870,Clothing Set,Dresses,Tops,0.5010347581817808,prototype,0.010347581817807818,ambiguous_unrelated_top1,False,,Clothing Set;Tshirts;Skirts,Dresses,image,red;patterned
+product_017694,Clutches,Clutches,Wallets,0.5068355813027695,prototype,0.06835581302769513,ambiguous_unrelated_top1,False,Dresses,Dresses,Dresses,text,silver
+product_022230,Clutches,Mobile Pouch,Clutches,0.5128536402003229,visual_neighbors,0.12853640200322872,ambiguous_unrelated_top1,False,,Clutches;Wallets,Mobile Pouch,image,pink;brown
+product_020095,Clutches,Handbags,Clutches,0.5135020224984499,prototype,0.13502022498449898,ambiguous_related_top2,True,,,Handbags,image,gold
+product_043450,Clutches,Clutches,Handbags,0.5067254552472198,prototype,0.06725455247219793,ambiguous_related_top2,True,Dresses,Dresses,Dresses,text,gold
+product_039669,Compact,Highlighter and Blush,Compact,0.5021038105495579,visual_neighbors,0.021038105495578833,ambiguous_unrelated_top1,False,Compact,Compact,Compact,text,white;beige
+product_003815,Compact,Compact,Foundation and Primer,0.5126280890445641,visual_neighbors,0.12628089044564142,ambiguous_unrelated_top1,False,Compact,Compact,Compact,text_image,
+product_022116,Concealer,Concealer,Lip Gloss,0.5170059158897505,prototype,0.17005915889750536,ambiguous_unrelated_top1,False,Concealer,Concealer,Concealer,text_image,
+product_008064,Cufflinks,Earrings,Ring,0.5225219067892762,prototype,0.22521906789276241,ambiguous_related_top2,True,Cufflinks,Cufflinks,Cufflinks,text,black
+product_033726,Cufflinks,Cufflinks,Earrings,0.5102884705786972,prototype,0.10288470578697198,ambiguous_unrelated_top1,False,Cufflinks,Cufflinks,Cufflinks,text_image,
+product_017839,Cufflinks,Cufflinks,Earrings,0.541311906418013,prototype,0.4131190641801298,ambiguous_unrelated_top1,False,Cufflinks,Cufflinks,Cufflinks,text_image,
+product_044178,Deodorant,Fragrance Gift Set,Perfume and Body Mist,0.5179276758691175,prototype,0.1792767586911748,ambiguous_related_top2,True,,,Fragrance Gift Set,image,gold;silver
+product_030378,Deodorant,Deodorant,Perfume and Body Mist,0.526266362383697,prototype,0.26266362383696956,ambiguous_unrelated_top1,False,Deodorant,Deodorant,Deodorant,text_image,
+product_043165,Deodorant,Deodorant,Fragrance Gift Set,0.518107615071446,visual_neighbors,0.18107615071445984,ambiguous_unrelated_top1,False,,,Deodorant,image,
+product_040519,Deodorant,Deodorant,Fragrance Gift Set,0.5048073576108226,combined,0.04807357610822628,ambiguous_unrelated_top1,False,Sandals,Sandals,Sandals,text,floral
+product_030620,Dresses,Sarees,Dupatta,0.5476421322942179,prototype,0.47642132294217887,ambiguous_related_top2,True,,Dresses;Shorts,Sarees,image,purple
+product_005713,Dresses,Dresses,Tunics,0.5002344983170764,prototype,0.0023449831707644813,ambiguous_unrelated_top1,False,,Dresses;Shorts;Belts,Dresses,image,patterned
+product_039821,Dresses,Dresses,Tops,0.5018626926070408,prototype,0.018626926070407505,ambiguous_unrelated_top1,False,,Dresses;Earrings,Dresses,image,beige;gold
+product_002312,Dresses,Skirts,Dresses,0.5424089728425326,visual_neighbors,0.42408972842532655,ambiguous_unrelated_top1,False,,Dresses;Flats,Skirts,image,blue;patterned;floral
+product_023633,Duffel Bag,Handbags,Duffel Bag,0.5260359790147778,visual_neighbors,0.2603597901477784,ambiguous_unrelated_top1,False,Shorts,Shorts,Shorts,text,black
+product_014364,Duffel Bag,Backpacks,Duffel Bag,0.5077200303543695,visual_neighbors,0.07720030354369524,ambiguous_unrelated_top1,False,,,Backpacks,image,blue
+product_008389,Dupatta,Dupatta,Stoles,0.5722471850047796,visual_neighbors,0.7224718500477957,ambiguous_related_top2,True,Dupatta,Dupatta,Dupatta,text_image,red
+product_003651,Dupatta,Kurtas,Dupatta,0.5175950247206645,visual_neighbors,0.17595024720664545,ambiguous_unrelated_top1,False,,Dupatta;Kurtas;Leggings;Sandals;Tops,Kurtas,image,maroon
+product_039370,Dupatta,Dupatta,Nightdress,0.5624766286110168,visual_neighbors,0.6247662861101678,ambiguous_unrelated_top1,False,Dupatta,Dupatta,Dupatta,text_image,
+product_041429,Earrings,Earrings,Ring,0.512357659799571,prototype,0.12357659799571044,ambiguous_related_top2,True,Earrings,Earrings,Earrings,text_image,silver;patterned
+product_025530,Earrings,Earrings,Cufflinks,0.5276889824183115,prototype,0.2768898241831153,ambiguous_unrelated_top1,False,Earrings,Earrings,Earrings,text_image,silver
+product_010357,Earrings,Earrings,Jewellery Set,0.5475796502848719,prototype,0.4757965028487189,ambiguous_related_top2,True,Earrings,Earrings,Earrings,text_image,pink;purple;floral
+product_006959,Earrings,Earrings,Jewellery Set,0.5391998548327834,prototype,0.39199854832783443,ambiguous_related_top2,True,Earrings,Earrings,Earrings,text_image,black;white;silver
+product_014335,Eye Cream,Face Moisturisers,Sunscreen,0.6646177032273085,visual_neighbors,1.0,confident_top1,False,Sunscreen,Sunscreen,Sunscreen,text,
+product_019267,Eyeshadow,Eyeshadow,Highlighter and Blush,0.5331728744076486,prototype,0.33172874407648606,ambiguous_related_top2,True,,,Eyeshadow,image,green
+product_012319,Eyeshadow,Eyeshadow,Compact,0.5349173944726624,prototype,0.34917394472662405,ambiguous_unrelated_top1,False,,,Eyeshadow,image,
+product_044351,Face Moisturisers,Face Wash and Cleanser,Deodorant,0.5220124838749267,visual_neighbors,0.2201248387492672,ambiguous_unrelated_top1,False,,,Face Wash and Cleanser,image,
+product_019475,Face Moisturisers,Face Moisturisers,Concealer,0.5335408230323601,visual_neighbors,0.3354082303236006,ambiguous_unrelated_top1,False,,,Face Moisturisers,image,gold
+product_025782,Face Scrub and Exfoliator,Mask and Peel,Sunscreen,0.5439828400430524,visual_neighbors,0.4398284004305243,ambiguous_unrelated_top1,False,,,Mask and Peel,image,
+product_005014,Face Wash and Cleanser,Face Wash and Cleanser,Body Wash and Scrub,0.5970843916801786,visual_neighbors,0.9708439168017859,ambiguous_related_top2,True,Caps,Caps,Caps,text,white
+product_021035,Face Wash and Cleanser,Face Wash and Cleanser,Mask and Peel,0.5482778811245343,visual_neighbors,0.4827788112453436,ambiguous_unrelated_top1,False,,,Face Wash and Cleanser,image,
+product_044159,Flats,Flats,Heels,0.5084880903481596,prototype,0.08488090348159562,ambiguous_related_top2,True,,Sandals;Flats,Flats,image,yellow
+product_020035,Flats,Flats,Heels,0.5020371077717857,combined,0.020371077717856737,ambiguous_related_top2,True,Sandals,Sandals,Sandals,text,black;white;patterned
+product_037979,Flats,Formal Shoes,Casual Shoes,0.5072402957454194,visual_neighbors,0.07240295745419402,ambiguous_related_top2,True,,Flats;Heels,Formal Shoes,image,blue;navy
+product_014712,Flats,Heels,Flats,0.5024446918747226,prototype,0.024446918747226272,ambiguous_related_top2,True,Sandals,Sandals,Sandals,text,yellow
+product_027891,Flats,Heels,Flats,0.5225089042276497,visual_neighbors,0.22508904227649734,ambiguous_related_top2,True,Sandals,Sandals,Sandals,text,brown
+product_011080,Flip Flops,Flip Flops,Sandals,0.5189867056313336,prototype,0.1898670563133365,ambiguous_related_top2,True,,Flip Flops;Jeans,Flip Flops,image,red;green;patterned
+product_017513,Flip Flops,Sandals,Flats,0.5200478056664918,visual_neighbors,0.20047805666491786,ambiguous_related_top2,True,Flip Flops,Flip Flops,Flip Flops,text,brown
+product_017914,Flip Flops,Flip Flops,Sandals,0.51898102208444,prototype,0.18981022084439975,ambiguous_related_top2,True,,Flip Flops;Heels,Flip Flops,image,white;striped
+product_037516,Flip Flops,Flip Flops,Sandals,0.5192004993117961,prototype,0.19200499311796132,ambiguous_related_top2,True,Flip Flops,Flip Flops,Flip Flops,text_image,green;patterned
+product_009339,Flip Flops,Flip Flops,Sports Sandals,0.5330952259871069,prototype,0.3309522598710691,ambiguous_related_top2,True,Flip Flops,Flip Flops,Flip Flops,text_image,purple;patterned;striped
+product_025681,Flip Flops,Flip Flops,Sandals,0.5185762326158957,prototype,0.18576232615895696,ambiguous_related_top2,True,,,Flip Flops,image,red
+product_013566,Flip Flops,Sandals,Flip Flops,0.551160839508829,visual_neighbors,0.51160839508829,ambiguous_related_top2,True,Flip Flops,Flip Flops,Flip Flops,text,
+product_044133,Footballs,Footballs,Basketballs,0.5278423612584527,prototype,0.27842361258452747,ambiguous_related_top2,True,Footballs,Footballs,Footballs,text_image,black;white;red
+product_009713,Formal Shoes,Sports Shoes,Casual Shoes,0.5648138369663528,prototype,0.648138369663528,ambiguous_related_top2,True,,,Sports Shoes,image,black;red
+product_000646,Formal Shoes,Formal Shoes,Casual Shoes,0.5350430295068955,prototype,0.35043029506895534,ambiguous_related_top2,True,,,Formal Shoes,image,black
+product_015942,Formal Shoes,Formal Shoes,Casual Shoes,0.5286022165318487,prototype,0.28602216531848695,ambiguous_related_top2,True,,Formal Shoes;Tops;Heels,Formal Shoes,image,brown
+product_029312,Formal Shoes,Formal Shoes,Casual Shoes,0.519495797774797,visual_neighbors,0.19495797774797047,ambiguous_related_top2,True,,Tops;Heels,Formal Shoes,image,brown
+product_012071,Formal Shoes,Formal Shoes,Casual Shoes,0.5261644750297515,prototype,0.26164475029751505,ambiguous_related_top2,True,,,Formal Shoes,image,black
+product_035922,Formal Shoes,Formal Shoes,Casual Shoes,0.5147521058544783,prototype,0.14752105854478284,ambiguous_related_top2,True,,Formal Shoes;Heels,Formal Shoes,image,black
+product_003670,Foundation and Primer,Face Moisturisers,Face Wash and Cleanser,0.5023484286833263,visual_neighbors,0.023484286833262986,ambiguous_related_top2,True,,,Face Moisturisers,image,
+product_013760,Foundation and Primer,Highlighter and Blush,Concealer,0.5081095561657935,combined,0.08109556165793454,ambiguous_related_top2,True,,,Highlighter and Blush,image,
+product_007106,Fragrance Gift Set,Fragrance Gift Set,Deodorant,0.5006726212425398,prototype,0.006726212425397506,ambiguous_unrelated_top1,False,Deodorant,Deodorant,Deodorant,text,green
+product_036774,Fragrance Gift Set,Deodorant,Fragrance Gift Set,0.5705685514373603,visual_neighbors,0.705685514373603,ambiguous_unrelated_top1,False,Deodorant,Deodorant,Deodorant,text_image,
+product_012877,Free Gifts,Watches,Free Gifts,0.5441783548544217,prototype,0.44178354854421686,ambiguous_unrelated_top1,False,,,Watches,image,silver
+product_027322,Free Gifts,Watches,Free Gifts,0.5507413912720374,prototype,0.5074139127203737,ambiguous_unrelated_top1,False,,,Watches,image,black;green
+product_012532,Gloves,Gloves,Booties,0.5474066788774924,visual_neighbors,0.47406678877492403,ambiguous_unrelated_top1,False,,,Gloves,image,blue
+product_036263,Gloves,Gloves,Booties,0.5635980375212157,visual_neighbors,0.6359803752121574,ambiguous_unrelated_top1,False,,,Gloves,image,blue
+product_039688,Hair Colour,Hair Colour,Deodorant,0.5215079961416876,prototype,0.2150799614168764,ambiguous_unrelated_top1,False,,Tops;Hair Colour;Gloves,Hair Colour,image,brown;grey
+product_040188,Handbags,Handbags,Laptop Bag,0.5211105018265794,prototype,0.2111050182657937,ambiguous_related_top2,True,Handbags,Handbags,Handbags,text_image,black;blue;navy;gold;floral
+product_039872,Handbags,Handbags,Mobile Pouch,0.5195605293452105,prototype,0.1956052934521047,ambiguous_unrelated_top1,False,,Handbags;Heels,Handbags,image,beige
+product_026109,Handbags,Handbags,Duffel Bag,0.5116450716492049,prototype,0.11645071649204922,ambiguous_unrelated_top1,False,Handbags,Handbags,Handbags,text_image,black
+product_043278,Handbags,Handbags,Backpacks,0.5089859502416041,prototype,0.08985950241604092,ambiguous_related_top2,True,,Handbags;Shorts,Handbags,image,green;orange;patterned;floral
+product_019161,Handbags,Handbags,Laptop Bag,0.5279234724757632,prototype,0.27923472475763217,ambiguous_related_top2,True,,Handbags;Shorts,Handbags,image,red
+product_017879,Handbags,Handbags,Backpacks,0.576001987456886,visual_neighbors,0.7600198745688604,ambiguous_related_top2,True,,,Handbags,image,black;silver;patterned
+product_023523,Handbags,Duffel Bag,Handbags,0.5057207347251926,combined,0.057207347251926347,ambiguous_unrelated_top1,False,,,Duffel Bag,image,black;patterned
+product_024117,Handbags,Laptop Bag,Handbags,0.5061243742463818,prototype,0.06124374246381793,ambiguous_related_top2,True,Handbags,Handbags,Handbags,text,green
+product_033880,Handbags,Handbags,Clutches,0.524397764788254,prototype,0.24397764788253956,ambiguous_related_top2,True,,,Handbags,image,yellow
+product_005259,Handbags,Handbags,Duffel Bag,0.5950818918364708,visual_neighbors,0.9508189183647078,ambiguous_unrelated_top1,False,,Handbags;Shorts,Handbags,image,white;patterned
+product_000040,Handbags,Handbags,Duffel Bag,0.5008771136013744,prototype,0.008771136013744353,ambiguous_unrelated_top1,False,,Handbags;Dresses,Handbags,image,green
+product_033470,Handbags,Clutches,Handbags,0.5039936788270507,prototype,0.03993678827050707,ambiguous_related_top2,True,,Handbags;Mobile Pouch,Clutches,image,brown
+product_010545,Hat,Caps,Hat,0.5081544522314224,prototype,0.08154452231422417,ambiguous_unrelated_top1,False,,Caps;Hat,Caps,image,red
+product_043672,Headband,Caps,Swimwear,0.5401402269834656,visual_neighbors,0.40140226983465654,ambiguous_unrelated_top1,False,Headband,Headband,Headband,text,black;white
+product_032959,Heels,Heels,Flats,0.5018020902220489,combined,0.018020902220489136,ambiguous_related_top2,True,,Heels;Kurtas;Sarees,Heels,image,
+product_006972,Heels,Flats,Heels,0.5079804346959577,visual_neighbors,0.07980434695957662,ambiguous_related_top2,True,Heels,Heels,Heels,text,black
+product_035970,Heels,Sandals,Flip Flops,0.5262066871483825,visual_neighbors,0.26206687148382485,ambiguous_related_top2,True,Flats,Flats,Flats,text,
+product_034753,Heels,Heels,Flats,0.5240563253267717,visual_neighbors,0.24056325326771716,ambiguous_related_top2,True,,Heels;Jeans;Dresses,Heels,image,black
+product_001608,Heels,Heels,Flats,0.5085565172777516,visual_neighbors,0.08556517277751642,ambiguous_related_top2,True,Sandals,Sandals,Sandals,text,black
+product_008249,Heels,Heels,Casual Shoes,0.5058176414603158,prototype,0.05817641460315827,ambiguous_related_top2,True,,Sandals;Heels,Heels,image,red
+product_019257,Heels,Flats,Flip Flops,0.5112748506102578,visual_neighbors,0.11274850610257794,ambiguous_related_top2,True,Flats,Flats,Flats,text_image,black
+product_003521,Heels,Flats,Heels,0.5241160739989587,prototype,0.2411607399895866,ambiguous_related_top2,True,Heels,Heels,Heels,text,gold
+product_040821,Heels,Flats,Heels,0.5078867008118718,visual_neighbors,0.07886700811871818,ambiguous_related_top2,True,,Sandals;Tops;Heels;Caps,Flats,image,blue
+product_016229,Heels,Flats,Heels,0.510008993823372,prototype,0.1000899382337195,ambiguous_related_top2,True,,Flats;Flip Flops;Tshirts;Heels,Flats,image,silver
+product_010180,Highlighter and Blush,Highlighter and Blush,Compact,0.500952245637986,prototype,0.009522456379860158,ambiguous_unrelated_top1,False,,,Highlighter and Blush,image,
+product_042110,Highlighter and Blush,Concealer,Highlighter and Blush,0.5475169411682301,visual_neighbors,0.4751694116823014,ambiguous_related_top2,True,,,Concealer,image,
+product_005133,Innerwear Vests,Innerwear Vests,Tops,0.535147471213172,prototype,0.3514747121317197,ambiguous_unrelated_top1,False,,Innerwear Vests;Shirts,Innerwear Vests,image,white
+product_035931,Innerwear Vests,Tshirts,Innerwear Vests,0.578034151177704,visual_neighbors,0.7803415117770398,ambiguous_unrelated_top1,False,,Innerwear Vests;Tshirts;Shorts;Shirts,Tshirts,image,red
+product_029297,Innerwear Vests,Innerwear Vests,Tshirts,0.5687234171530292,prototype,0.6872341715302922,ambiguous_unrelated_top1,False,,,Innerwear Vests,image,blue;grey
+product_030481,Jackets,Sweatshirts,Jackets,0.5311825429616852,visual_neighbors,0.31182542961685217,ambiguous_related_top2,True,Jackets,Jackets,Jackets,text,pink
+product_019394,Jackets,Jackets,Rain Jacket,0.5187540610145236,visual_neighbors,0.187540610145236,ambiguous_related_top2,True,Jackets,Jackets,Jackets,text_image,red;blue;navy
+product_001010,Jackets,Jackets,Tracksuits,0.5129205709458939,visual_neighbors,0.12920570945893942,ambiguous_related_top2,True,,Jackets;Tshirts,Jackets,image,black;red;striped
+product_028698,Jeans,Jeans,Shorts,0.5250222401578295,visual_neighbors,0.25022240157829506,ambiguous_unrelated_top1,False,,Jeans;Belts;Dresses;Tshirts;Sandals,Jeans,image,blue
+product_021006,Jeans,Trousers,Jeans,0.5073578825182515,prototype,0.07357882518251536,ambiguous_unrelated_top1,False,,Jeans;Belts,Trousers,image,black
+product_028840,Jeans,Jeans,Trousers,0.5462700387508326,prototype,0.46270038750832587,ambiguous_unrelated_top1,False,,Jeans;Shirts;Blazers;Trousers,Jeans,image,blue;navy
+product_016267,Jeans,Jeans,Capris,0.5276246286007513,visual_neighbors,0.2762462860075133,ambiguous_unrelated_top1,False,,Jeans;Belts,Jeans,image,blue;floral
+product_012272,Jeans,Jeans,Trousers,0.5498336601418786,prototype,0.49833660141878633,ambiguous_unrelated_top1,False,,Jeans;Trousers;Belts;Flats;Shirts,Jeans,image,blue
+product_011223,Jeggings,Jeggings,Leggings,0.5094438460075519,visual_neighbors,0.09443846007551884,ambiguous_related_top2,True,Jeggings,Jeggings,Jeggings,text_image,white;blue;navy
+product_006366,Jeggings,Jeggings,Jeans,0.5042312566033762,prototype,0.042312566033761996,ambiguous_related_top2,True,,Jeggings;Shirts,Jeggings,image,grey;patterned
+product_005822,Jewellery Set,Jewellery Set,Pendant,0.5228260983074812,visual_neighbors,0.22826098307481174,ambiguous_unrelated_top1,False,,Earrings;Pendant,Jewellery Set,image,gold
+product_000316,Jewellery Set,Jewellery Set,Pendant,0.5217566717082468,visual_neighbors,0.21756671708246805,ambiguous_unrelated_top1,False,,Earrings;Pendant,Jewellery Set,image,white;silver
+product_010859,Jumpsuit,Jumpsuit,Shirts,0.5267186513969895,prototype,0.26718651396989485,ambiguous_unrelated_top1,False,Jumpsuit,Jumpsuit,Jumpsuit,text_image,blue;grey
+product_041469,Kajal and Eyeliner,Lip Care,Lip Gloss,0.5500461175283773,visual_neighbors,0.500461175283773,ambiguous_related_top2,True,,,Lip Care,image,
+product_032352,Kajal and Eyeliner,Kajal and Eyeliner,Lip Liner,0.5551015995646816,visual_neighbors,0.5510159956468165,ambiguous_unrelated_top1,False,,,Kajal and Eyeliner,image,black
+product_010242,Kurta Sets,Kurta Sets,Salwar and Dupatta,0.5178582458818978,visual_neighbors,0.17858245881897775,ambiguous_related_top2,True,,Patiala;Kurta Sets;Kurtas,Kurta Sets,image,blue;grey;patterned;floral
+product_023899,Kurta Sets,Kurta Sets,Dupatta,0.5221956903068813,visual_neighbors,0.22195690306881294,ambiguous_unrelated_top1,False,,Salwar;Kurtas;Dupatta;Flats,Kurta Sets,image,brown;patterned
+product_005978,Kurtas,Shirts,Tshirts,0.5054561258711077,prototype,0.05456125871107666,ambiguous_related_top2,True,,Kurtas;Shorts,Shirts,image,blue;striped
+product_006546,Kurtas,Kurtas,Tunics,0.5278816271136091,visual_neighbors,0.2788162711360909,ambiguous_related_top2,True,Kurtas,Kurtas,Kurtas,text_image,red;floral
+product_019942,Kurtas,Dresses,Kurtas,0.5157218552197091,combined,0.1572185521970915,ambiguous_unrelated_top1,False,Kurtas,Kurtas,Kurtas,text,white;patterned
+product_001895,Kurtas,Kurtas,Nightdress,0.5370049072688865,visual_neighbors,0.37004907268886506,ambiguous_unrelated_top1,False,Kurtas,Kurtas,Kurtas,text_image,white;pink;patterned
+product_026437,Kurtas,Kurtas,Nightdress,0.5209477823205847,visual_neighbors,0.209477823205847,ambiguous_unrelated_top1,False,,Kurtas;Caps,Kurtas,image,blue;gold;patterned
+product_024987,Kurtas,Kurtas,Kurtis,0.5321229394737561,visual_neighbors,0.3212293947375611,ambiguous_unrelated_top1,False,Kurtas,Kurtas,Kurtas,text_image,orange;purple;patterned
+product_023848,Kurtas,Kurtas,Dupatta,0.5008839121767428,combined,0.00883912176742774,ambiguous_unrelated_top1,False,Kurtas,Kurtas,Kurtas,text_image,
+product_004321,Kurtas,Kurtas,Kurta Sets,0.5177257321459556,prototype,0.17725732145955633,ambiguous_related_top2,True,,Kurtas;Shorts,Kurtas,image,red;patterned
+product_038270,Kurtas,Kurtas,Kurtis,0.5011715296723906,prototype,0.011715296723906478,ambiguous_unrelated_top1,False,Kurtas,Kurtas,Kurtas,text_image,white;blue;yellow;orange;gold;patterned
+product_018560,Kurtas,Kurtas,Kurta Sets,0.5103457011602875,prototype,0.10345701160287549,ambiguous_related_top2,True,Kurtas,Kurtas,Kurtas,text_image,black;red;striped
+product_010637,Kurtas,Kurtis,Tops,0.5095953961542878,visual_neighbors,0.09595396154287841,ambiguous_related_top2,True,,Kurtas;Shorts,Kurtis,image,white;brown;patterned
+product_014009,Kurtas,Tops,Tshirts,0.5350042937488071,visual_neighbors,0.35004293748807097,ambiguous_unrelated_top1,False,,Kurtas;Shorts,Tops,image,red;brown;patterned
+product_030225,Kurtas,Kurtis,Kurtas,0.5041659836253193,visual_neighbors,0.04165983625319281,ambiguous_unrelated_top1,False,,Kurtas;Shorts,Kurtis,image,red;green;gold
+product_008009,Kurtis,Kurtas,Tunics,0.5302283311023751,visual_neighbors,0.3022833110237511,ambiguous_related_top2,True,,Kurtis;Tunics;Capris;Leggings,Kurtas,image,black;red;pink;patterned
+product_040620,Kurtis,Kurtas,Tunics,0.5089343025038968,visual_neighbors,0.0893430250389682,ambiguous_related_top2,True,,Kurtis;Leggings;Heels;Flats;Shorts,Kurtas,image,blue
+product_035235,Kurtis,Tops,Tunics,0.5081013566065851,prototype,0.08101356606585065,ambiguous_unrelated_top1,False,,Kurtis;Shorts;Tops,Tops,image,black
+product_034321,Laptop Bag,Handbags,Duffel Bag,0.5041854356974348,prototype,0.041854356974347924,ambiguous_unrelated_top1,False,Laptop Bag,Laptop Bag,Laptop Bag,text,brown
+product_019498,Laptop Bag,Duffel Bag,Handbags,0.5186017186060285,prototype,0.18601718606028553,ambiguous_unrelated_top1,False,,Laptop Bag;Shorts;Compact;Key chain,Duffel Bag,image,yellow;checked
+product_036955,Leggings,Capris,Leggings,0.5007615326078995,prototype,0.007615326078994624,ambiguous_unrelated_top1,False,,Leggings;Flats;Tshirts,Capris,image,white
+product_044392,Leggings,Leggings,Jeggings,0.5284817715802681,prototype,0.28481771580268106,ambiguous_related_top2,True,Leggings,Leggings,Leggings,text_image,grey
+product_028091,Leggings,Jeggings,Leggings,0.515521614825167,visual_neighbors,0.1552161482516701,ambiguous_related_top2,True,Leggings,Leggings,Leggings,text,grey
+product_041966,Lehenga Choli,Dresses,Kurtas,0.508666027268929,prototype,0.08666027268928957,ambiguous_unrelated_top1,False,,Lehenga Choli;Dupatta;Shorts;Dresses,Dresses,image,blue;patterned
+product_001547,Lip Care,Lip Care,Mask and Peel,0.6580135935804995,visual_neighbors,1.0,confident_top1,False,,,Lip Care,image,
+product_042872,Lip Gloss,Lip Gloss,Lipstick,0.5646965090972763,visual_neighbors,0.6469650909727632,ambiguous_related_top2,True,Lip Gloss,Lip Gloss,Lip Gloss,text_image,
+product_012942,Lip Gloss,Concealer,Lip Gloss,0.5009198380035744,visual_neighbors,0.009198380035744249,ambiguous_unrelated_top1,False,,,Concealer,image,
+product_041612,Lip Gloss,Concealer,Lip Gloss,0.5572349469370242,prototype,0.5723494693702426,ambiguous_unrelated_top1,False,Lip Gloss,Lip Gloss,Lip Gloss,text,
+product_014345,Lip Liner,Lip Liner,Kajal and Eyeliner,0.5196720584058768,prototype,0.1967205840587683,ambiguous_unrelated_top1,False,Lip Liner,Lip Liner,Lip Liner,text_image,
+product_012707,Lip Liner,Lip Liner,Kajal and Eyeliner,0.5510014530892817,prototype,0.5100145308928173,ambiguous_unrelated_top1,False,Lip Liner,Lip Liner,Lip Liner,text_image,red
+product_032952,Lip Plumper,Lip Plumper,Lip Gloss,0.5888934169040255,visual_neighbors,0.8889341690402555,ambiguous_unrelated_top1,False,Lip Plumper,Lip Plumper,Lip Plumper,text_image,pink
+product_017050,Lipstick,Lipstick,Lip Liner,0.5414907319246592,prototype,0.4149073192465925,ambiguous_related_top2,True,Lipstick,Lipstick,Lipstick,text_image,
+product_002892,Lipstick,Lipstick,Lip Liner,0.537099899995787,prototype,0.37099899995787006,ambiguous_related_top2,True,Lipstick,Lipstick,Lipstick,text_image,
+product_039910,Lipstick,Lipstick,Lip Liner,0.5274655302115613,prototype,0.2746553021156129,ambiguous_related_top2,True,Lipstick,Lipstick,Lipstick,text_image,red
+product_032180,Lipstick,Lipstick,Lip Liner,0.5173439418028188,prototype,0.17343941802818844,ambiguous_related_top2,True,Lipstick,Lipstick,Lipstick,text_image,floral
+product_039724,Lounge Pants,Track Pants,Trousers,0.5072940700201185,combined,0.07294070020118505,ambiguous_related_top2,True,Lounge Pants,Lounge Pants,Lounge Pants,text,green
+product_037644,Lounge Pants,Track Pants,Lounge Pants,0.5052523921083408,prototype,0.05252392108340832,ambiguous_related_top2,True,Lounge Pants,Lounge Pants,Lounge Pants,text,black;grey;patterned
+product_030332,Lounge Shorts,Track Pants,Lounge Pants,0.5088348210642335,prototype,0.08834821064233501,ambiguous_related_top2,True,Capris,Capris,Capris,text,maroon
+product_012981,Lounge Shorts,Lounge Shorts,Capris,0.5719946950826548,visual_neighbors,0.7199469508265478,ambiguous_unrelated_top1,False,Lounge Shorts,Lounge Shorts,Lounge Shorts,text_image,blue;navy
+product_029871,Lounge Tshirts,Tops,Dresses,0.5125229356665357,visual_neighbors,0.1252293566653573,ambiguous_unrelated_top1,False,,Tops;Nightdress;Caps,Tops,image,brown;patterned
+product_011746,Makeup Remover,Face Wash and Cleanser,Face Moisturisers,0.5397499100210987,visual_neighbors,0.39749910021098744,ambiguous_related_top2,True,Makeup Remover,Makeup Remover,Makeup Remover,text,
+product_043549,Mascara,Mascara,Kajal and Eyeliner,0.5123148782320252,prototype,0.12314878232025153,ambiguous_unrelated_top1,False,Mascara,Mascara,Mascara,text_image,
+product_013755,Mask and Peel,Face Moisturisers,Mask and Peel,0.5459159861495574,visual_neighbors,0.459159861495574,ambiguous_unrelated_top1,False,,,Face Moisturisers,image,
+product_008789,Messenger Bag,Duffel Bag,Laptop Bag,0.5114606371609658,prototype,0.11460637160965795,ambiguous_unrelated_top1,False,Messenger Bag,Messenger Bag,Messenger Bag,text,black;grey
+product_017705,Messenger Bag,Messenger Bag,Backpacks,0.51252594201887,prototype,0.12525942018870032,ambiguous_unrelated_top1,False,,Messenger Bag;Tops,Messenger Bag,image,
+product_036229,Mobile Pouch,Clutches,Handbags,0.5203574254171954,visual_neighbors,0.20357425417195435,ambiguous_related_top2,True,,Mobile Pouch;Tops,Clutches,image,green
+product_025596,Mobile Pouch,Mobile Pouch,Clutches,0.5102110301976426,prototype,0.10211030197642582,ambiguous_unrelated_top1,False,Mobile Pouch,Mobile Pouch,Mobile Pouch,text_image,black
+product_033620,Mufflers,Tshirts,Mufflers,0.5166754930870954,visual_neighbors,0.16675493087095375,ambiguous_unrelated_top1,False,,Footballs;Mufflers,Tshirts,image,red
+product_006898,Mufflers,Scarves,Mufflers,0.5596776505859727,prototype,0.5967765058597275,ambiguous_unrelated_top1,False,,Mufflers;Tshirts;Kurtas;Flats,Scarves,image,grey
+product_023406,Nail Essentials,Nail Essentials,Makeup Remover,0.5903447733503276,visual_neighbors,0.9034477335032767,ambiguous_unrelated_top1,False,Nail Polish,Nail Polish,Nail Polish,text,
+product_001557,Nail Polish,Nail Polish,Foundation and Primer,0.6273218409969082,visual_neighbors,1.0,confident_top1,False,Nail Polish,Nail Polish,Nail Polish,text_image,gold
+product_000295,Nail Polish,Nail Polish,Mascara,0.6213973943800024,visual_neighbors,1.0,confident_top1,False,,Nail Polish;Flats,Nail Polish,image,
+product_016496,Nail Polish,Nail Polish,Lip Gloss,0.529518909750538,prototype,0.2951890975053795,ambiguous_unrelated_top1,False,Flats,Flats,Flats,text,pink
+product_008109,Nail Polish,Nail Polish,Perfume and Body Mist,0.5266809952170721,prototype,0.2668099521707213,ambiguous_unrelated_top1,False,,Nail Polish;Flats,Nail Polish,image,orange
+product_017116,Necklace and Chains,Necklace and Chains,Jewellery Set,0.5287071517679001,prototype,0.2870715176790007,ambiguous_related_top2,True,,,Necklace and Chains,image,white;green;orange;gold
+product_028078,Necklace and Chains,Necklace and Chains,Pendant,0.5376393899073554,prototype,0.3763938990735539,ambiguous_related_top2,True,,,Necklace and Chains,image,white;gold
+product_012871,Necklace and Chains,Jewellery Set,Necklace and Chains,0.5277190632392016,visual_neighbors,0.27719063239201597,ambiguous_related_top2,True,,,Jewellery Set,image,red;gold
+product_028501,Nehru Jackets,Nehru Jackets,Kurtas,0.5285240743043528,prototype,0.2852407430435278,ambiguous_unrelated_top1,False,,Jackets;Trousers;Sandals,Nehru Jackets,image,brown
+product_016045,Night suits,Night suits,Tshirts,0.5624215362366867,visual_neighbors,0.6242153623668668,ambiguous_unrelated_top1,False,,Tops;Lounge Pants;Shorts,Night suits,image,white;purple;patterned;checked
+product_026183,Night suits,Shorts,Lounge Shorts,0.5126065837158221,prototype,0.1260658371582213,ambiguous_related_top2,True,,Tshirts;Shorts,Shorts,image,black;white;blue;navy;patterned;striped
+product_022437,Night suits,Track Pants,Lounge Pants,0.5065999470251223,combined,0.06599947025122345,ambiguous_related_top2,True,,Tshirts;Shorts,Track Pants,image,blue;grey;patterned
+product_003794,Nightdress,Dresses,Nightdress,0.5216327789637845,visual_neighbors,0.21632778963784466,ambiguous_related_top2,True,Nightdress,Nightdress,Nightdress,text,red;brown;patterned;floral
+product_025351,Nightdress,Jumpsuit,Trousers,0.507628492765611,prototype,0.07628492765610952,ambiguous_unrelated_top1,False,,Tops;Lounge Pants,Jumpsuit,image,black
+product_027032,Nightdress,Nightdress,Dresses,0.5123690226824741,prototype,0.12369022682474087,ambiguous_related_top2,True,Nightdress,Nightdress,Nightdress,text_image,white;red;blue;patterned
+product_028223,Patiala,Patiala,Salwar,0.5090707797545602,prototype,0.09070779754560167,ambiguous_related_top2,True,,Patiala;Kurtas;Tops,Patiala,image,green;patterned
+product_018486,Patiala,Patiala,Lounge Pants,0.5741642354379141,visual_neighbors,0.7416423543791407,ambiguous_unrelated_top1,False,,Patiala;Trousers,Patiala,image,brown;patterned;floral
+product_034806,Pendant,Necklace and Chains,Pendant,0.5100245332232606,prototype,0.10024533223260582,ambiguous_related_top2,True,Pendant,Pendant,Pendant,text,silver
+product_011846,Pendant,Pendant,Necklace and Chains,0.517842791557356,prototype,0.17842791557356022,ambiguous_related_top2,True,Pendant,Pendant,Pendant,text_image,pink;silver
+product_018364,Pendant,Necklace and Chains,Pendant,0.522479808902897,prototype,0.2247980890289703,ambiguous_related_top2,True,Pendant,Pendant,Pendant,text,silver
+product_018717,Perfume and Body Mist,Perfume and Body Mist,Fragrance Gift Set,0.5296790742496065,visual_neighbors,0.2967907424960648,ambiguous_related_top2,True,Tops,Tops,Tops,text,black;green;orange
+product_016147,Perfume and Body Mist,Perfume and Body Mist,Fragrance Gift Set,0.510529749108009,prototype,0.1052974910800897,ambiguous_related_top2,True,Tops,Tops,Tops,text,white;floral
+product_000226,Perfume and Body Mist,Perfume and Body Mist,Deodorant,0.5051292770121786,prototype,0.051292770121785805,ambiguous_unrelated_top1,False,,,Perfume and Body Mist,image,floral
+product_026015,Perfume and Body Mist,Perfume and Body Mist,Lip Care,0.5208739845870958,visual_neighbors,0.20873984587095779,ambiguous_unrelated_top1,False,,,Perfume and Body Mist,image,
+product_042309,Perfume and Body Mist,Perfume and Body Mist,Fragrance Gift Set,0.5820845459601919,visual_neighbors,0.820845459601919,ambiguous_related_top2,True,,,Perfume and Body Mist,image,white;orange
+product_036174,Rain Jacket,Rain Jacket,Jackets,0.5513239407800558,visual_neighbors,0.5132394078005577,ambiguous_related_top2,True,,Rain Jacket;Compact;Jackets,Rain Jacket,image,black
+product_007995,Ring,Ring,Bracelet,0.5027463170662605,prototype,0.02746317066260496,ambiguous_related_top2,True,Ring,Ring,Ring,text_image,black;white;silver
+product_023442,Ring,Ring,Bangle,0.5047449371193988,prototype,0.0474493711939883,ambiguous_related_top2,True,Ring,Ring,Ring,text_image,white;silver
+product_013409,Ring,Ring,Pendant,0.5299670219598318,prototype,0.29967021959831813,ambiguous_unrelated_top1,False,Ring,Ring,Ring,text_image,silver
+product_041867,Robe,Dresses,Nightdress,0.5435079095662196,visual_neighbors,0.4350790956621965,ambiguous_related_top2,True,Robe,Robe,Robe,text,black
+product_012697,Rompers,Rompers,Tshirts,0.6498068983727899,visual_neighbors,1.0,confident_top1,False,,Rompers;Shorts,Rompers,image,green;pink;patterned
+product_024554,Rucksacks,Rucksacks,Backpacks,0.5558020616736267,visual_neighbors,0.5580206167362668,ambiguous_related_top2,True,Rucksacks,Rucksacks,Rucksacks,text_image,yellow;grey
+product_001284,Salwar,Salwar,Churidar,0.5321658857530583,visual_neighbors,0.3216588575305835,ambiguous_unrelated_top1,False,,Salwar;Kurtas;Tops;Waistcoat;Sandals,Salwar,image,white
+product_037285,Salwar,Salwar,Churidar,0.5167595404954272,visual_neighbors,0.16759540495427164,ambiguous_unrelated_top1,False,,Salwar;Kurtas;Tops;Waistcoat;Sandals,Salwar,image,beige;patterned
+product_010043,Salwar and Dupatta,Salwar and Dupatta,Dupatta,0.5302114012098776,visual_neighbors,0.3021140120987765,ambiguous_related_top2,True,,Salwar and Dupatta;Dupatta;Salwar,Salwar and Dupatta,image,black;white;striped
+product_041001,Sandals,Flip Flops,Sports Sandals,0.5084755575689163,visual_neighbors,0.08475557568916271,ambiguous_related_top2,True,Sandals,Sandals,Sandals,text,blue
+product_001922,Sandals,Flip Flops,Flats,0.5188918402321507,prototype,0.18891840232150742,ambiguous_related_top2,True,,,Flip Flops,image,red
+product_000160,Sandals,Flats,Casual Shoes,0.5135347728942992,prototype,0.13534772894299166,ambiguous_unrelated_top1,False,,Sandals;Shorts;Heels,Flats,image,brown;patterned
+product_041647,Sandals,Sandals,Flip Flops,0.5634566170414214,visual_neighbors,0.6345661704142137,ambiguous_related_top2,True,,,Sandals,image,red
+product_037053,Sandals,Sandals,Flip Flops,0.5356347842122248,visual_neighbors,0.35634784212224774,ambiguous_related_top2,True,Sandals,Sandals,Sandals,text_image,black;red
+product_043841,Sandals,Sandals,Sports Sandals,0.5184829228226033,visual_neighbors,0.18482922822603334,ambiguous_related_top2,True,Sandals,Sandals,Sandals,text_image,black
+product_033651,Sandals,Sandals,Sports Sandals,0.523723650539935,visual_neighbors,0.23723650539934976,ambiguous_related_top2,True,,Sandals;Heels,Sandals,image,black
+product_010159,Sarees,Sarees,Free Gifts,0.5263971756670582,prototype,0.2639717566705824,ambiguous_unrelated_top1,False,Sarees,Sarees,Sarees,text_image,blue;patterned;floral
+product_034283,Sarees,Dresses,Tops,0.5035394622934996,prototype,0.03539462293499552,ambiguous_unrelated_top1,False,Sarees,Sarees,Sarees,text,maroon
+product_032772,Sarees,Sarees,Dupatta,0.5548327400147433,prototype,0.5483274001474326,ambiguous_related_top2,True,Sarees,Sarees,Sarees,text_image,white;patterned
+product_020222,Sarees,Sarees,Dupatta,0.546015628472749,prototype,0.46015628472748993,ambiguous_related_top2,True,,,Sarees,image,white;red;green;brown;patterned
+product_010689,Scarves,Scarves,Stoles,0.5454559955684519,prototype,0.45455995568451935,ambiguous_related_top2,True,,,Scarves,image,blue;green;patterned
+product_019514,Scarves,Scarves,Dupatta,0.5431757766628039,prototype,0.43175776662803933,ambiguous_unrelated_top1,False,,,Scarves,image,pink;patterned
+product_006370,Scarves,Scarves,Stoles,0.538585662170513,prototype,0.3858566217051297,ambiguous_related_top2,True,,,Scarves,image,white;maroon
+product_033868,Shapewear,Shapewear,Bra,0.5110797167789284,visual_neighbors,0.11079716778928386,ambiguous_related_top2,True,Shapewear,Shapewear,Shapewear,text_image,black;purple
+product_012967,Shirts,Jackets,Shirts,0.5455758079510656,prototype,0.4557580795106565,ambiguous_unrelated_top1,False,,Shirts;Trousers,Jackets,image,grey
+product_026338,Shirts,Shirts,Tops,0.5126952792729218,prototype,0.12695279272921803,ambiguous_related_top2,True,,Shirts;Kurtis;Tshirts,Shirts,image,white
+product_027265,Shirts,Shirts,Tshirts,0.5238722988665003,prototype,0.23872298866500336,ambiguous_related_top2,True,Shirts,Shirts,Shirts,text_image,blue;striped
+product_029090,Shirts,Shirts,Trousers,0.5049254083875157,prototype,0.04925408387515652,ambiguous_unrelated_top1,False,,Shirts;Flats,Shirts,image,blue
+product_037048,Shirts,Waistcoat,Shrug,0.5003688011274757,prototype,0.0036880112747572644,ambiguous_unrelated_top1,False,Shirts,Shirts,Shirts,text,black
+product_039797,Shirts,Shirts,Tshirts,0.5150183204241778,prototype,0.15018320424177836,ambiguous_related_top2,True,,Shirts;Tshirts,Shirts,image,black
+product_029342,Shirts,Shirts,Tshirts,0.5251885961335815,prototype,0.2518859613358149,ambiguous_related_top2,True,,Shirts;Blazers,Shirts,image,black;white;striped
+product_039372,Shirts,Shirts,Tops,0.5267636897965959,visual_neighbors,0.2676368979659594,ambiguous_related_top2,True,Shirts,Shirts,Shirts,text_image,white;brown;grey;striped
+product_008623,Shirts,Shirts,Tops,0.5972316499890816,visual_neighbors,0.9723164998908165,ambiguous_related_top2,True,,Shirts;Skirts;Heels,Shirts,image,white
+product_042466,Shirts,Shirts,Tshirts,0.5096940702007884,prototype,0.09694070200788388,ambiguous_related_top2,True,Shirts,Shirts,Shirts,text_image,yellow;pink;grey;patterned;checked
+product_013906,Shirts,Tops,Shirts,0.5133862026185345,visual_neighbors,0.13386202618534518,ambiguous_related_top2,True,,Shirts;Trousers;Caps,Tops,image,yellow
+product_000394,Shirts,Shirts,Tops,0.5054955558775832,visual_neighbors,0.05495555877583215,ambiguous_related_top2,True,,Shirts;Shorts,Shirts,image,white;blue;floral
+product_000175,Shirts,Shirts,Tops,0.5188808209104003,prototype,0.18880820910400337,ambiguous_related_top2,True,,Shirts;Shorts;Tshirts;Jeans;Sandals,Shirts,image,blue
+product_033996,Shirts,Shirts,Tshirts,0.5263994609856362,prototype,0.26399460985636175,ambiguous_related_top2,True,Shirts,Shirts,Shirts,text_image,white;blue;maroon;checked
+product_023304,Shirts,Shirts,Tshirts,0.5315758053186642,prototype,0.31575805318664224,ambiguous_related_top2,True,Shirts,Shirts,Shirts,text_image,red;checked
+product_025303,Shirts,Shirts,Tshirts,0.5285974381977505,prototype,0.2859743819775052,ambiguous_related_top2,True,Shirts,Shirts,Shirts,text_image,white;blue;striped
+product_033601,Shirts,Shirts,Tshirts,0.517952668283574,prototype,0.17952668283574005,ambiguous_related_top2,True,,Shirts;Shorts,Shirts,image,black
+product_027049,Shirts,Shirts,Tshirts,0.5295604041046028,prototype,0.29560404104602817,ambiguous_related_top2,True,Shirts,Shirts,Shirts,text_image,purple;checked
+product_008412,Shirts,Shirts,Tops,0.5067214466931682,visual_neighbors,0.06721446693168211,ambiguous_related_top2,True,Shirts,Shirts,Shirts,text_image,yellow
+product_015065,Shoe Accessories,Shoe Accessories,Clutches,0.56114539857425,visual_neighbors,0.6114539857425006,ambiguous_unrelated_top1,False,Shoe Accessories,Shoe Accessories,Shoe Accessories,text_image,
+product_029764,Shoe Accessories,Sunscreen,Shoe Accessories,0.5042171910823503,visual_neighbors,0.04217191082350303,ambiguous_unrelated_top1,False,Shoe Accessories,Shoe Accessories,Shoe Accessories,text,orange
+product_042263,Shorts,Jeans,Shorts,0.5307144790509702,visual_neighbors,0.3071447905097025,ambiguous_unrelated_top1,False,,Jeans;Shorts,Jeans,image,blue
+product_035635,Shorts,Capris,Shorts,0.526841091102327,visual_neighbors,0.26841091102327025,ambiguous_related_top2,True,,Shorts;Belts,Capris,image,purple
+product_000951,Shorts,Shorts,Lounge Shorts,0.5036277394682405,prototype,0.03627739468240466,ambiguous_related_top2,True,Shorts,Shorts,Shorts,text_image,grey
+product_024479,Shorts,Lounge Shorts,Shorts,0.5161715432964682,visual_neighbors,0.16171543296468197,ambiguous_related_top2,True,Shorts,Shorts,Lounge Shorts,text_image,black;white
+product_039960,Shorts,Shorts,Lounge Shorts,0.5109002983366804,prototype,0.10900298336680384,ambiguous_related_top2,True,Shorts,Shorts,Shorts,text_image,blue;navy
+product_035304,Shrug,Tops,Shrug,0.5031112332033426,combined,0.031112332033426122,ambiguous_unrelated_top1,False,Shrug,Shrug,Shrug,text,black;beige
+product_011407,Skirts,Jeans,Shorts,0.5288995425766355,visual_neighbors,0.28899542576635523,ambiguous_unrelated_top1,False,Skirts,Skirts,Skirts,text,blue
+product_011972,Skirts,Skirts,Dresses,0.5626703946125142,prototype,0.6267039461251424,ambiguous_unrelated_top1,False,,Skirts;Shirts;Flats,Skirts,image,black
+product_044254,Skirts,Skirts,Shorts,0.5302444134605645,prototype,0.30244413460564507,ambiguous_related_top2,True,,Skirts;Belts,Skirts,image,blue;patterned
+product_004048,Socks,Booties,Briefs,0.5458591291447955,visual_neighbors,0.4585912914479552,ambiguous_unrelated_top1,False,,Socks;Sports Shoes,Booties,image,black;white;red
+product_014076,Socks,Socks,Stockings,0.5214344752768191,prototype,0.21434475276819082,ambiguous_related_top2,True,Socks,Socks,Socks,text_image,
+product_023188,Socks,Socks,Ties,0.6193180102352499,visual_neighbors,1.0,confident_top1,False,,Socks;Heels,Socks,image,
+product_000683,Socks,Socks,Stockings,0.5425896805762576,prototype,0.4258968057625757,ambiguous_related_top2,True,Socks,Socks,Socks,text_image,black;striped
+product_032283,Socks,Socks,Stockings,0.578712058883249,prototype,0.7871205888324897,ambiguous_related_top2,True,Socks,Socks,Socks,text_image,black;red;grey;striped
+product_017138,Socks,Socks,Stockings,0.5503730202123948,prototype,0.5037302021239477,ambiguous_related_top2,True,Socks,Socks,Socks,text_image,black
+product_030610,Sports Sandals,Sports Sandals,Sandals,0.5122575342315745,prototype,0.12257534231574499,ambiguous_related_top2,True,Sports Sandals,Sports Sandals,Sports Sandals,text_image,black;green
+product_034511,Sports Sandals,Sandals,Sports Sandals,0.5232359852639439,visual_neighbors,0.23235985263943887,ambiguous_related_top2,True,Sandals,Sandals,Sandals,text_image,brown
+product_003691,Sports Shoes,Sports Shoes,Casual Shoes,0.5551934395252964,prototype,0.5519343952529644,ambiguous_related_top2,True,,,Sports Shoes,image,blue
+product_035507,Sports Shoes,Sports Shoes,Casual Shoes,0.5127930359557109,prototype,0.1279303595571091,ambiguous_related_top2,True,,,Sports Shoes,image,
+product_026424,Sports Shoes,Sports Shoes,Casual Shoes,0.5536165355747595,prototype,0.5361653557475955,ambiguous_related_top2,True,Sports Shoes,Sports Shoes,Sports Shoes,text_image,yellow;silver
+product_013593,Sports Shoes,Sports Shoes,Casual Shoes,0.5371580186259951,prototype,0.3715801862599511,ambiguous_related_top2,True,Sports Shoes,Sports Shoes,Sports Shoes,text_image,white
+product_017227,Sports Shoes,Sports Shoes,Casual Shoes,0.5400721737693737,prototype,0.40072173769373676,ambiguous_related_top2,True,Footballs,Footballs,Footballs,text,
+product_040296,Sports Shoes,Sports Shoes,Casual Shoes,0.5473252634007848,prototype,0.4732526340078481,ambiguous_related_top2,True,,,Sports Shoes,image,blue
+product_006434,Sports Shoes,Sports Shoes,Casual Shoes,0.5519811084820666,prototype,0.5198110848206662,ambiguous_related_top2,True,,Sports Shoes;Heels,Sports Shoes,image,white;patterned
+product_011835,Sports Shoes,Sports Shoes,Casual Shoes,0.5591683536324568,prototype,0.5916835363245677,ambiguous_related_top2,True,,Sports Shoes;Briefs,Sports Shoes,image,black;white;patterned
+product_005931,Sports Shoes,Casual Shoes,Sports Shoes,0.5433990569305711,visual_neighbors,0.4339905693057112,ambiguous_related_top2,True,Heels,Heels,Heels,text,black
+product_043043,Sports Shoes,Sports Shoes,Casual Shoes,0.5384774113184913,prototype,0.3847741131849126,ambiguous_related_top2,True,Sports Shoes,Sports Shoes,Sports Shoes,text_image,
+product_004190,Sports Shoes,Sports Shoes,Casual Shoes,0.523461648702849,prototype,0.23461648702848953,ambiguous_related_top2,True,,,Sports Shoes,image,
+product_010001,Sports Shoes,Sports Shoes,Casual Shoes,0.55983505295393,prototype,0.5983505295393,ambiguous_related_top2,True,,Sports Shoes;Jeans;Tshirts,Sports Shoes,image,white
+product_026308,Sports Shoes,Sports Shoes,Casual Shoes,0.5375944213276878,prototype,0.37594421327687766,ambiguous_related_top2,True,,Sports Shoes;Heels,Sports Shoes,image,white;striped
+product_028470,Sports Shoes,Sports Shoes,Casual Shoes,0.5131757719167878,prototype,0.13175771916787762,ambiguous_related_top2,True,,Sports Shoes;Heels,Sports Shoes,image,white
+product_039049,Stockings,Stockings,Tights,0.5825231572056433,visual_neighbors,0.8252315720564332,ambiguous_related_top2,True,Stockings,Stockings,Stockings,text_image,black
+product_004879,Stockings,Stockings,Tights,0.5986194995916209,visual_neighbors,0.9861949959162088,ambiguous_related_top2,True,,Tights;Shorts;Skirts;Stockings,Stockings,image,brown
+product_026463,Stoles,Dupatta,Stoles,0.5107184582156931,prototype,0.10718458215693064,ambiguous_related_top2,True,Stoles,Stoles,Stoles,text,blue;patterned
+product_039161,Stoles,Scarves,Stoles,0.5441603151417833,prototype,0.44160315141783324,ambiguous_related_top2,True,Stoles,Stoles,Stoles,text,pink
+product_011656,Sunglasses,Sunglasses,Ties and Cufflinks,0.5833022434720149,prototype,0.8330224347201489,ambiguous_unrelated_top1,False,Sunglasses,Sunglasses,Sunglasses,text_image,black
+product_002365,Sunglasses,Sunglasses,Ties and Cufflinks,0.590027423555286,prototype,0.9002742355528606,ambiguous_unrelated_top1,False,Sunglasses,Sunglasses,Sunglasses,text_image,blue
+product_027978,Sunglasses,Sunglasses,Ties and Cufflinks,0.58065695540772,prototype,0.8065695540772002,ambiguous_unrelated_top1,False,Sunglasses,Sunglasses,Sunglasses,text_image,black;brown
+product_000434,Sunglasses,Sunglasses,Ties and Cufflinks,0.5878212983191081,prototype,0.8782129831910814,ambiguous_unrelated_top1,False,Sunglasses,Sunglasses,Sunglasses,text_image,grey
+product_043892,Sunglasses,Sunglasses,Ties and Cufflinks,0.5715438244689532,prototype,0.7154382446895325,ambiguous_unrelated_top1,False,Sunglasses,Sunglasses,Sunglasses,text_image,brown
+product_028969,Sunglasses,Sunglasses,Ties and Cufflinks,0.5584646330220695,prototype,0.5846463302206951,ambiguous_unrelated_top1,False,Sunglasses,Sunglasses,Sunglasses,text_image,white;brown
+product_027047,Sunglasses,Sunglasses,Ties and Cufflinks,0.5673525760706074,prototype,0.6735257607060742,ambiguous_unrelated_top1,False,Sunglasses,Sunglasses,Sunglasses,text_image,black;white;grey
+product_014346,Sunglasses,Sunglasses,Ties and Cufflinks,0.5629383898438263,prototype,0.6293838984382628,ambiguous_unrelated_top1,False,Sunglasses,Sunglasses,Sunglasses,text_image,black;pink
+product_004656,Sunscreen,Sunscreen,Face Wash and Cleanser,0.6059774391625503,visual_neighbors,1.0,confident_top1,False,Sunscreen,Sunscreen,Sunscreen,text_image,
+product_022502,Sunscreen,Face Moisturisers,Eye Cream,0.55577269977975,visual_neighbors,0.5577269977974998,ambiguous_related_top2,True,,,Face Moisturisers,image,
+product_033856,Suspenders,Suspenders,Belts,0.5151942676129135,prototype,0.1519426761291354,ambiguous_unrelated_top1,False,,Suspenders;Belts;Shorts;Skirts;Tights;Shirts,Suspenders,image,brown
+product_033921,Suspenders,Suspenders,Belts,0.538230477352161,prototype,0.3823047735216102,ambiguous_unrelated_top1,False,,Suspenders;Belts;Shorts;Skirts;Tights;Shirts,Suspenders,image,beige
+product_001322,Sweaters,Sweaters,Sweatshirts,0.5094184403406263,prototype,0.09418440340626336,ambiguous_related_top2,True,,Sweaters;Flats,Sweaters,image,blue;striped
+product_031451,Sweaters,Sweaters,Sweatshirts,0.5075388855397426,visual_neighbors,0.0753888553974258,ambiguous_related_top2,True,Sweaters,Sweaters,Sweaters,text_image,red
+product_043669,Sweaters,Sweaters,Tshirts,0.5134811125269555,combined,0.134811125269555,ambiguous_unrelated_top1,False,,Sweaters;Tshirts;Jeans,Sweaters,image,green;striped
+product_022940,Sweaters,Sweatshirts,Jackets,0.5170209081766213,visual_neighbors,0.17020908176621277,ambiguous_related_top2,True,,Sweaters;Jackets;Shirts;Tshirts;Jeans,Sweatshirts,image,black;grey
+product_008555,Sweatshirts,Sweatshirts,Jackets,0.5352017285049014,prototype,0.3520172850490145,ambiguous_related_top2,True,Sweatshirts,Sweatshirts,Sweatshirts,text_image,grey;silver;patterned
+product_041051,Sweatshirts,Sweatshirts,Sweaters,0.5456235207526503,prototype,0.45623520752650315,ambiguous_related_top2,True,,Sweatshirts;Tshirts,Sweatshirts,image,patterned;striped
+product_019879,Sweatshirts,Jackets,Sweatshirts,0.5308363458516616,visual_neighbors,0.30836345851661623,ambiguous_related_top2,True,,Sweatshirts;Jackets;Flats;Track Pants,Jackets,image,pink
+product_015210,Sweatshirts,Sweatshirts,Jackets,0.5363958283650814,prototype,0.3639582836508138,ambiguous_related_top2,True,,Sweatshirts;Jeans,Sweatshirts,image,blue;patterned
+product_030794,Swimwear,Swimwear,Shapewear,0.5181586373555036,prototype,0.18158637355503607,ambiguous_unrelated_top1,False,Swimwear,Swimwear,Swimwear,text_image,blue;pink
+product_039594,Tablet Sleeve,Wallets,Mobile Pouch,0.5125372624864564,visual_neighbors,0.12537262486456371,ambiguous_related_top2,True,Tablet Sleeve,Tablet Sleeve,Tablet Sleeve,text,blue;brown
+product_016983,Ties,Ties,Scarves,0.5138151399963865,prototype,0.13815139996386508,ambiguous_related_top2,True,Ties,Ties,Ties,text_image,red;patterned
+product_038037,Ties,Ties,Free Gifts,0.5487095004472222,prototype,0.4870950044722223,ambiguous_unrelated_top1,False,,,Ties,image,red;brown;striped
+product_043153,Ties,Ties,Free Gifts,0.5272696401361491,prototype,0.2726964013614908,ambiguous_unrelated_top1,False,,,Ties,image,black;blue;grey;striped
+product_007079,Tights,Leggings,Jeggings,0.5395045131732317,visual_neighbors,0.3950451317323168,ambiguous_related_top2,True,,Tights;Tunics;Shirts;Dresses;Kurtas,Leggings,image,black
+product_024034,Toner,Face Wash and Cleanser,Foundation and Primer,0.5267019274798159,visual_neighbors,0.2670192747981593,ambiguous_unrelated_top1,False,Toner,Toner,Toner,text,
+product_037769,Tops,Shirts,Tops,0.5062502557961592,prototype,0.06250255796159233,ambiguous_related_top2,True,Tops,Tops,Tops,text,blue
+product_005011,Tops,Tops,Tshirts,0.5090343039909426,visual_neighbors,0.09034303990942628,ambiguous_unrelated_top1,False,Tops,Tops,Tops,text_image,white
+product_010998,Tops,Nightdress,Tunics,0.5203734435666305,prototype,0.20373443566630517,ambiguous_unrelated_top1,False,Tops,Tops,Tops,text,
+product_032581,Tops,Tshirts,Tops,0.5514328950949977,visual_neighbors,0.5143289509499772,ambiguous_unrelated_top1,False,Tops,Tops,Tops,text,purple
+product_000659,Tops,Tshirts,Sweatshirts,0.6010157255856533,visual_neighbors,1.0,confident_top1,False,Tops,Tops,Tops,text,
+product_028856,Tops,Camisoles,Tops,0.5020377238477219,prototype,0.0203772384772194,ambiguous_unrelated_top1,False,Tops,Tops,Tops,text,black
+product_009672,Tops,Tops,Tshirts,0.5137551115031785,prototype,0.13755111503178544,ambiguous_unrelated_top1,False,,Tops;Shorts,Tops,image,purple
+product_025627,Tops,Tops,Kurtis,0.5003591214930734,prototype,0.003591214930733778,ambiguous_related_top2,True,Tops,Tops,Tops,text_image,orange
+product_043424,Tops,Tops,Tunics,0.5703474371307037,visual_neighbors,0.7034743713070369,ambiguous_unrelated_top1,False,Tops,Tops,Tops,text_image,
+product_011752,Tops,Camisoles,Tops,0.5085319496975191,prototype,0.08531949697519138,ambiguous_unrelated_top1,False,,Tops;Jeans;Heels,Camisoles,image,pink;patterned
+product_042932,Tops,Tops,Shirts,0.5268300507586119,visual_neighbors,0.26830050758611895,ambiguous_related_top2,True,,Tops;Dresses,Tops,image,black;white;grey
+product_038653,Tops,Tshirts,Tops,0.5221127564491967,visual_neighbors,0.22112756449196752,ambiguous_unrelated_top1,False,Tops,Tops,Tops,text,patterned
+product_007272,Track Pants,Track Pants,Capris,0.5232914322860428,prototype,0.23291432286042807,ambiguous_unrelated_top1,False,,Track Pants;Wallets;Tshirts,Track Pants,image,blue;navy;patterned
+product_037075,Track Pants,Track Pants,Capris,0.5116443710899929,prototype,0.11644371089992947,ambiguous_unrelated_top1,False,Tshirts,Tshirts,Tshirts,text,blue;navy
+product_031016,Track Pants,Lounge Pants,Track Pants,0.5224668940012296,visual_neighbors,0.22466894001229593,ambiguous_related_top2,True,Track Pants,Track Pants,Track Pants,text,blue;navy;patterned
+product_009112,Track Pants,Track Pants,Lounge Pants,0.5260087142696165,prototype,0.2600871426961649,ambiguous_related_top2,True,Capris,Capris,Capris,text,black;striped
+product_030135,Tracksuits,Lounge Pants,Track Pants,0.5170733259416278,prototype,0.17073325941627807,ambiguous_related_top2,True,,Track Pants;Tshirts,Lounge Pants,image,red;patterned
+product_015291,Tracksuits,Tracksuits,Track Pants,0.5497429869941961,prototype,0.49742986994196114,ambiguous_related_top2,True,,Tracksuits;Jackets;Track Pants;Shorts;Tshirts;Trousers,Tracksuits,image,blue;navy;striped
+product_008669,Travel Accessory,Waist Pouch,Duffel Bag,0.5566080334157559,visual_neighbors,0.5660803341575594,ambiguous_unrelated_top1,False,,,Waist Pouch,image,black
+product_026073,Trolley Bag,Laptop Bag,Duffel Bag,0.5281223525644404,visual_neighbors,0.28122352564440406,ambiguous_unrelated_top1,False,,Trolley Bag;Compact;Tops;Shorts,Laptop Bag,image,black;purple
+product_006645,Trousers,Track Pants,Capris,0.5073170027986958,combined,0.0731700279869585,ambiguous_unrelated_top1,False,Trousers,Trousers,Trousers,text,blue;navy
+product_004143,Trousers,Trousers,Jeggings,0.518787141330838,prototype,0.18787141330838036,ambiguous_unrelated_top1,False,,Jeans;Trousers,Trousers,image,brown
+product_021062,Trousers,Lounge Pants,Track Pants,0.503670791213251,prototype,0.0367079121325098,ambiguous_related_top2,True,,Trousers;Shirts,Lounge Pants,image,grey
+product_003232,Trousers,Trousers,Track Pants,0.5095276164221719,prototype,0.09527616422171928,ambiguous_related_top2,True,,Trousers;Shirts;Belts;Handbags,Trousers,image,beige
+product_021292,Trousers,Trousers,Track Pants,0.5140684800974472,prototype,0.14068480097447214,ambiguous_related_top2,True,,Trousers;Shirts;Tops,Trousers,image,brown
+product_003533,Trunk,Briefs,Shorts,0.5798574552298196,visual_neighbors,0.798574552298196,ambiguous_related_top2,True,,Boxers;Briefs;Flats,Briefs,image,white;patterned
+product_025956,Trunk,Boxers,Briefs,0.5186533396505252,prototype,0.18653339650525183,ambiguous_related_top2,True,,Boxers;Briefs,Boxers,image,blue;patterned
+product_034366,Trunk,Lounge Shorts,Shorts,0.5173724128281645,visual_neighbors,0.17372412828164488,ambiguous_related_top2,True,,Boxers;Briefs,Lounge Shorts,image,black;patterned
+product_025460,Tshirts,Tshirts,Free Gifts,0.5109471151508141,prototype,0.10947115150814149,ambiguous_unrelated_top1,False,Tshirts,Tshirts,Tshirts,text_image,blue
+product_015222,Tshirts,Tshirts,Innerwear Vests,0.5472187089292029,visual_neighbors,0.4721870892920289,ambiguous_unrelated_top1,False,,Tshirts;Shorts,Tshirts,image,blue;grey;navy;patterned
+product_000723,Tshirts,Tshirts,Sweaters,0.5301051514575326,visual_neighbors,0.3010515145753257,ambiguous_unrelated_top1,False,Tshirts,Tshirts,Tshirts,text_image,blue;navy;striped
+product_026907,Tshirts,Tshirts,Tops,0.5973558971155132,visual_neighbors,0.973558971155132,ambiguous_unrelated_top1,False,,Tshirts;Shorts,Tshirts,image,white;orange;silver
+product_036861,Tshirts,Tshirts,Shirts,0.5702772026270823,visual_neighbors,0.7027720262708227,ambiguous_related_top2,True,Shorts,Shorts,Shorts,text,white;blue;navy
+product_026372,Tshirts,Tshirts,Shirts,0.5027790616175435,prototype,0.027790616175434886,ambiguous_related_top2,True,Tshirts,Tshirts,Tshirts,text_image,
+product_043967,Tshirts,Tshirts,Rompers,0.5294502572320173,visual_neighbors,0.29450257232017335,ambiguous_unrelated_top1,False,,Tshirts;Tops;Caps;Shorts;Skirts,Tshirts,image,black;white;pink;patterned;striped;floral
+product_019443,Tshirts,Tshirts,Shirts,0.5111089832257918,prototype,0.11108983225791794,ambiguous_related_top2,True,Tshirts,Tshirts,Tshirts,text_image,black
+product_025384,Tshirts,Tshirts,Shirts,0.5131559861225888,prototype,0.1315598612258884,ambiguous_related_top2,True,Tshirts,Tshirts,Tshirts,text_image,green
+product_012185,Tshirts,Tshirts,Innerwear Vests,0.5014727700376111,prototype,0.014727700376111489,ambiguous_unrelated_top1,False,,Tshirts;Shorts,Tshirts,image,white;orange;silver
+product_018389,Tshirts,Tops,Tshirts,0.5476768084493093,visual_neighbors,0.4767680844930934,ambiguous_unrelated_top1,False,,Tshirts;Tops;Shirts;Trousers;Shorts,Tops,image,green;orange;grey;gold;patterned
+product_028257,Tshirts,Bra,Camisoles,0.5207762585200673,prototype,0.20776258520067264,ambiguous_related_top2,True,Shorts,Shorts,Shorts,text,black
+product_039037,Tshirts,Shirts,Tshirts,0.507932961278127,prototype,0.07932961278127039,ambiguous_related_top2,True,,Tshirts;Shorts,Shirts,image,
+product_023217,Tshirts,Tshirts,Shirts,0.507096003023102,prototype,0.07096003023101984,ambiguous_related_top2,True,Tshirts,Tshirts,Tshirts,text_image,blue
+product_027726,Tshirts,Tshirts,Shirts,0.5029044381880435,prototype,0.02904438188043535,ambiguous_related_top2,True,Tshirts,Tshirts,Tshirts,text_image,red
+product_025545,Tshirts,Tops,Tshirts,0.5345539085592447,visual_neighbors,0.3455390855924468,ambiguous_unrelated_top1,False,,Tshirts;Flats;Jeans;Heels,Tops,image,purple
+product_019655,Tshirts,Shirts,Tshirts,0.5112389844111359,combined,0.11238984411135913,ambiguous_related_top2,True,Tshirts,Tshirts,Shirts,text_image,white;green
+product_011621,Tshirts,Tshirts,Shirts,0.5049089650128445,prototype,0.049089650128445475,ambiguous_related_top2,True,,Tshirts;Shorts,Tshirts,image,blue;patterned
+product_005233,Tshirts,Camisoles,Tshirts,0.5204109404900377,combined,0.2041094049003767,ambiguous_unrelated_top1,False,,Tops;Tshirts,Camisoles,image,white
+product_003133,Tshirts,Tshirts,Shirts,0.5156693845605417,prototype,0.1566938456054168,ambiguous_related_top2,True,,Tshirts;Shorts,Tshirts,image,blue;grey;patterned
+product_006902,Tshirts,Tshirts,Jackets,0.6776559563673096,visual_neighbors,1.0,confident_top1,False,,Footballs;Shorts,Tshirts,image,black;white;red;green;gold;striped
+product_014156,Tshirts,Tops,Sweaters,0.5067149818597724,prototype,0.06714981859772375,ambiguous_unrelated_top1,False,,Tshirts;Shorts,Tops,image,grey
+product_040317,Tshirts,Tshirts,Shirts,0.5659414616308179,visual_neighbors,0.6594146163081794,ambiguous_related_top2,True,Tshirts,Tshirts,Tshirts,text_image,black
+product_020714,Tshirts,Tshirts,Shirts,0.616555667524289,visual_neighbors,1.0,confident_top1,True,,Tshirts;Flats,Tshirts,image,green;patterned
+product_025195,Tshirts,Tshirts,Innerwear Vests,0.6518667872645898,visual_neighbors,1.0,confident_top1,False,,Shorts;Jackets;Sports Shoes,Tshirts,image,red
+product_004459,Tshirts,Tshirts,Shirts,0.5072615013858323,prototype,0.0726150138583226,ambiguous_related_top2,True,,Shorts;Footballs;Jeans;Tshirts,Tshirts,image,red;grey;silver;patterned;striped
+product_022053,Tshirts,Tshirts,Shirts,0.522853203947546,prototype,0.2285320394754598,ambiguous_related_top2,True,Tshirts,Tshirts,Tshirts,text_image,grey
+product_031470,Tshirts,Tshirts,Shirts,0.5108857843319077,prototype,0.1088578433190768,ambiguous_related_top2,True,,Tshirts;Shorts;Jeans,Tshirts,image,black;red;grey;patterned
+product_031038,Tshirts,Tshirts,Innerwear Vests,0.5002666494989297,prototype,0.002666494989297386,ambiguous_unrelated_top1,False,,Tshirts;Shorts,Tshirts,image,black
+product_014338,Tshirts,Tshirts,Shirts,0.5023950331340905,prototype,0.02395033134090508,ambiguous_related_top2,True,Tshirts,Tshirts,Tshirts,text_image,
+product_035418,Tshirts,Tshirts,Shirts,0.6543025922219103,visual_neighbors,1.0,confident_top1,True,,Tshirts;Flats,Tshirts,image,brown;patterned
+product_044321,Tshirts,Tshirts,Tops,0.5838844930656706,visual_neighbors,0.8388449306567061,ambiguous_unrelated_top1,False,,Shorts;Sweatshirts,Tshirts,image,blue;patterned
+product_040251,Tshirts,Tshirts,Tops,0.5188954118290647,visual_neighbors,0.1889541182906474,ambiguous_unrelated_top1,False,,Tshirts;Shorts,Tshirts,image,pink
+product_017375,Tshirts,Tshirts,Shirts,0.5452737433131134,visual_neighbors,0.4527374331311341,ambiguous_related_top2,True,,Tshirts;Shorts,Tshirts,image,white;pink;striped
+product_037596,Tshirts,Tshirts,Shirts,0.6483303804724857,visual_neighbors,1.0,confident_top1,True,Tshirts,Tshirts,Tshirts,text_image,green
+product_039829,Tshirts,Tshirts,Shirts,0.5096293637165021,prototype,0.0962936371650214,ambiguous_related_top2,True,,Tshirts;Shorts,Tshirts,image,blue
+product_014931,Tshirts,Tops,Tshirts,0.5048119131931236,prototype,0.04811913193123575,ambiguous_unrelated_top1,False,,Tshirts;Caps,Tops,image,white;pink;striped
+product_017730,Tshirts,Tshirts,Sweatshirts,0.5189174889930772,prototype,0.1891748899307722,ambiguous_unrelated_top1,False,,Tshirts;Shorts,Tshirts,image,yellow;patterned
+product_042889,Tshirts,Tops,Tshirts,0.5452916638000753,visual_neighbors,0.4529166380007533,ambiguous_unrelated_top1,False,,Tshirts;Shorts,Tops,image,white;patterned
+product_010626,Tshirts,Tshirts,Shirts,0.5213529932945407,visual_neighbors,0.21352993294540662,ambiguous_related_top2,True,,Tshirts;Shorts;Jeans,Tshirts,image,yellow;grey;patterned
+product_040491,Tshirts,Tshirts,Tops,0.5164858958166991,combined,0.16485895816699128,ambiguous_unrelated_top1,False,,Tshirts;Jeans;Sports Shoes;Shorts,Tshirts,image,white;patterned
+product_000940,Tunics,Kurtas,Nightdress,0.5216952358974384,visual_neighbors,0.21695235897438386,ambiguous_unrelated_top1,False,Tunics,Tunics,Tunics,text,white
+product_023926,Tunics,Tops,Tshirts,0.5118836892614719,prototype,0.11883689261471878,ambiguous_unrelated_top1,False,Tunics,Tunics,Tunics,text,yellow
+product_015802,Tunics,Kurtas,Kurtis,0.5009413500804205,prototype,0.009413500804205112,ambiguous_unrelated_top1,False,Tunics,Tunics,Tunics,text,maroon;patterned
+product_029688,Umbrellas,Umbrellas,Ties,0.5816908433371075,prototype,0.8169084333710754,ambiguous_unrelated_top1,False,,Umbrellas;Compact;Caps;Tops,Umbrellas,image,black;green;purple;striped
+product_015698,Waist Pouch,Messenger Bag,Waist Pouch,0.5068104309424615,combined,0.06810430942461478,ambiguous_unrelated_top1,False,,Waist Pouch;Tops,Messenger Bag,image,red;grey
+product_012180,Waistcoat,Waistcoat,Nehru Jackets,0.5422079398409099,prototype,0.4220793984090988,ambiguous_related_top2,True,Waistcoat,Waistcoat,Waistcoat,text_image,brown;checked
+product_040013,Wallets,Handbags,Clutches,0.5262447349376447,prototype,0.2624473493764468,ambiguous_related_top2,True,Wallets,Wallets,Wallets,text,white
+product_009372,Wallets,Clutches,Mobile Pouch,0.5122977927232883,visual_neighbors,0.1229779272328835,ambiguous_unrelated_top1,False,Wallets,Wallets,Wallets,text,blue;patterned
+product_042789,Wallets,Wallets,Accessory Gift Set,0.5358503115204986,prototype,0.3585031152049856,ambiguous_unrelated_top1,False,Wallets,Wallets,Wallets,text_image,blue
+product_033788,Wallets,Clutches,Wallets,0.5231553738310716,prototype,0.23155373831071585,ambiguous_unrelated_top1,False,Wallets,Wallets,Wallets,text,beige
+product_007097,Wallets,Wallets,Mobile Pouch,0.5365224016583727,prototype,0.36522401658372733,ambiguous_related_top2,True,Wallets,Wallets,Wallets,text_image,brown
+product_043684,Wallets,Wallets,Mobile Pouch,0.5542243267096181,visual_neighbors,0.5422432670961809,ambiguous_related_top2,True,Wallets,Wallets,Wallets,text_image,beige
+product_015779,Wallets,Wallets,Clutches,0.5426398667266816,prototype,0.4263986672668164,ambiguous_unrelated_top1,False,Wallets,Wallets,Wallets,text_image,black
+product_041314,Watches,Watches,Free Gifts,0.5534015338189826,prototype,0.5340153381898262,ambiguous_unrelated_top1,False,,,Watches,image,black
+product_042775,Watches,Watches,Free Gifts,0.546266388626971,prototype,0.4626638862697098,ambiguous_unrelated_top1,False,,,Watches,image,silver
+product_026331,Watches,Watches,Free Gifts,0.5559698262376516,prototype,0.5596982623765158,ambiguous_unrelated_top1,False,,,Watches,image,silver
+product_031772,Watches,Watches,Free Gifts,0.5446010651931856,prototype,0.4460106519318564,ambiguous_unrelated_top1,False,Belts,Belts,Belts,text,black;green;grey;striped
+product_040935,Watches,Watches,Free Gifts,0.5429428524817994,prototype,0.4294285248179942,ambiguous_unrelated_top1,False,,,Watches,image,gold
+product_004052,Watches,Watches,Free Gifts,0.5637139686462583,prototype,0.6371396864625835,ambiguous_unrelated_top1,False,,,Watches,image,black;white;red;silver
+product_001513,Watches,Watches,Belts,0.5493793700159277,visual_neighbors,0.4937937001592775,ambiguous_unrelated_top1,False,,,Watches,image,black;patterned
+product_007016,Watches,Watches,Free Gifts,0.5429143325275664,prototype,0.4291433252756639,ambiguous_unrelated_top1,False,Bracelet,Bracelet,Bracelet,text,
+product_004297,Watches,Watches,Free Gifts,0.5409757397994542,prototype,0.40975739799454247,ambiguous_unrelated_top1,False,,,Watches,image,red;brown;maroon
+product_011660,Watches,Watches,Free Gifts,0.5486369120607621,prototype,0.4863691206076216,ambiguous_unrelated_top1,False,,,Watches,image,white
+product_035579,Watches,Watches,Free Gifts,0.5298582106100355,prototype,0.2985821061003547,ambiguous_unrelated_top1,False,Tops,Tops,Tops,text,black
+product_015632,Watches,Watches,Free Gifts,0.5428071540052286,prototype,0.4280715400522862,ambiguous_unrelated_top1,False,Watches,Watches,Watches,text_image,pink
+product_021710,Watches,Watches,Free Gifts,0.5371777047130784,prototype,0.3717770471307836,ambiguous_unrelated_top1,False,,,Watches,image,brown;silver
+product_007870,Watches,Pendant,Watches,0.537923047927688,prototype,0.3792304792768798,ambiguous_unrelated_top1,False,,,Pendant,image,
+product_004620,Watches,Watches,Pendant,0.5732877912689276,visual_neighbors,0.732877912689276,ambiguous_unrelated_top1,False,,,Watches,image,white
+product_036695,Watches,Watches,Free Gifts,0.5428117871087337,prototype,0.4281178710873369,ambiguous_unrelated_top1,False,Caps,Caps,Caps,text,black
+product_003728,Watches,Watches,Free Gifts,0.5293034865461304,prototype,0.2930348654613036,ambiguous_unrelated_top1,False,,,Watches,image,purple
+product_012004,Water Bottle,Water Bottle,Backpacks,0.5491377005978547,prototype,0.4913770059785473,ambiguous_unrelated_top1,False,Caps,Caps,Caps,text,red
+product_012171,Wristbands,Wallets,Flip Flops,0.5460171806045809,visual_neighbors,0.46017180604580943,ambiguous_unrelated_top1,False,,Wristbands;Basketballs,Wallets,image,black
