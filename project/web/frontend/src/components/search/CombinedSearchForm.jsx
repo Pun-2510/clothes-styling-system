@@ -54,6 +54,9 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
     if (!restoreRequest) return
 
     const restoredFile = restoreRequest.file || null
+    // This effect intentionally restores a complete user-selected snapshot
+    // from search history when the parent changes restoreRequest.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setQuery(restoreRequest.query || '')
     setLanguage(restoreRequest.language === 'en' ? 'en' : 'vi')
     setTopK(RESULT_COUNTS.includes(restoreRequest.topK) ? restoreRequest.topK : 5)
@@ -67,6 +70,9 @@ export default function CombinedSearchForm({ loading, onSearchStart, onSearchSuc
 
   useEffect(() => {
     if (!querySuggestion?.query) return
+    // Suggestions are external events from the result panel and must replace
+    // the current form state as one action.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setQuery(querySuggestion.query)
     setLanguage(querySuggestion.language === 'vi' ? 'vi' : 'en')
     setFile(null)

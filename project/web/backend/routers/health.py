@@ -72,7 +72,9 @@ async def readiness_check(request: Request):
         "text_embeddings_ready": (
             recommender.has_text_embeddings
         ),
-        "metadata_index_ready": recommender.has_metadata_index,
+        "metadata_index_ready": bool(
+            getattr(recommender, "has_metadata_index", False)
+        ),
         "translator_ready": (
             getattr(
                 request.app.state,
@@ -108,7 +110,8 @@ async def system_status(request: Request):
             model_ready and recommender.has_text_embeddings
         ),
         "metadata_index_ready": bool(
-            model_ready and recommender.has_metadata_index
+            model_ready
+            and bool(getattr(recommender, "has_metadata_index", False))
         ),
         "translator_ready": translator is not None,
         "model_error": getattr(request.app.state, "model_error", None),

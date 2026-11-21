@@ -14,6 +14,7 @@ class ProjectArtifactIsolationTests(unittest.TestCase):
             "FASHION_CATALOG_DIR": "./data/processed",
             "FASHION_IMAGE_DIR": "./data/data",
             "FASHION_EMBEDDINGS_DIR": "./embeddings",
+            "FASHION_METADATA_INDEX_DIR": "./metadata_index",
             "FASHION_CHECKPOINT_DIR": "./runs/clip_finetune/best",
             "FASHION_RETRIEVAL_WEIGHTS_FILE": "./retrieval_weights.json",
         }

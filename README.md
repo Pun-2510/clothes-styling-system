@@ -2,7 +2,8 @@
 
 Hệ thống truy xuất sản phẩm thời trang bằng ảnh, văn bản hoặc kết hợp cả hai.
 Fine-tuned CLIP tạo image/text embeddings trong cùng không gian; raw cosine
-similarity, thuộc tính văn bản và category evidence được dùng để xếp hạng Top-K.
+similarity, TF-IDF metadata matching và category evidence được dùng để xếp
+hạng Top-K.
 
 ## Hai phạm vi độc lập
 
@@ -36,6 +37,8 @@ Prepare catalog + category audit + audience audit
 Fine-tune CLIP; select best epoch on validation
         ↓
 Generate catalog image/text embeddings
+        ↓
+Build TF-IDF metadata index from the processed catalog
         ↓
 Tune retrieval weights on validation
         ↓
@@ -88,7 +91,8 @@ docker compose up -d --build
 
 ## Thí nghiệm nghiên cứu
 
-Các so sánh TF-IDF, BERT, SBERT, ResNet18, EfficientNet, ViT, pretrained CLIP,
-fine-tuned CLIP, Category-Aware ranking và system pipeline nằm riêng tại
+Các so sánh chính và baseline mở rộng (TF-IDF, BERT, SBERT, ResNet18,
+EfficientNet, ViT, pretrained/fine-tuned CLIP), Category-Aware ranking và
+system pipeline nằm riêng tại
 [experiments/model_comparison/README.md](experiments/model_comparison/README.md).
 Kết quả thí nghiệm không phải đầu vào để Docker chạy website.

@@ -118,9 +118,12 @@ export default function DeveloperPage() {
   }, [])
 
   useEffect(() => {
-    refresh()
+    const initialRefresh = window.setTimeout(refresh, 0)
     const timer = window.setInterval(refresh, 15000)
-    return () => window.clearInterval(timer)
+    return () => {
+      window.clearTimeout(initialRefresh)
+      window.clearInterval(timer)
+    }
   }, [refresh])
 
   const backend = snapshot?.backend

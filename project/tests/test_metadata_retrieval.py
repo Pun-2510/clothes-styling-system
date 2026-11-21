@@ -1,7 +1,8 @@
 from pathlib import Path
+from tempfile import TemporaryDirectory
+import unittest
 
 import pandas as pd
-import pytest
 
 from src.metadata_retrieval import MetadataRetriever, build_metadata_index
 
@@ -31,48 +32,57 @@ def _write_catalog(path: Path):
     ).to_csv(path, index=False)
 
 
-def test_metadata_index_scores_catalog_names_and_descriptions(tmp_path):
-    catalog = tmp_path / "products.csv"
-    index_dir = tmp_path / "metadata_index"
-    _write_catalog(catalog)
-    metadata = build_metadata_index(catalog, index_dir, min_df=1)
+class MetadataRetrievalTests(unittest.TestCase):
+    def test_metadata_index_scores_catalog_names_and_descriptions(self):
+        with TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            catalog = root / "products.csv"
+            index_dir = root / "metadata_index"
+            _write_catalog(catalog)
+            metadata = build_metadata_index(catalog, index_dir, min_df=1)
 
-    retriever = MetadataRetriever(index_dir, catalog, expected_rows=3)
-    scores, usable = retriever.score("red cotton striped")
+            retriever = MetadataRetriever(index_dir, catalog, expected_rows=3)
+            scores, usable = retriever.score("red cotton striped")
 
-    assert metadata["rows"] == 3
-    assert retriever.features > 0
-    assert usable is True
-    assert scores.argmax() == 0
+            self.assertEqual(metadata["rows"], 3)
+            self.assertGreater(retriever.features, 0)
+            self.assertTrue(usable)
+            self.assertEqual(int(scores.argmax()), 0)
+
+    def test_metadata_index_rejects_a_different_catalog(self):
+        with TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            catalog = root / "products.csv"
+            index_dir = root / "metadata_index"
+            _write_catalog(catalog)
+            build_metadata_index(catalog, index_dir, min_df=1)
+            products = pd.read_csv(catalog)
+            products.loc[0, "product_name"] = "Changed product"
+            products.to_csv(catalog, index=False)
+
+            with self.assertRaisesRegex(ValueError, "another catalog"):
+                MetadataRetriever(index_dir, catalog, expected_rows=3)
+
+    def test_refinement_queries_are_catalog_derived(self):
+        with TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            catalog = root / "products.csv"
+            index_dir = root / "metadata_index"
+            _write_catalog(catalog)
+            build_metadata_index(catalog, index_dir, min_df=1)
+            retriever = MetadataRetriever(index_dir, catalog, expected_rows=3)
+
+            prompts = retriever.refinement_queries_for_rows(
+                [0, 1],
+                max_terms=2,
+                minimum_document_frequency=1,
+                maximum_document_ratio=1.0,
+            )
+
+            self.assertEqual(len(prompts), 2)
+            self.assertTrue(prompts[0])
+            self.assertTrue(prompts[1])
 
 
-def test_metadata_index_rejects_a_different_catalog(tmp_path):
-    catalog = tmp_path / "products.csv"
-    index_dir = tmp_path / "metadata_index"
-    _write_catalog(catalog)
-    build_metadata_index(catalog, index_dir, min_df=1)
-    products = pd.read_csv(catalog)
-    products.loc[0, "product_name"] = "Changed product"
-    products.to_csv(catalog, index=False)
-
-    with pytest.raises(ValueError, match="another catalog"):
-        MetadataRetriever(index_dir, catalog, expected_rows=3)
-
-
-def test_refinement_queries_are_catalog_derived(tmp_path):
-    catalog = tmp_path / "products.csv"
-    index_dir = tmp_path / "metadata_index"
-    _write_catalog(catalog)
-    build_metadata_index(catalog, index_dir, min_df=1)
-    retriever = MetadataRetriever(index_dir, catalog, expected_rows=3)
-
-    prompts = retriever.refinement_queries_for_rows(
-        [0, 1],
-        max_terms=2,
-        minimum_document_frequency=1,
-        maximum_document_ratio=1.0,
-    )
-
-    assert len(prompts) == 2
-    assert prompts[0]
-    assert prompts[1]
+if __name__ == "__main__":
+    unittest.main()

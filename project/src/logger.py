@@ -51,11 +51,6 @@ logger.setLevel(
 
 if not logger.handlers:
 
-    file_handler = logging.FileHandler(
-        LOG_FILE,
-        encoding="utf-8"
-    )
-
     console_handler = (
         logging.StreamHandler()
     )
@@ -67,21 +62,35 @@ if not logger.handlers:
         datefmt="%Y-%m-%d %H:%M:%S"
     )
 
-    file_handler.setFormatter(
-        formatter
-    )
-
     console_handler.setFormatter(
         formatter
     )
 
     logger.addHandler(
-        file_handler
-    )
-
-    logger.addHandler(
         console_handler
     )
+
+    # Logging must never prevent the API or local tests from starting.  On
+    # Windows, a bind-mounted log can be locked by a running Docker container.
+    # Keep console logging available and attach the file handler only when the
+    # configured path can be opened.
+    try:
+        file_handler = logging.FileHandler(
+            LOG_FILE,
+            encoding="utf-8"
+        )
+        file_handler.setFormatter(
+            formatter
+        )
+        logger.addHandler(
+            file_handler
+        )
+    except OSError as exc:
+        logger.warning(
+            "File logging unavailable at %s; continuing with console logging: %s",
+            LOG_FILE,
+            exc,
+        )
 
 
 # =========================================================

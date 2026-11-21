@@ -668,7 +668,7 @@ class CombinedRecommendationTests(unittest.TestCase):
         self.assertAlmostEqual(matches["Shirts"], UNRELATED_TOP1_BONUS_FACTOR)
         self.assertAlmostEqual(matches["Boxers"], 0.0)
 
-    def test_explicit_text_category_and_colour_override_image_colour(self):
+    def test_explicit_text_category_and_metadata_query_override_image_colour(self):
         from src.recommend import FashionRecommender
 
         recommender = FashionRecommender.__new__(FashionRecommender)
@@ -702,7 +702,8 @@ class CombinedRecommendationTests(unittest.TestCase):
         self.assertEqual(recommendation["applied_category"], "Caps")
         self.assertEqual(recommendation["category_source"], "text")
         self.assertEqual(recommendation["category_route"], "explicit_text")
-        self.assertEqual(recommendation["detected_attributes"], ["red"])
+        self.assertEqual(recommendation["metadata_query"], "red")
+        self.assertFalse(recommendation["metadata_used"])
 
         self.assertTrue(
             recommender.categories_are_related("Tshirts", "Shirts")

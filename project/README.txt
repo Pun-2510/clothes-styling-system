@@ -146,8 +146,8 @@ Giải thích tham số chính:
 - `--epochs 3`: số lần model đi qua tập train. Tăng có thể cải thiện hoặc gây
   overfitting và luôn làm thời gian chạy dài hơn.
 - `--batch-size 16`: số cặp ảnh–text xử lý trong một bước. Giảm xuống 8 hoặc 4
-  nếu thiếu VRAM/RAM; tăng nếu phần cứng cho số mỗi bư phép.
-- `--learning-rate 1e-6`: mức cập nhật trọngớc.
+  nếu thiếu VRAM/RAM; tăng khi phần cứng cho phép để xử lý nhiều mẫu mỗi bước.
+- `--learning-rate 1e-6`: mức cập nhật trọng số sau mỗi bước tối ưu.
 - `--trainable full`: cập nhật toàn bộ CLIP. Dùng `projections` để chỉ cập nhật
   projection layers và `logit_scale`, nhanh và nhẹ hơn.
 - Hai tham số category balance giảm ảnh hưởng của category quá lớn khi train.
@@ -290,6 +290,9 @@ Test-Path .\data\data
 Test-Path .\runs\clip_finetune\best\model.safetensors
 Test-Path .\embeddings\image_embeddings.npy
 Test-Path .\embeddings\text_embeddings.npy
+Test-Path .\metadata_index\catalog_tfidf.npz
+Test-Path .\metadata_index\tfidf_vectorizer.joblib
+Test-Path .\metadata_index\metadata.json
 Test-Path .\retrieval_weights.json
 docker compose config --quiet
 ```
@@ -354,8 +357,9 @@ Không dùng `docker compose down -v` nếu muốn giữ Hugging Face và Node c
 
 ## 9. THÍ NGHIỆM NGHIÊN CỨU RIÊNG
 
-Các so sánh pretrained/fine-tuned CLIP, TF-IDF, BERT, SBERT, ResNet18,
-EfficientNet, ViT, category ablation, system pipeline và tổng hợp nhiều seed nằm ở:
+Các so sánh chính và baseline mở rộng (pretrained/fine-tuned CLIP, TF-IDF,
+BERT, SBERT, ResNet18, EfficientNet và ViT), category ablation, system pipeline
+và tổng hợp nhiều seed nằm ở:
 
 ```text
 ../experiments/model_comparison/README.md

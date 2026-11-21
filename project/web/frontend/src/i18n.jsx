@@ -1,3 +1,5 @@
+/* eslint-disable react-refresh/only-export-components -- The provider and its
+ * translation helpers intentionally share one message catalog. */
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
 const STORAGE_KEY = 'thread-find.interface-language'

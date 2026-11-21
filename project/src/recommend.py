@@ -668,13 +668,14 @@ class FashionRecommender:
 
     @property
     def has_metadata_index(self):
-        return self.metadata_retriever is not None
+        return getattr(self, "metadata_retriever", None) is not None
 
     def metadata_match_scores(self, query):
         """Return catalog-derived lexical scores or a safe zero fallback."""
-        if self.metadata_retriever is None or not str(query).strip():
+        metadata_retriever = getattr(self, "metadata_retriever", None)
+        if metadata_retriever is None or not str(query).strip():
             return np.zeros(len(self.products), dtype=np.float32), False
-        return self.metadata_retriever.score(query)
+        return metadata_retriever.score(query)
 
     # =====================================================
     # ENCODE AND SEARCH WITH IMAGE + TEXT
