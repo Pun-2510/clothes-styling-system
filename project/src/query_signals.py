@@ -6,49 +6,6 @@ from difflib import SequenceMatcher
 import re
 
 
-ATTRIBUTE_RULES = (
-    ("black", (r"\bblack\b",), (r"\bblack\b",)),
-    ("white", (r"\bwhite\b",), (r"\bwhite\b",)),
-    ("red", (r"\bred\b",), (r"\bred\b",)),
-    ("blue", (r"\bblue\b",), (r"\bblue\b",)),
-    ("green", (r"\bgreen\b",), (r"\bgreen\b",)),
-    ("yellow", (r"\byellow\b",), (r"\byellow\b",)),
-    ("pink", (r"\bpink\b",), (r"\bpink\b",)),
-    ("orange", (r"\borange\b",), (r"\borange\b",)),
-    ("purple", (r"\bpurple\b",), (r"\bpurple\b",)),
-    ("brown", (r"\bbrown\b",), (r"\bbrown\b",)),
-    ("grey", (r"\b(?:grey|gray)\b",), (r"\b(?:grey|gray)\b",)),
-    ("navy", (r"\bnavy\b",), (r"\bnavy\b",)),
-    ("maroon", (r"\bmaroon\b",), (r"\bmaroon\b",)),
-    ("beige", (r"\bbeige\b",), (r"\bbeige\b",)),
-    ("gold", (r"\b(?:gold|golden)\b",), (r"\b(?:gold|golden)\b",)),
-    ("silver", (r"\bsilver\b",), (r"\bsilver\b",)),
-    (
-        "patterned",
-        (r"\b(?:patterned|printed|graphic|motif)\b",),
-        (
-            r"\b(?:patterned|printed|graphic|pattern|striped|check|checked|"
-            r"plaid|floral|polka)\b",
-        ),
-    ),
-    (
-        "striped",
-        (r"\b(?:stripe|striped|stripes)\b",),
-        (r"\b(?:stripe|striped|stripes)\b",),
-    ),
-    (
-        "checked",
-        (r"\b(?:check|checked|checkered|plaid)\b",),
-        (r"\b(?:check|checked|checkered|plaid)\b",),
-    ),
-    (
-        "floral",
-        (r"\b(?:floral|flower|flowers)\b",),
-        (r"\b(?:floral|flower|flowers)\b",),
-    ),
-)
-
-
 BROAD_QUERY_TERMS = {
     "apparel",
     "clothes",
@@ -67,16 +24,6 @@ BROAD_QUERY_TERMS = {
     "things",
     "wear",
 }
-
-
-def extract_query_attributes(text):
-    """Return explicit color or pattern attributes found in a query."""
-    query = str(text).lower()
-    return [
-        name
-        for name, query_patterns, _ in ATTRIBUTE_RULES
-        if any(re.search(pattern, query) for pattern in query_patterns)
-    ]
 
 
 def normalize_words(value):
@@ -158,6 +105,22 @@ def explicit_categories_from_text(text, categories):
         if match["category"] not in categories_found:
             categories_found.append(match["category"])
     return categories_found
+
+
+def metadata_refinement_text(text, explicit_categories):
+    """Remove an explicit catalog category from lexical refinement text.
+
+    Category policy already handles phrases such as ``shirts`` or ``caps``.
+    Removing those aliases lets TF-IDF concentrate on the remaining metadata
+    request, for example ``black``, ``cotton`` or ``striped``.
+    """
+    refined = normalize_words(text)
+    aliases = set()
+    for category in explicit_categories:
+        aliases.update(category_aliases(category))
+    for alias in sorted(aliases, key=len, reverse=True):
+        refined = re.sub(rf"\b{re.escape(alias)}\b", " ", refined)
+    return re.sub(r"\s+", " ", refined).strip()
 
 
 def infer_category_from_text(text, categories):

@@ -51,9 +51,11 @@ def _serving_defaults():
         CATEGORY_PROTOTYPE_WEIGHT,
         CATEGORY_RELATION_NEIGHBORS,
         CATEGORY_TOP_PER_CLASS,
-        COMBINED_ATTRIBUTE_WEIGHT,
+        COMBINED_METADATA_WEIGHT,
         COMBINED_CATEGORY_WEIGHT,
         COMBINED_IMAGE_WEIGHT,
+        METADATA_INDEX_DIR,
+        TEXT_METADATA_WEIGHT,
         TEXT_RETRIEVAL_IMAGE_WEIGHT,
         RELATED_TOP1_BONUS_FACTOR,
         RELATED_TOP2_BONUS_FACTOR,
@@ -63,7 +65,9 @@ def _serving_defaults():
     return {
         "image_weight": COMBINED_IMAGE_WEIGHT,
         "text_image_weight": TEXT_RETRIEVAL_IMAGE_WEIGHT,
-        "attribute_weight": COMBINED_ATTRIBUTE_WEIGHT,
+        "metadata_index_dir": METADATA_INDEX_DIR,
+        "text_metadata_weight": TEXT_METADATA_WEIGHT,
+        "combined_metadata_weight": COMBINED_METADATA_WEIGHT,
         "image_category_bonus": CATEGORY_BONUS,
         "combined_category_bonus": COMBINED_CATEGORY_WEIGHT,
         "category_top_per_class": CATEGORY_TOP_PER_CLASS,
@@ -89,6 +93,12 @@ def arguments():
         "--text-embeddings", type=Path, default=DEFAULT_FINETUNED_TEXT
     )
     parser.add_argument("--query-text-cache-dir", type=Path, default=DEFAULT_CACHE)
+    parser.add_argument(
+        "--metadata-index-dir",
+        type=Path,
+        default=defaults["metadata_index_dir"],
+        help="TF-IDF index built from the same catalog and row ordering.",
+    )
     parser.add_argument("--expected-gallery-size", type=int, default=5000)
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
@@ -100,7 +110,14 @@ def arguments():
         "--text-image-weight", type=float, default=defaults["text_image_weight"]
     )
     parser.add_argument(
-        "--attribute-weight", type=float, default=defaults["attribute_weight"]
+        "--text-metadata-weight",
+        type=float,
+        default=defaults["text_metadata_weight"],
+    )
+    parser.add_argument(
+        "--combined-metadata-weight",
+        type=float,
+        default=defaults["combined_metadata_weight"],
     )
     parser.add_argument(
         "--image-category-bonus",
@@ -163,7 +180,12 @@ def _validate_arguments(args):
         raise ValueError("Gallery size and batch size must be positive.")
     if args.category_top_per_class < 1 or any(k < 1 for k in args.ks):
         raise ValueError("Top-per-class and every K value must be positive.")
-    for name in ("image_weight", "text_image_weight", "attribute_weight"):
+    for name in (
+        "image_weight",
+        "text_image_weight",
+        "text_metadata_weight",
+        "combined_metadata_weight",
+    ):
         if not 0.0 <= getattr(args, name) <= 1.0:
             raise ValueError(f"{name} must be between 0 and 1.")
     if args.image_category_bonus < 0.0 or args.combined_category_bonus < 0.0:
@@ -233,83 +255,77 @@ def _rank_rows(scores, excluded_positions, candidate_groups=None):
     return rankings
 
 
-def _attribute_masks(products, rules):
-    search_text = (
-        products[["product_name", "description", "category"]]
-        .fillna("")
-        .astype(str)
-        .agg(" ".join, axis=1)
-        .str.lower()
-    )
-    masks = {}
-    for name, _, candidate_patterns in rules:
-        matched = np.zeros(len(products), dtype=bool)
-        for pattern in candidate_patterns:
-            matched |= search_text.str.contains(
-                pattern, regex=True, na=False
-            ).to_numpy()
-        masks[name] = matched.astype(np.float32)
-    return masks
-
-
-def _attribute_score_matrix(query_attributes, masks, gallery_size):
-    scores = np.zeros((len(query_attributes), gallery_size), dtype=np.float32)
-    for query_index, attributes in enumerate(query_attributes):
-        if attributes:
-            scores[query_index] = np.mean(
-                np.stack([masks[name] for name in attributes]), axis=0
-            )
-    return scores
-
-
-def _attribute_metrics(rankings_by_system, attribute_scores, query_attributes, ks):
-    eligible = [index for index, values in enumerate(query_attributes) if values]
+def _metadata_metrics(rankings_by_system, metadata_scores, usable_queries, ks):
+    eligible = np.flatnonzero(np.asarray(usable_queries, dtype=bool)).tolist()
     rows = []
     for system, rankings in rankings_by_system.items():
         for k in ks:
             means = []
-            all_matches = []
+            hit_rates = []
             for query_index in eligible:
                 top = np.asarray(rankings[query_index], dtype=np.int64)[:k]
                 if len(top):
-                    selected = attribute_scores[query_index, top]
+                    selected = metadata_scores[query_index, top]
                     means.append(float(np.mean(selected)))
-                    all_matches.append(float(np.mean(selected >= 1.0)))
+                    hit_rates.append(float(np.mean(selected > 0.0)))
             rows.append(
                 {
                     "system": system,
                     "k": k,
-                    "attribute_queries": len(eligible),
-                    "mean_attribute_match": float(np.mean(means)) if means else None,
-                    "all_attributes_match_rate": (
-                        float(np.mean(all_matches)) if all_matches else None
+                    "metadata_queries": len(eligible),
+                    "mean_metadata_match": float(np.mean(means)) if means else None,
+                    "metadata_hit_rate": (
+                        float(np.mean(hit_rates)) if hit_rates else None
                     ),
                 }
             )
     return rows
 
 
+def _combined_category_route(
+    explicit_categories,
+    predicted_category,
+    category_strength,
+):
+    """Mirror the deployed combined-query category precedence.
+
+    One explicit text category is the clearest user instruction and therefore
+    becomes a hard candidate pool. Multiple explicit categories are treated as
+    ambiguous. Image evidence is used only when text does not name a category.
+    """
+    explicit = [str(value) for value in explicit_categories]
+    if len(explicit) == 1:
+        return explicit[0], "text"
+    if len(explicit) > 1:
+        return None, None
+    if float(category_strength) > 0.0:
+        return str(predicted_category), "image"
+    return None, None
+
+
 def _category_policy_rankings(
     scores,
     category_sources,
     applied_categories,
-    predicted_categories,
-    category_strengths,
+    category_evidence,
     gallery_categories,
     category_indices,
     excluded_positions,
     soft_bonus,
 ):
     adjusted = np.asarray(scores, dtype=np.float32).copy()
+    dynamic_adjusted = apply_dynamic_category_bonus(
+        adjusted,
+        category_evidence,
+        gallery_categories,
+        soft_bonus,
+    )
     candidate_groups = []
     for query_index, source in enumerate(category_sources):
         if source == "image":
-            matches = gallery_categories == predicted_categories[query_index]
-            adjusted[query_index] += (
-                soft_bonus * category_strengths[query_index] * matches
-            )
+            adjusted[query_index] = dynamic_adjusted[query_index]
             candidate_groups.append(None)
-        elif source in {"text", "text_image"}:
+        elif source == "text":
             candidate_groups.append(category_indices[applied_categories[query_index]])
         else:
             candidate_groups.append(None)
@@ -330,15 +346,25 @@ def self_test():
     rankings = _rank_rows(scores, np.asarray([0, 1]))
     assert rankings[0].tolist() == [1, 2]
     assert rankings[1].tolist() == [2, 0]
-    attrs = _attribute_metrics(
+    metadata = _metadata_metrics(
         {"base": rankings},
         np.asarray([[0.0, 1.0, 0.0], [1.0, 0.0, 0.5]], dtype=np.float32),
-        [["red"], []],
+        np.asarray([True, False]),
         [1],
     )
-    assert attrs[0]["attribute_queries"] == 1
-    assert attrs[0]["mean_attribute_match"] == 1.0
-    print("PASS: query routing, self exclusion and attribute diagnostics")
+    assert metadata[0]["metadata_queries"] == 1
+    assert metadata[0]["mean_metadata_match"] == 1.0
+    assert _combined_category_route(["Shirts"], "Tshirts", 1.0) == (
+        "Shirts",
+        "text",
+    )
+    assert _combined_category_route(["Shirts", "Tshirts"], "Shirts", 1.0) == (
+        None,
+        None,
+    )
+    assert _combined_category_route([], "Shirts", 0.5) == ("Shirts", "image")
+    assert _combined_category_route([], "Shirts", 0.0) == (None, None)
+    print("PASS: query routing, self exclusion and metadata diagnostics")
 
 
 def main():
@@ -351,11 +377,10 @@ def main():
     sys.path.insert(0, str(PROJECT))
     from src.clip_data import file_sha256
     from src.clip_runtime import model_identity, same_model_identity
+    from src.metadata_retrieval import MetadataRetriever
     from src.query_signals import (
-        ATTRIBUTE_RULES,
-        categories_are_related,
         explicit_categories_from_text,
-        extract_query_attributes,
+        metadata_refinement_text,
     )
 
     _, queries, gallery, query_positions, experiment, training, training_path = (
@@ -380,7 +405,9 @@ def main():
         "ks": ks,
         "image_weight": args.image_weight,
         "text_image_weight": args.text_image_weight,
-        "attribute_weight": args.attribute_weight,
+        "text_metadata_weight": args.text_metadata_weight,
+        "combined_metadata_weight": args.combined_metadata_weight,
+        "metadata_index_dir": str(args.metadata_index_dir.resolve()),
         "image_category_bonus": args.image_category_bonus,
         "combined_category_bonus": args.combined_category_bonus,
         "category_top_per_class": args.category_top_per_class,
@@ -449,28 +476,50 @@ def main():
     for scores in (visual_scores, text_to_image_scores, text_to_text_scores):
         scores[np.arange(len(queries)), query_positions] = -np.inf
 
-    text_scores = (
+    text_clip_scores = (
         args.text_image_weight * text_to_image_scores
         + (1.0 - args.text_image_weight) * text_to_text_scores
     )
-    combined_base_scores = (
-        args.image_weight * visual_scores
-        + (1.0 - args.image_weight) * text_scores
+    query_texts = queries.evaluation_text.astype(str).tolist()
+    catalog_categories = sorted(
+        gallery.category.fillna("").astype(str).unique().tolist()
+    )
+    explicit_text_categories = [
+        explicit_categories_from_text(text, catalog_categories)
+        for text in query_texts
+    ]
+    metadata_queries = [
+        metadata_refinement_text(text, categories)
+        for text, categories in zip(query_texts, explicit_text_categories)
+    ]
+    metadata_retriever = MetadataRetriever(
+        args.metadata_index_dir,
+        args.catalog_csv,
+        len(gallery),
+    )
+    metadata_scores, metadata_usable = metadata_retriever.score_many(
+        metadata_queries
     )
 
-    query_texts = queries.evaluation_text.astype(str).tolist()
-    query_attributes = [extract_query_attributes(text) for text in query_texts]
-    attribute_masks = _attribute_masks(gallery, ATTRIBUTE_RULES)
-    attribute_scores = _attribute_score_matrix(
-        query_attributes, attribute_masks, len(gallery)
+    text_scores = text_clip_scores.copy()
+    if args.text_metadata_weight > 0.0 and np.any(metadata_usable):
+        text_scores[metadata_usable] = (
+            (1.0 - args.text_metadata_weight)
+            * text_clip_scores[metadata_usable]
+            + args.text_metadata_weight * metadata_scores[metadata_usable]
+        )
+
+    combined_base_scores = (
+        args.image_weight * visual_scores
+        + (1.0 - args.image_weight) * text_clip_scores
     )
-    combined_attribute_scores = combined_base_scores.copy()
-    for query_index, attributes in enumerate(query_attributes):
-        if attributes:
-            combined_attribute_scores[query_index] = (
-                (1.0 - args.attribute_weight) * combined_base_scores[query_index]
-                + args.attribute_weight * attribute_scores[query_index]
-            )
+    combined_metadata_scores = combined_base_scores.copy()
+    if args.combined_metadata_weight > 0.0 and np.any(metadata_usable):
+        combined_metadata_scores[metadata_usable] = (
+            (1.0 - args.combined_metadata_weight)
+            * combined_base_scores[metadata_usable]
+            + args.combined_metadata_weight * metadata_scores[metadata_usable]
+        )
 
     gallery_categories = gallery.category.fillna("").astype(str).to_numpy()
     query_categories = queries.category.fillna("").astype(str).to_numpy()
@@ -512,31 +561,21 @@ def main():
         [item["strength"] for item in category_evidence], dtype=np.float32
     )
     text_categories = []
-    explicit_text_categories = []
+    routed_explicit_text_categories = []
     applied_categories = []
     category_sources = []
     for query_index, predicted in enumerate(predicted_categories):
         strength = category_strengths[query_index]
-        explicit = explicit_categories_from_text(
-            query_texts[query_index], catalog_categories
-        )
+        explicit = explicit_text_categories[query_index]
         text_category = explicit[0] if len(explicit) == 1 else None
-        if text_category is not None:
-            if strength > 0.0 and categories_are_related(predicted, text_category):
-                applied_category = predicted
-                category_source = "text_image"
-            else:
-                applied_category = text_category
-                category_source = "text"
-        elif strength > 0.0:
-            applied_category = predicted
-            category_source = "image"
-        else:
-            applied_category = None
-            category_source = None
+        applied_category, category_source = _combined_category_route(
+            explicit,
+            predicted,
+            strength,
+        )
 
         text_categories.append(text_category)
-        explicit_text_categories.append(explicit)
+        routed_explicit_text_categories.append(explicit)
         applied_categories.append(applied_category)
         category_sources.append(category_source)
 
@@ -558,26 +597,24 @@ def main():
     )
 
     combined_base_rankings = _rank_rows(combined_base_scores, query_positions)
-    combined_attribute_rankings = _rank_rows(
-        combined_attribute_scores, query_positions
+    combined_metadata_rankings = _rank_rows(
+        combined_metadata_scores, query_positions
     )
     combined_category_rankings = _category_policy_rankings(
         combined_base_scores,
         category_sources,
         applied_categories,
-        predicted_categories,
-        category_strengths,
+        category_evidence,
         gallery_categories,
         category_indices,
         query_positions,
         args.combined_category_bonus,
     )
     combined_full_rankings = _category_policy_rankings(
-        combined_attribute_scores,
+        combined_metadata_scores,
         category_sources,
         applied_categories,
-        predicted_categories,
-        category_strengths,
+        category_evidence,
         gallery_categories,
         category_indices,
         query_positions,
@@ -591,7 +628,7 @@ def main():
     }
     combined_rankings = {
         "combined_base": combined_base_rankings,
-        "combined_attribute": combined_attribute_rankings,
+        "combined_metadata": combined_metadata_rankings,
         "combined_category": combined_category_rankings,
         "combined_full": combined_full_rankings,
     }
@@ -608,14 +645,20 @@ def main():
             "role": "deployed text query",
             "deployed": True,
             "input": "text",
-            "formula": "w_t*S_TI + (1-w_t)*S_TT; exact category => hard pool",
+            "formula": (
+                "CLIP text fusion + TF-IDF metadata; "
+                "exact category => hard candidate pool"
+            ),
         },
         "combined_full_deployed": {
             "comparison_group": "query_mode",
             "role": "deployed combined query",
             "deployed": True,
             "input": "image + text",
-            "formula": "raw fusion + attribute + category policy",
+            "formula": (
+                "raw cosine fusion + TF-IDF metadata + explicit-text hard pool "
+                "or dynamic image category bonus"
+            ),
         },
     }
     combined_specs = {
@@ -626,26 +669,32 @@ def main():
             "input": "image + text",
             "formula": "w_i*S_II + (1-w_i)*(w_t*S_TI + (1-w_t)*S_TT)",
         },
-        "combined_attribute": {
+        "combined_metadata": {
             "comparison_group": "combined_ablation",
-            "role": "attribute contribution",
+            "role": "TF-IDF metadata contribution",
             "deployed": False,
             "input": "image + text",
-            "formula": "raw fusion + attribute adjustment",
+            "formula": "raw cosine fusion + TF-IDF metadata refinement",
         },
         "combined_category": {
             "comparison_group": "combined_ablation",
             "role": "category contribution",
             "deployed": False,
             "input": "image + text",
-            "formula": "raw fusion + category policy",
+            "formula": (
+                "raw fusion + explicit-text hard pool or dynamic image "
+                "category bonus"
+            ),
         },
         "combined_full": {
             "comparison_group": "combined_ablation",
             "role": "full deployed ranking",
             "deployed": True,
             "input": "image + text",
-            "formula": "raw fusion + attribute + category policy",
+            "formula": (
+                "raw cosine fusion + TF-IDF metadata + explicit-text hard pool "
+                "or dynamic image category bonus"
+            ),
         },
     }
 
@@ -688,8 +737,8 @@ def main():
         ks,
         "same-category combined-search ablation",
     )
-    attribute_rows = _attribute_metrics(
-        combined_rankings, attribute_scores, query_attributes, ks
+    metadata_rows = _metadata_metrics(
+        combined_rankings, metadata_scores, metadata_usable, ks
     )
 
     diagnostics = pd.DataFrame(
@@ -702,15 +751,16 @@ def main():
             },
             "text_category": [value or "" for value in text_categories],
             "explicit_text_categories": [
-                ";".join(values) for values in explicit_text_categories
+                ";".join(values) for values in routed_explicit_text_categories
             ],
             "applied_category": [value or "" for value in applied_categories],
             "category_source": [value or "" for value in category_sources],
-            "attributes": [";".join(values) for values in query_attributes],
+            "metadata_query": metadata_queries,
+            "metadata_usable": metadata_usable,
         }
     )
     settings["diagnostics"] = {
-        "queries_with_attributes": int(sum(bool(values) for values in query_attributes)),
+        "queries_with_metadata": int(np.sum(metadata_usable)),
         "queries_with_explicit_text_category": int(
             sum(value is not None for value in text_categories)
         ),
@@ -730,8 +780,8 @@ def main():
     pd.DataFrame(all_category_rows).to_csv(
         output / "comparison_by_category.csv", index=False
     )
-    pd.DataFrame(attribute_rows).to_csv(
-        output / "attribute_comparison.csv", index=False
+    pd.DataFrame(metadata_rows).to_csv(
+        output / "metadata_comparison.csv", index=False
     )
     diagnostics.to_csv(output / "query_diagnostics.csv", index=False)
     _write_group(
@@ -752,11 +802,12 @@ def main():
             "runtime_text": text_metadata,
             "query_text": query_text_metadata,
             "category_prototypes": category_prototype_metadata,
+            "metadata_index": metadata_retriever.metadata,
         },
         "category_relation_graph": relation_graph,
         "query_mode_metrics": query_mode_metrics,
         "combined_ablation_metrics": combined_metrics,
-        "attribute_metrics": attribute_rows,
+        "metadata_metrics": metadata_rows,
     }
     (output / "comparison.json").write_text(
         json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
@@ -775,21 +826,21 @@ def main():
         "",
         *_markdown_table("Combined-search ablation", combined_rows),
         "",
-        "## Attribute diagnostics",
+        "## TF-IDF metadata diagnostics",
         "",
-        "| System | K | Attribute queries | Mean attribute match | All attributes match |",
+        "| System | K | Metadata queries | Mean metadata match | Metadata hit rate |",
         "|---|---:|---:|---:|---:|",
     ]
-    for row in attribute_rows:
-        mean_match = row["mean_attribute_match"]
-        all_match = row["all_attributes_match_rate"]
+    for row in metadata_rows:
+        mean_match = row["mean_metadata_match"]
+        hit_rate = row["metadata_hit_rate"]
         summary.append(
-            f"| {row['system']} | {row['k']} | {row['attribute_queries']} | "
-            f"{mean_match:.4f} | {all_match:.4f} |"
-            if mean_match is not None and all_match is not None
+            f"| {row['system']} | {row['k']} | {row['metadata_queries']} | "
+            f"{mean_match:.4f} | {hit_rate:.4f} |"
+            if mean_match is not None and hit_rate is not None
             else (
                 f"| {row['system']} | {row['k']} | "
-                f"{row['attribute_queries']} | N/A | N/A |"
+                f"{row['metadata_queries']} | N/A | N/A |"
             )
         )
     (output / "summary.md").write_text(

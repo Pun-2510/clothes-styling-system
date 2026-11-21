@@ -1,9 +1,13 @@
 # Final three-seed experiment evidence
 
 This directory contains the lightweight final summaries used by Chapter 5 and
-the appendices. The files were copied from:
+the appendices. The model-baseline evidence was copied from:
 
 `experiments/model_comparison/results/aggregate_diverse_3_seeds_map_v1/`
+
+The current category-aware and system-pipeline evidence was copied from:
+
+`experiments/model_comparison/results/aggregate_diverse_3_seeds_tfidf_prompt_v3/`
 
 The aggregation covers seeds `42`, `123`, and `2026`. Each seed uses a
 controlled 5,000-product gallery. Raw caches, embeddings, checkpoints, and
@@ -13,8 +17,10 @@ from Git.
 ## Contents
 
 - `core_extended_pretrained/`: model and modality comparisons.
-- `category_aware/`: category-aware ranking comparisons.
-- `system_pipeline/`: end-to-end image-only, text-only, and combined queries.
+- `category_aware/`: category-aware ranking comparisons using the final
+  CLIP-prompt evidence and dynamic category-relation policy.
+- `system_pipeline/`: end-to-end image-only, text-only, and combined queries
+  using the final TF-IDF metadata refinement and category policy.
 
 Each group contains:
 
@@ -40,7 +46,7 @@ For each run, the retained files can include:
 - `comparison_by_category.csv`: metrics broken down by catalog category.
 - `category_predictions.csv` and
   `category_prediction_by_category.csv`: category-prediction diagnostics.
-- `attribute_comparison.csv`: combined-query attribute ablation results.
+- `metadata_comparison.csv`: combined-query TF-IDF metadata ablation results.
 - `query_diagnostics.csv`: per-query diagnostics for the deployed pipeline.
 
 These are structured run records rather than raw terminal logs. Raw terminal

@@ -44,7 +44,7 @@ Mini Fashion Product Images and Text Dataset
 https://www.kaggle.com/datasets/nirmalsankalana/mini-product-image-and-text-dataset
 ```
 
-Đặt dữ liệu như sau:
+Đặt dữ liệu như sau và đổi tên lại folder thành data/:
 
 ```text
 project/
@@ -182,7 +182,31 @@ Validation chọn epoch tốt nhất; test split không được dùng để c�
 Không xóa các file `.npy.json`; backend dùng chúng để xác minh catalog,
 checkpoint và embedding không bị trộn từ các lần chạy khác nhau.
 
-### 5.4. Chọn retrieval weights trên validation
+### 5.4. Sinh TF-IDF metadata index
+
+TF-IDF được xây trực tiếp từ `product_name` và `description` của catalog đã xử
+lý. Artifact này bổ sung mức khớp từ khóa cho text-only và combined query;
+image-only không sử dụng TF-IDF. Category không được đưa vào tài liệu TF-IDF vì
+category đã có cơ chế riêng, nhờ đó một tín hiệu không bị tính hai lần.
+
+```powershell
+.\.venv\Scripts\python.exe -m src.build_metadata_index `
+  --catalog-csv data/processed/products.csv `
+  --output-dir metadata_index `
+  --min-df 2 `
+  --max-features 50000
+```
+
+- `--min-df 2`: bỏ từ chỉ xuất hiện trong một sản phẩm, giúp giảm nhiễu.
+- `--max-features 50000`: giới hạn kích thước từ vựng và bộ nhớ; có thể giảm
+  nếu máy ít RAM.
+- Phải chạy lại bước này khi thay `products.csv`; không cần fine-tune CLIP hay
+  sinh lại CLIP embeddings chỉ vì thay TF-IDF index.
+
+Kết quả nằm trong `project/metadata_index/` và có hash catalog để backend phát
+hiện trường hợp index không cùng catalog hoặc sai thứ tự dòng.
+
+### 5.5. Chọn retrieval weights trên validation
 
 Đây là lệnh vận hành trong `project/`, không gọi module trong `experiments/`:
 
@@ -192,6 +216,7 @@ checkpoint và embedding không bị trộn từ các lần chạy khác nhau.
   --catalog-csv data/processed/products.csv `
   --image-embeddings embeddings/image_embeddings.npy `
   --text-embeddings embeddings/text_embeddings.npy `
+  --metadata-index-dir metadata_index `
   --output-dir validation/weight_tuning `
   --weights-output retrieval_weights.json `
   --objective-k 10 `
@@ -200,8 +225,8 @@ checkpoint và embedding không bị trộn từ các lần chạy khác nhau.
 
 Lệnh chỉ dùng validation split và chọn:
 
-- Tỷ lệ text→image so với text→text.
-- Trọng số ảnh, attribute và category cho combined query.
+- Tỷ lệ text→image so với text→text và trọng số TF-IDF cho text-only.
+- Trọng số ảnh, TF-IDF metadata và category cho combined query.
 - Category bonus cho image-only.
 
 `--objective-k 10` nghĩa là chọn theo danh sách Top-10; có thể đổi nếu giao diện
@@ -231,6 +256,7 @@ Cấu hình mặc định hoàn toàn nằm trong `project/`:
 FASHION_CATALOG_DIR=./data/processed
 FASHION_IMAGE_DIR=./data/data
 FASHION_EMBEDDINGS_DIR=./embeddings
+FASHION_METADATA_INDEX_DIR=./metadata_index
 FASHION_CHECKPOINT_DIR=./runs/clip_finetune/best
 FASHION_RETRIEVAL_WEIGHTS_FILE=./retrieval_weights.json
 
@@ -306,37 +332,14 @@ docker compose down
 
 Không dùng `docker compose down -v` nếu muốn giữ Hugging Face và Node cache.
 
-## 8. CHẠY NHANH BẰNG ARTIFACT CÓ SẴN (TÙY CHỌN)
-
-Nếu không muốn tự fine-tune, có thể tải gói artifact đồng bộ:
-
-```text
-https://drive.google.com/file/d/1_xiQjMBlf5EMZVRflDwC2G5kbgEkwy00/view?usp=drive_link
-```
-
-Sau khi giải nén, sắp xếp hoặc đổi tên thành đúng cấu trúc project-local:
-
-```text
-project/data/processed/products.csv
-project/data/data/<images>
-project/runs/clip_finetune/best/<checkpoint files>
-project/embeddings/image_embeddings.npy
-project/embeddings/image_embeddings.npy.json
-project/embeddings/text_embeddings.npy
-project/embeddings/text_embeddings.npy.json
-project/retrieval_weights.json
-```
-
-Nếu gói cũ mang tên seed, có thể giữ tên thư mục đó nhưng phải cập nhật `.env`.
-Website vẫn không được trỏ tới `experiments/`.
-
-## 9. HỆ THỐNG ONLINE LÀM GÌ
+## 8. HỆ THỐNG ONLINE LÀM GÌ
 
 - Text-only: kết hợp text→image và text→text; chỉ hard-filter khi câu truy vấn
   nêu rõ đúng một catalog category.
 - Image-only: image→image trên toàn catalog; category prediction chỉ thêm soft
   bonus theo confidence và quan hệ Top-2, không lọc cứng.
-- Image + text: ảnh giữ ngữ cảnh sản phẩm và text bổ sung category/attribute.
+- Image + text: ảnh giữ ngữ cảnh sản phẩm; text bổ sung semantic evidence,
+  TF-IDF metadata refinement và category được nêu rõ nếu có.
   Một category được ghi rõ trong text tạo hard candidate pool. Nếu text không
   nêu category, hệ thống dùng confidence và quan hệ Top-2 của ảnh để cộng soft
   bonus động giống Image-only, không loại sản phẩm ngoài category.
@@ -349,7 +352,7 @@ Website vẫn không được trỏ tới `experiments/`.
   viên theo nhóm đó nhưng vẫn giữ nguyên embedding, cosine similarity và công
   thức category-aware ranking.
 
-## 10. THÍ NGHIỆM NGHIÊN CỨU RIÊNG
+## 9. THÍ NGHIỆM NGHIÊN CỨU RIÊNG
 
 Các so sánh pretrained/fine-tuned CLIP, TF-IDF, BERT, SBERT, ResNet18,
 EfficientNet, ViT, category ablation, system pipeline và tổng hợp nhiều seed nằm ở:
@@ -362,7 +365,7 @@ Thí nghiệm có thể đọc artifact của từng seed để đánh giá, nh�
 trong `project/` không đọc kết quả `experiments/`. Không cần chạy thí nghiệm để
 khởi động website.
 
-## 11. KIỂM THỬ CODE
+## 10. KIỂM THỬ CODE
 
 ```powershell
 .\.venv\Scripts\python.exe -m src.tune_retrieval_weights --self-test
@@ -378,7 +381,7 @@ npm run build
 Set-Location ../..
 ```
 
-## 12. LỖI THƯỜNG GẶP
+## 11. LỖI THƯỜNG GẶP
 
 - `Output directory is not empty`: chọn tên mới cho `--output-dir` validation.
 - `Experiment dataset changed`: không chỉnh `dataset.csv` bên trong một run cũ;

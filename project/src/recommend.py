@@ -31,6 +31,7 @@ from src.config import (
     CLIP_MODEL,
     ACTIVE_CLIP_MODEL,
     PROCESSED_CSV,
+    METADATA_INDEX_DIR,
     EMBEDDINGS_FILE,
     TEXT_EMBEDDINGS_FILE,
     TOP_K,
@@ -44,9 +45,10 @@ from src.config import (
     CATEGORY_CONFIDENCE_THRESHOLD,
     CATEGORY_BONUS,
     TEXT_RETRIEVAL_IMAGE_WEIGHT,
+    TEXT_METADATA_WEIGHT,
     COMBINED_IMAGE_WEIGHT,
     COMBINED_CATEGORY_WEIGHT,
-    COMBINED_ATTRIBUTE_WEIGHT,
+    COMBINED_METADATA_WEIGHT,
 )
 
 from src.clip_runtime import model_identity, validate_embedding_metadata
@@ -75,16 +77,17 @@ from src.audience import (
 )
 
 from src.query_signals import (
-    ATTRIBUTE_RULES,
     categories_are_related,
     category_aliases,
     explicit_categories_from_text,
-    extract_query_attributes,
     fuzzy_category_suggestions,
     infer_category_from_text,
     is_broad_query,
     normalize_words,
+    metadata_refinement_text,
 )
+
+from src.metadata_retrieval import MetadataRetriever
 
 from src.similarity import (
     cosine_similarity,
@@ -207,6 +210,26 @@ class FashionRecommender:
             .agg(" ".join, axis=1)
             .str.lower()
         )
+
+        # The TF-IDF index is optional at startup so image-only retrieval and
+        # existing installations remain usable. Text-bearing queries simply
+        # fall back to CLIP until the project-local artifact is generated.
+        self.metadata_retriever = None
+        try:
+            self.metadata_retriever = MetadataRetriever(
+                METADATA_INDEX_DIR,
+                PROCESSED_CSV,
+                len(self.products),
+            )
+            log_info(
+                "TF-IDF metadata index loaded | "
+                f"features={self.metadata_retriever.features:,}"
+            )
+        except (FileNotFoundError, OSError, ValueError) as error:
+            log_warning(
+                "TF-IDF metadata refinement unavailable; CLIP-only fallback | "
+                f"reason={error}"
+            )
 
         # -------------------------------------------------
         # Load embeddings
@@ -523,6 +546,13 @@ class FashionRecommender:
             text,
             self.categories,
         )
+        metadata_query = metadata_refinement_text(text, explicit_categories)
+        metadata_scores, metadata_used = self.metadata_match_scores(metadata_query)
+        if metadata_used and TEXT_METADATA_WEIGHT > 0.0:
+            final_scores = (
+                (1.0 - TEXT_METADATA_WEIGHT) * final_scores
+                + TEXT_METADATA_WEIGHT * metadata_scores
+            )
         applied_category = (
             explicit_categories[0]
             if len(explicit_categories) == 1
@@ -562,6 +592,7 @@ class FashionRecommender:
         results["cross_modal_similarity"] = cross_modal_scores[top_indices]
         if text_scores is not None:
             results["text_similarity"] = text_scores[top_indices]
+        results["metadata_match"] = metadata_scores[top_indices]
         results["similarity"] = final_scores[top_indices]
 
         if applied_category is not None:
@@ -611,6 +642,8 @@ class FashionRecommender:
             f"audience={audience or 'not_used'} | "
             f"candidate_count={len(eligible_indices)} | "
             f"image_weight={image_weight:.2f} | elapsed={elapsed:.4f}s"
+            f" | metadata_used={metadata_used} | "
+            f"metadata_weight={TEXT_METADATA_WEIGHT if metadata_used else 0.0:.2f}"
         )
         if return_guidance:
             return results, elapsed, query_embedding, guidance
@@ -633,43 +666,15 @@ class FashionRecommender:
         """Treat a broad text category as compatible with an image subtype."""
         return categories_are_related(first, second)
 
-    def attribute_match_scores(self, attributes):
-        """Score how many requested attributes occur in catalog metadata."""
-        if not attributes:
-            return np.zeros(len(self.products), dtype=np.float32)
+    @property
+    def has_metadata_index(self):
+        return self.metadata_retriever is not None
 
-        search_text = getattr(self, "product_search_text", None)
-        if search_text is None:
-            columns = [
-                column
-                for column in ("product_name", "description", "category")
-                if column in self.products.columns
-            ]
-            search_text = (
-                self.products[columns]
-                .fillna("")
-                .astype(str)
-                .agg(" ".join, axis=1)
-                .str.lower()
-            )
-
-        rule_map = {
-            name: candidate_patterns
-            for name, _, candidate_patterns in ATTRIBUTE_RULES
-        }
-        score = np.zeros(len(self.products), dtype=np.float32)
-
-        for attribute in attributes:
-            matched = np.zeros(len(self.products), dtype=bool)
-            for pattern in rule_map[attribute]:
-                matched |= search_text.str.contains(
-                    pattern,
-                    regex=True,
-                    na=False,
-                ).to_numpy()
-            score += matched.astype(np.float32)
-
-        return score / float(len(attributes))
+    def metadata_match_scores(self, query):
+        """Return catalog-derived lexical scores or a safe zero fallback."""
+        if self.metadata_retriever is None or not str(query).strip():
+            return np.zeros(len(self.products), dtype=np.float32), False
+        return self.metadata_retriever.score(query)
 
     # =====================================================
     # ENCODE AND SEARCH WITH IMAGE + TEXT
@@ -685,7 +690,7 @@ class FashionRecommender:
         request_id=None,
         audience=None,
     ):
-        """Apply category-aware, attribute-aware image and text fusion."""
+        """Apply category-aware image, text and metadata fusion."""
         if request_id is None:
             request_id = uuid.uuid4().hex[:8]
 
@@ -798,12 +803,12 @@ class FashionRecommender:
             + text_weight * text_scores
         )
 
-        attributes = extract_query_attributes(text)
-        attribute_scores = self.attribute_match_scores(attributes)
-        if attributes:
+        metadata_query = metadata_refinement_text(text, explicit_text_categories)
+        metadata_scores, metadata_used = self.metadata_match_scores(metadata_query)
+        if metadata_used and COMBINED_METADATA_WEIGHT > 0.0:
             final_scores = (
-                (1.0 - COMBINED_ATTRIBUTE_WEIGHT) * final_scores
-                + COMBINED_ATTRIBUTE_WEIGHT * attribute_scores
+                (1.0 - COMBINED_METADATA_WEIGHT) * final_scores
+                + COMBINED_METADATA_WEIGHT * metadata_scores
             )
 
         if category_source == "text":
@@ -870,7 +875,7 @@ class FashionRecommender:
         if text_to_text_scores is not None:
             results["text_to_text_similarity"] = text_to_text_scores[top_indices]
         results["text_similarity"] = text_scores[top_indices]
-        results["attribute_match"] = attribute_scores[top_indices]
+        results["metadata_match"] = metadata_scores[top_indices]
         results["category_match"] = category_scores[top_indices]
         results["similarity"] = final_scores[top_indices]
 
@@ -910,7 +915,10 @@ class FashionRecommender:
             f"candidate_categories={candidate_categories or 'not_used'} | "
             f"category_strength={category_strength:.4f} | "
             f"category_bonus={effective_category_bonus:.4f} | "
-            f"attributes={attributes or 'not_used'} | top_k={actual_k} | "
+            f"metadata_query={metadata_query or 'not_used'!r} | "
+            f"metadata_used={metadata_used} | "
+            f"metadata_weight={COMBINED_METADATA_WEIGHT if metadata_used else 0.0:.2f} | "
+            f"top_k={actual_k} | "
             f"audience={audience or 'not_used'} | "
             "fusion=raw_cosine | "
             f"image_weight={image_weight:.2f} | text_weight={text_weight:.2f} | "
@@ -926,7 +934,8 @@ class FashionRecommender:
             "category_route": category_route,
             "candidate_categories": candidate_categories,
             "category_strength": category_strength,
-            "detected_attributes": attributes,
+            "metadata_query": metadata_query,
+            "metadata_used": metadata_used,
             "audience": audience,
             "guidance": guidance,
             "elapsed": elapsed,

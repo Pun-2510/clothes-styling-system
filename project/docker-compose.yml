@@ -29,6 +29,7 @@ services:
     environment: &backend-environment
       CLIP_MODEL_PATH: /app/model/best
       CLIP_EMBEDDING_DIR: /app/embeddings
+      METADATA_INDEX_DIR: /app/metadata_index
       CATEGORY_CONFIDENCE_THRESHOLD: ${CATEGORY_CONFIDENCE_THRESHOLD:-0.60}
       CATEGORY_CONFIDENCE_FLOOR: ${CATEGORY_CONFIDENCE_FLOOR:-0.50}
       CATEGORY_TOP_PER_CLASS: ${CATEGORY_TOP_PER_CLASS:-3}
@@ -59,6 +60,10 @@ services:
       - type: bind
         source: ${FASHION_EMBEDDINGS_DIR:-./embeddings}
         target: /app/embeddings
+        read_only: true
+      - type: bind
+        source: ${FASHION_METADATA_INDEX_DIR:-./metadata_index}
+        target: /app/metadata_index
         read_only: true
       - type: bind
         source: ${FASHION_CHECKPOINT_DIR:-./runs/clip_finetune/best}

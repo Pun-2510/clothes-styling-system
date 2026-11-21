@@ -98,6 +98,15 @@ TEXT_EMBEDDINGS_FILE = (
     "text_embeddings.npy"
 )
 
+# Sparse catalog metadata used to refine queries containing text.  It is
+# generated offline from product_name + description and is not a model weight.
+METADATA_INDEX_DIR = Path(
+    os.environ.get(
+        "METADATA_INDEX_DIR",
+        str(BASE_DIR / "metadata_index"),
+    )
+)
+
 
 # =========================================================
 # LOGGING
@@ -201,24 +210,33 @@ TEXT_RETRIEVAL_IMAGE_WEIGHT = _configured_float(
     "TEXT_RETRIEVAL_IMAGE_WEIGHT", 0.50
 )
 
+# Relative contribution of catalog-derived lexical metadata after the CLIP
+# text branch.  Validation may override these values in retrieval_weights.json.
+TEXT_METADATA_WEIGHT = _configured_float("TEXT_METADATA_WEIGHT", 0.15)
+
 # Default balance for a query that contains both an image and text. A value of
 # 0.50 gives the two query modalities equal influence on the final ranking.
 COMBINED_IMAGE_WEIGHT = _configured_float("COMBINED_IMAGE_WEIGHT", 0.50)
 
-# Combined search treats explicit text attributes as requested edits to the
+# Combined search treats text metadata as a requested refinement of the
 # reference image. These weights are applied after raw cosine fusion.
 COMBINED_CATEGORY_WEIGHT = _configured_float(
     "COMBINED_CATEGORY_WEIGHT", 0.10
 )
-COMBINED_ATTRIBUTE_WEIGHT = _configured_float(
-    "COMBINED_ATTRIBUTE_WEIGHT", 0.25
+COMBINED_METADATA_WEIGHT = _configured_float(
+    "COMBINED_METADATA_WEIGHT",
+    RETRIEVAL_WEIGHTS.get("COMBINED_ATTRIBUTE_WEIGHT", 0.25),
 )
+# Backward-compatible alias for old reports and external imports. Runtime
+# ranking uses COMBINED_METADATA_WEIGHT.
+COMBINED_ATTRIBUTE_WEIGHT = COMBINED_METADATA_WEIGHT
 
 for setting_name, setting_value in (
     ("TEXT_RETRIEVAL_IMAGE_WEIGHT", TEXT_RETRIEVAL_IMAGE_WEIGHT),
+    ("TEXT_METADATA_WEIGHT", TEXT_METADATA_WEIGHT),
     ("COMBINED_IMAGE_WEIGHT", COMBINED_IMAGE_WEIGHT),
     ("COMBINED_CATEGORY_WEIGHT", COMBINED_CATEGORY_WEIGHT),
-    ("COMBINED_ATTRIBUTE_WEIGHT", COMBINED_ATTRIBUTE_WEIGHT),
+    ("COMBINED_METADATA_WEIGHT", COMBINED_METADATA_WEIGHT),
 ):
     if not 0.0 <= setting_value <= 1.0:
         raise ValueError(f"{setting_name} must be between 0 and 1.")

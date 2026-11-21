@@ -198,7 +198,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible, input:focus-
 .search-preferences-layout {
   padding-top: 13px;
   display: grid;
-  grid-template-columns: minmax(150px, .34fr) minmax(0, 1.66fr);
+  grid-template-columns: minmax(270px, .58fr) minmax(0, 1.42fr);
   align-items: end;
   gap: 18px;
 }
@@ -239,13 +239,17 @@ button:focus-visible, textarea:focus-visible, select:focus-visible, input:focus-
   margin-bottom: 6px;
 }
 .audience-preference-options {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(190px, 1.65fr) repeat(4, minmax(70px, 1fr));
   gap: 6px;
 }
 .audience-preference-options button {
+  width: 100%;
   min-height: 38px;
-  padding: 0 13px;
+  padding: 7px 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid #c9c9c9;
   border-radius: 2px;
   color: #454545;
@@ -253,6 +257,9 @@ button:focus-visible, textarea:focus-visible, select:focus-visible, input:focus-
   cursor: pointer;
   font-size: 10px;
   font-weight: 750;
+  line-height: 1.3;
+  text-align: center;
+  white-space: normal;
   transition: border-color .16s ease, color .16s ease, background .16s ease, transform .16s ease;
 }
 .audience-preference-options button:hover {
@@ -261,9 +268,9 @@ button:focus-visible, textarea:focus-visible, select:focus-visible, input:focus-
   transform: translateY(-1px);
 }
 .audience-preference-options button.active {
-  border-color: #111;
-  color: #fff;
-  background: #111;
+  border-color: var(--primary);
+  color: #171717;
+  background: #fff4dc;
   box-shadow: inset 0 -3px var(--primary);
 }
 .audience-preference-options button:focus-visible,
@@ -304,6 +311,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible, input:focus-
 @media (max-width: 900px) {
   .search-preferences-layout { grid-template-columns: 1fr; align-items: stretch; }
   .search-basic-preferences { max-width: 360px; }
+  .audience-preference-options { grid-template-columns: minmax(190px, 1.6fr) repeat(4, minmax(64px, 1fr)); }
 }
 
 @media (max-width: 650px) {
@@ -311,7 +319,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible, input:focus-
   .search-preferences-panel { padding: 0 13px 13px; }
   .search-preferences-heading { align-items: flex-start; flex-direction: column; gap: 4px; }
   .search-basic-preferences { max-width: none; }
-  .audience-preference-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .audience-preference-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .audience-preference-options button:first-child { grid-column: 1 / -1; }
   .audience-preference-options button { padding-inline: 8px; }
 }

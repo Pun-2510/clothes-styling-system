@@ -13,11 +13,13 @@
     5,
     10
   ],
-  "image_weight": 0.8,
-  "text_image_weight": 0.45,
-  "attribute_weight": 0.1,
+  "image_weight": 0.4,
+  "text_image_weight": 0.5,
+  "text_metadata_weight": 0.3,
+  "combined_metadata_weight": 0.6,
+  "metadata_index_dir": "D:\\dacntt\\project\\metadata_index_diverse_seed_42",
   "image_category_bonus": 0.2,
-  "combined_category_bonus": 0.25,
+  "combined_category_bonus": 0.05,
   "category_top_per_class": 3,
   "category_confidence_floor": 0.5,
   "category_confidence_threshold": 0.6,
@@ -31,12 +33,12 @@
   "self_match": "excluded before category prediction and ranking",
   "relevance": "same ground-truth category",
   "diagnostics": {
-    "queries_with_attributes": 403,
+    "queries_with_metadata": 460,
     "queries_with_explicit_text_category": 223,
     "category_source_counts": {
-      "image": 237,
-      "text_image": 147,
-      "text": 76
+      "text": 223,
+      "not_used": 167,
+      "image": 70
     }
   }
 }

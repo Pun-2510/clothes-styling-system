@@ -65,6 +65,11 @@ project/embeddings_finetuned/**
 # Seed-specific catalog embeddings are reproducible experiment artifacts.
 # Keep every generated file local, including the lightweight *.npy.json metadata.
 project/embeddings_diverse_seed_*/**
+# Catalog-derived TF-IDF matrices are reproducible local runtime artifacts.
+project/metadata_index/**
+!project/metadata_index/.gitkeep
+!project/metadata_index/README.md
+project/metadata_index_diverse_seed_*/**
 # Project-local validation caches and trial tables are regenerated offline.
 # Keep only the final lightweight project/retrieval_weights.json in Git.
 project/validation/**

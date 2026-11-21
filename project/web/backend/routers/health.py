@@ -10,10 +10,11 @@ from src.config import (
     CATEGORY_PROTOTYPE_WEIGHT,
     CATEGORY_RELATION_NEIGHBORS,
     CATEGORY_TOP_PER_CLASS,
-    COMBINED_ATTRIBUTE_WEIGHT,
+    COMBINED_METADATA_WEIGHT,
     COMBINED_CATEGORY_WEIGHT,
     COMBINED_IMAGE_WEIGHT,
     TEXT_RETRIEVAL_IMAGE_WEIGHT,
+    TEXT_METADATA_WEIGHT,
     RELATED_TOP1_BONUS_FACTOR,
     RELATED_TOP2_BONUS_FACTOR,
     UNRELATED_TOP1_BONUS_FACTOR,
@@ -71,6 +72,7 @@ async def readiness_check(request: Request):
         "text_embeddings_ready": (
             recommender.has_text_embeddings
         ),
+        "metadata_index_ready": recommender.has_metadata_index,
         "translator_ready": (
             getattr(
                 request.app.state,
@@ -105,13 +107,17 @@ async def system_status(request: Request):
         "text_embeddings_ready": bool(
             model_ready and recommender.has_text_embeddings
         ),
+        "metadata_index_ready": bool(
+            model_ready and recommender.has_metadata_index
+        ),
         "translator_ready": translator is not None,
         "model_error": getattr(request.app.state, "model_error", None),
         "translator_error": getattr(request.app.state, "translator_error", None),
         "retrieval": {
             "text_retrieval_image_weight": TEXT_RETRIEVAL_IMAGE_WEIGHT,
+            "text_metadata_weight": TEXT_METADATA_WEIGHT,
             "combined_image_weight": COMBINED_IMAGE_WEIGHT,
-            "combined_attribute_weight": COMBINED_ATTRIBUTE_WEIGHT,
+            "combined_metadata_weight": COMBINED_METADATA_WEIGHT,
             "combined_category_weight": COMBINED_CATEGORY_WEIGHT,
             "image_category_bonus": CATEGORY_BONUS,
             "category_confidence_floor": CATEGORY_CONFIDENCE_FLOOR,

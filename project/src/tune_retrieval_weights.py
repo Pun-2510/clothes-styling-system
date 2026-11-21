@@ -19,11 +19,11 @@ import torch
 
 from src.clip_data import file_sha256
 from src.clip_runtime import load_clip, model_identity, same_model_identity
-from src.config import BASE_DIR
+from src.config import BASE_DIR, METADATA_INDEX_DIR
+from src.metadata_retrieval import MetadataRetriever
 from src.query_signals import (
-    ATTRIBUTE_RULES,
     explicit_categories_from_text,
-    extract_query_attributes,
+    metadata_refinement_text,
 )
 from src.retrieval_validation import (
     CategoryPolicySettings,
@@ -34,8 +34,6 @@ from src.retrieval_validation import (
     DEFAULT_RUN,
     DEFAULT_TEXT_EMBEDDINGS,
     apply_dynamic_category_bonus,
-    attribute_masks,
-    attribute_score_matrix,
     build_category_evidence,
     cache_signature,
     cached_embeddings,
@@ -59,6 +57,12 @@ def arguments():
     parser.add_argument("--catalog-csv", type=Path, default=DEFAULT_CATALOG)
     parser.add_argument("--image-embeddings", type=Path, default=DEFAULT_IMAGE_EMBEDDINGS)
     parser.add_argument("--text-embeddings", type=Path, default=DEFAULT_TEXT_EMBEDDINGS)
+    parser.add_argument(
+        "--metadata-index-dir",
+        type=Path,
+        default=METADATA_INDEX_DIR,
+        help="TF-IDF index built from the same processed catalog.",
+    )
     parser.add_argument("--query-text-cache-dir", type=Path, default=DEFAULT_CACHE)
     parser.add_argument(
         "--expected-gallery-size",
@@ -184,20 +188,20 @@ def _metrics(rankings, query_ids, query_categories, gallery_ids, gallery_categor
     }
 
 
-def _attribute_metrics(rankings, attribute_scores, query_attributes, k):
-    eligible = [index for index, values in enumerate(query_attributes) if values]
+def _metadata_metrics(rankings, metadata_scores, usable_queries, k):
+    eligible = np.flatnonzero(np.asarray(usable_queries, dtype=bool)).tolist()
     mean_matches = []
-    all_matches = []
+    hit_rates = []
     for query_index in eligible:
         top = np.asarray(rankings[query_index], dtype=np.int64)[:k]
         if len(top):
-            selected = attribute_scores[query_index, top]
+            selected = metadata_scores[query_index, top]
             mean_matches.append(float(np.mean(selected)))
-            all_matches.append(float(np.mean(selected >= 1.0)))
+            hit_rates.append(float(np.mean(selected > 0.0)))
     return {
-        "attribute_queries": len(eligible),
-        "mean_attribute_match": float(np.mean(mean_matches)) if mean_matches else None,
-        "all_attributes_match_rate": float(np.mean(all_matches)) if all_matches else None,
+        "metadata_queries": len(eligible),
+        "mean_metadata_match": float(np.mean(mean_matches)) if mean_matches else None,
+        "metadata_hit_rate": float(np.mean(hit_rates)) if hit_rates else None,
     }
 
 
@@ -223,8 +227,8 @@ def _best_combined_row(rows, maximum_drop):
     return max(
         eligible,
         key=lambda row: (
-            row["all_attributes_match_rate"],
-            row["mean_attribute_match"],
+            row["metadata_hit_rate"],
+            row["mean_metadata_match"],
             row["category_macro_f1"],
             row["f1"],
         ),
@@ -248,14 +252,14 @@ def self_test():
     assert rankings[1].tolist() == [2]
     rows = [
         {"category_macro_f1": 0.50, "f1": 0.40, "category_macro_precision": 0.6,
-         "all_attributes_match_rate": 0.40, "mean_attribute_match": 0.50},
+         "metadata_hit_rate": 0.40, "mean_metadata_match": 0.50},
         {"category_macro_f1": 0.49, "f1": 0.39, "category_macro_precision": 0.6,
-         "all_attributes_match_rate": 0.70, "mean_attribute_match": 0.80},
+         "metadata_hit_rate": 0.70, "mean_metadata_match": 0.80},
     ]
     assert _best_combined_row(rows, 0.02) is rows[1]
     bounded = _values_around(0.20, 0.20, 0.05, lower=0.20, upper=0.80)
     assert min(bounded) >= 0.20 and max(bounded) <= 0.80
-    print("PASS: top-K ranking and constrained combined-weight selection")
+    print("PASS: top-K ranking and metadata-aware combined-weight selection")
 
 
 def main():
@@ -330,12 +334,6 @@ def main():
         ).groups.items()
     }
     query_texts = queries.evaluation_text.astype(str).tolist()
-    query_attributes = [extract_query_attributes(text) for text in query_texts]
-    attribute_scores = attribute_score_matrix(
-        query_attributes,
-        attribute_masks(gallery, ATTRIBUTE_RULES),
-        len(gallery),
-    )
 
     catalog_categories = sorted(category_indices)
     category_prototypes, category_prototype_metadata = load_category_prototypes(
@@ -364,23 +362,43 @@ def main():
         category_indices[value] if value is not None else None
         for value in text_categories
     ]
+    metadata_retriever = MetadataRetriever(
+        args.metadata_index_dir,
+        args.catalog_csv,
+        len(gallery),
+    )
+    text_metadata_queries = [
+        metadata_refinement_text(
+            text,
+            explicit_categories_from_text(text, catalog_categories),
+        )
+        for text in query_texts
+    ]
+    text_metadata_scores, text_metadata_usable = metadata_retriever.score_many(
+        text_metadata_queries
+    )
     k = args.objective_k
 
     text_trials = []
-    for text_image_weight in np.linspace(0.0, 1.0, 21):
-        scores = (
+    for text_image_weight, metadata_weight in product(
+        np.linspace(0.0, 1.0, 21),
+        np.linspace(0.0, 0.30, 7),
+    ):
+        clip_scores = (
             text_image_weight * text_to_image_scores
             + (1.0 - text_image_weight) * text_to_text_scores
         )
-        rankings = _top_rank_rows(
-            scores,
-            query_positions,
-            k,
-            text_candidate_groups,
-        )
+        scores = clip_scores.copy()
+        if metadata_weight > 0.0 and np.any(text_metadata_usable):
+            scores[text_metadata_usable] = (
+                (1.0 - metadata_weight) * clip_scores[text_metadata_usable]
+                + metadata_weight * text_metadata_scores[text_metadata_usable]
+            )
+        rankings = _top_rank_rows(scores, query_positions, k, text_candidate_groups)
         text_trials.append(
             {
                 "text_image_weight": float(text_image_weight),
+                "text_metadata_weight": float(metadata_weight),
                 **_metrics(
                     rankings,
                     query_ids,
@@ -393,6 +411,7 @@ def main():
         )
     selected_text = _best_retrieval_row(text_trials)
     text_image_weight = selected_text["text_image_weight"]
+    text_metadata_weight = selected_text["text_metadata_weight"]
 
     image_trials = []
     for image_category_bonus in np.linspace(0.0, 0.20, 9):
@@ -418,23 +437,24 @@ def main():
         )
     selected_image = _best_retrieval_row(image_trials)
 
+    derived_refinement_queries = metadata_retriever.refinement_queries_for_rows(
+        query_positions,
+        max_terms=3,
+    )
     combined_query_indices = np.flatnonzero(
-        np.asarray([bool(values) for values in query_attributes])
+        np.asarray([bool(value) for value in derived_refinement_queries])
     )
     if not len(combined_query_indices):
         raise ValueError(
-            "No validation queries contain supported attributes for combined tuning."
+            "The TF-IDF catalog index could not derive combined validation prompts."
         )
 
     # A realistic combined query uses the image for the product identity and a
     # short text prompt for refinements such as colour, pattern, or style. It
     # must not reuse the complete product name/description because that gives
     # the text branch enough identity information to ignore the image.
-    combined_query_attributes = [
-        query_attributes[index] for index in combined_query_indices
-    ]
     combined_query_texts = [
-        " ".join(values) for values in combined_query_attributes
+        derived_refinement_queries[index] for index in combined_query_indices
     ]
     combined_query_frame = queries.iloc[combined_query_indices][
         ["product_id", "image_sha256"]
@@ -445,12 +465,12 @@ def main():
         {
             "architecture": "CLIP text encoder",
             "identity": checkpoint_identity,
-            "query_policy": "attribute-only validation text",
+            "query_policy": "catalog-derived TF-IDF refinement terms",
         },
     )
     combined_text_vectors, combined_text_metadata = cached_embeddings(
         args.query_text_cache_dir,
-        "clip_finetuned_validation_attribute_queries",
+        "clip_finetuned_validation_metadata_queries",
         combined_signature,
         lambda: encode_texts(
             model,
@@ -462,7 +482,7 @@ def main():
         not args.no_cache,
     )
     combined_text_vectors = normalized(
-        combined_text_vectors, "combined attribute-text embeddings"
+        combined_text_vectors, "combined metadata-text embeddings"
     )
 
     combined_positions = query_positions[combined_query_indices]
@@ -475,7 +495,9 @@ def main():
         text_image_weight * combined_text_to_image_scores
         + (1.0 - text_image_weight) * combined_text_to_text_scores
     )
-    combined_attribute_scores = attribute_scores[combined_query_indices]
+    combined_metadata_scores, combined_metadata_usable = (
+        metadata_retriever.score_many(combined_query_texts)
+    )
     combined_query_ids = query_ids[combined_query_indices]
     combined_query_categories = query_categories[combined_query_indices]
     combined_category_evidence = [
@@ -487,12 +509,12 @@ def main():
 
     def evaluate_combined(
         image_weight,
-        attribute_weight,
+        metadata_weight,
         category_bonus,
         stage,
         eligible_for_selection=True,
     ):
-        key = (round(image_weight, 6), round(attribute_weight, 6), round(category_bonus, 6))
+        key = (round(image_weight, 6), round(metadata_weight, 6), round(category_bonus, 6))
         if key in attempted:
             return
         attempted.add(key)
@@ -500,10 +522,11 @@ def main():
             image_weight * combined_visual_scores
             + (1.0 - image_weight) * combined_text_scores
         )
-        if attribute_weight > 0.0:
-            scores = (
-                (1.0 - attribute_weight) * scores
-                + attribute_weight * combined_attribute_scores
+        if metadata_weight > 0.0 and np.any(combined_metadata_usable):
+            scores[combined_metadata_usable] = (
+                (1.0 - metadata_weight) * scores[combined_metadata_usable]
+                + metadata_weight
+                * combined_metadata_scores[combined_metadata_usable]
             )
         scores = apply_dynamic_category_bonus(
             scores,
@@ -516,7 +539,7 @@ def main():
             {
                 "stage": stage,
                 "image_weight": float(image_weight),
-                "attribute_weight": float(attribute_weight),
+                "metadata_weight": float(metadata_weight),
                 "combined_category_weight": float(category_bonus),
                 "eligible_for_selection": bool(eligible_for_selection),
                 **_metrics(
@@ -527,10 +550,10 @@ def main():
                     gallery_categories,
                     k,
                 ),
-                **_attribute_metrics(
+                **_metadata_metrics(
                     rankings,
-                    combined_attribute_scores,
-                    combined_query_attributes,
+                    combined_metadata_scores,
+                    combined_metadata_usable,
                     k,
                 ),
             }
@@ -566,7 +589,7 @@ def main():
             lower=args.min_combined_image_weight,
             upper=args.max_combined_image_weight,
         ),
-        _values_around(coarse_best["attribute_weight"], 0.10, 0.05, upper=0.60),
+        _values_around(coarse_best["metadata_weight"], 0.10, 0.05, upper=0.60),
         _values_around(coarse_best["combined_category_weight"], 0.05, 0.025, upper=0.30),
     ):
         evaluate_combined(*values, stage="refined")
@@ -584,8 +607,9 @@ def main():
 
     weights = {
         "TEXT_RETRIEVAL_IMAGE_WEIGHT": round(text_image_weight, 6),
+        "TEXT_METADATA_WEIGHT": round(text_metadata_weight, 6),
         "COMBINED_IMAGE_WEIGHT": round(selected_combined["image_weight"], 6),
-        "COMBINED_ATTRIBUTE_WEIGHT": round(selected_combined["attribute_weight"], 6),
+        "COMBINED_METADATA_WEIGHT": round(selected_combined["metadata_weight"], 6),
         "COMBINED_CATEGORY_WEIGHT": round(
             selected_combined["combined_category_weight"], 6
         ),
@@ -599,22 +623,27 @@ def main():
         ),
     }
     report = {
-        "version": 4,
+        "version": 5,
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "selection_split": "validation",
         "objective_k": k,
         "selection_policy": {
-            "text_and_image_only": "maximize category-macro F1, then query-macro F1",
+            "text_and_image_only": (
+                "maximize category-macro F1, then query-macro F1; text-only "
+                "also selects its catalog-derived TF-IDF metadata weight"
+            ),
             "combined": (
-                "use attribute-only validation text, keep the image weight within "
+                "use short catalog-derived validation text, keep the image weight within "
                 f"[{args.min_combined_image_weight:.2f}, "
-                f"{args.max_combined_image_weight:.2f}], and maximize attribute "
-                "match among candidates within "
+                f"{args.max_combined_image_weight:.2f}], use catalog-derived TF-IDF "
+                "metadata for lexical refinement, and maximize metadata "
+                "coverage among candidates within "
                 f"{args.max_macro_f1_drop:.4f} absolute category-macro F1 of the best"
             ),
         },
         "combined_query_policy": (
-            "attribute-only text; the image supplies product and category context"
+            "short TF-IDF terms derived from the validation product metadata; "
+            "the image supplies product and category context"
         ),
         "combined_image_weight_bounds": {
             "minimum": args.min_combined_image_weight,
@@ -632,6 +661,8 @@ def main():
             "dataset_sha256": experiment["dataset_sha256"],
             "training_json_sha256": file_sha256(training_path),
             "catalog_sha256": file_sha256(args.catalog_csv),
+            "metadata_index_dir": portable_path(args.metadata_index_dir),
+            "metadata_index_features": metadata_retriever.features,
             "validation_queries": len(queries),
             "combined_validation_queries": len(combined_query_indices),
             "gallery_size": len(gallery),

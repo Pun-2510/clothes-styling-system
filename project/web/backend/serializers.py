@@ -20,10 +20,13 @@ def serialize_text_results(
 
     for _, row in results.iterrows():
         text_score = row.get("text_similarity")
+        metadata_match = optional_float(row.get("metadata_match"))
 
         reason_codes = ["text_image_match"]
         if text_score is not None and not pd.isna(text_score):
             reason_codes.append("text_description_match")
+        if metadata_match is not None and metadata_match > 0:
+            reason_codes.append("metadata_match")
 
         items.append(
             ProductRecommendation(
@@ -46,6 +49,7 @@ def serialize_text_results(
                     if text_score is None or pd.isna(text_score)
                     else float(text_score)
                 ),
+                metadata_match=metadata_match,
                 final_score=float(row["similarity"]),
                 reason_codes=reason_codes,
             )
@@ -105,11 +109,11 @@ def serialize_combined_results(
     items = []
 
     for _, row in results.iterrows():
-        attribute_match = optional_float(row.get("attribute_match"))
+        metadata_match = optional_float(row.get("metadata_match"))
         category_match = optional_float(row.get("category_match"))
         reason_codes = ["visual_similarity", "text_query_match"]
-        if attribute_match is not None and attribute_match > 0:
-            reason_codes.append("attribute_match")
+        if metadata_match is not None and metadata_match > 0:
+            reason_codes.append("metadata_match")
         if category_match is not None and category_match > 0:
             reason_codes.append("category_evidence")
 
@@ -126,7 +130,7 @@ def serialize_combined_results(
                     row.get("text_to_text_similarity")
                 ),
                 text_score=float(row["text_similarity"]),
-                attribute_match=attribute_match,
+                metadata_match=metadata_match,
                 category_match=category_match,
                 final_score=float(row["similarity"]),
                 reason_codes=reason_codes,

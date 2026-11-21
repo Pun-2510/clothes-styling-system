@@ -282,11 +282,11 @@ def main():
     sys.path.insert(0, str(PROJECT))
     from src.clip_data import file_sha256
     from src.clip_runtime import model_identity, same_model_identity
-    from src.query_signals import (
+    from experiments.model_comparison.attribute_evaluation import (
         ATTRIBUTE_RULES,
-        explicit_categories_from_text,
         extract_query_attributes,
     )
+    from src.query_signals import explicit_categories_from_text
 
     _, queries, gallery, query_positions, experiment, training, training_path = (
         _load_and_validate_data(args, file_sha256)

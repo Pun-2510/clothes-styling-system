@@ -6,7 +6,7 @@ const COPY = {
     eyebrow: 'ONLINE RETRIEVAL PIPELINE',
     title: 'Ba luồng truy vấn trong cùng một hệ thống',
     subtitle: 'Chọn một loại truy vấn để xem cách hệ thống mã hóa, tính điểm và sử dụng category evidence trước khi trả về Top-K.',
-    serving: ['REACT', 'NGINX', 'BACKEND ×2', 'FINE-TUNED CLIP', 'CATALOG 5K'],
+    serving: ['REACT', 'NGINX', 'BACKEND ×2', 'FINE-TUNED CLIP', 'CATALOG INDEX'],
     modes: {
       image: {
         tab: 'IMAGE QUERY',
@@ -27,13 +27,13 @@ const COPY = {
       },
       text: {
         tab: 'TEXT QUERY',
-        summary: 'Văn bản tạo cả text-to-image và text-to-text score; category chỉ lọc cứng khi truy vấn nêu rõ đúng một loại sản phẩm.',
+        summary: 'Văn bản tạo text-to-image và text-to-text score; TF-IDF bổ sung mức khớp với tên và mô tả catalog. Category chỉ giới hạn ứng viên khi truy vấn nêu rõ đúng một loại sản phẩm.',
         steps: [
           ['01', 'NORMALIZE', 'Dịch VI → EN khi cần'],
           ['02', 'CLIP TEXT', 'Tạo text embedding'],
           ['03', 'DUAL SCORES', 'Tính STI và STT'],
-          ['04', 'TEXT EVIDENCE', 'Kiểm tra category và alias'],
-          ['05', 'ROUTING TOP-K', 'Chọn candidate pool rồi xếp hạng'],
+          ['04', 'TF-IDF METADATA', 'Khớp từ khóa với tên và mô tả'],
+          ['05', 'CATEGORY + TOP-K', 'Chọn candidate pool rồi xếp hạng'],
         ],
         evidenceTitle: 'Ba nhánh xử lý category từ text',
         evidence: [
@@ -49,7 +49,7 @@ const COPY = {
           ['01', 'DUAL INPUT', 'Ảnh đã crop + mô tả'],
           ['02', 'CLIP ENCODERS', 'Vision và text embeddings'],
           ['03', 'RAW FUSION', 'Kết hợp SII với ST'],
-          ['04', 'ATTRIBUTES', 'Màu sắc và họa tiết A(i)'],
+          ['04', 'TF-IDF METADATA', 'Tinh chỉnh bằng tên và mô tả catalog'],
           ['05', 'CATEGORY ROUTE', 'Text rõ: hard · ảnh: dynamic Top-2'],
         ],
         evidenceTitle: 'Kết hợp category evidence từ ảnh và văn bản',
@@ -65,7 +65,7 @@ const COPY = {
     eyebrow: 'ONLINE RETRIEVAL PIPELINE',
     title: 'Three query paths in one retrieval system',
     subtitle: 'Select a query type to inspect how the system encodes, scores, and applies category evidence before returning Top-K.',
-    serving: ['REACT', 'NGINX', 'BACKEND ×2', 'FINE-TUNED CLIP', 'CATALOG 5K'],
+    serving: ['REACT', 'NGINX', 'BACKEND ×2', 'FINE-TUNED CLIP', 'CATALOG INDEX'],
     modes: {
       image: {
         tab: 'IMAGE QUERY',
@@ -86,13 +86,13 @@ const COPY = {
       },
       text: {
         tab: 'TEXT QUERY',
-        summary: 'Text produces both text-to-image and text-to-text scores; hard filtering is used only when exactly one product category is explicitly identified.',
+        summary: 'Text produces text-to-image and text-to-text scores; TF-IDF adds lexical matching against catalog names and descriptions. Candidate restriction is used only when exactly one category is explicit.',
         steps: [
           ['01', 'NORMALIZE', 'Translate VI → EN when needed'],
           ['02', 'CLIP TEXT', 'Create text embedding'],
           ['03', 'DUAL SCORES', 'Calculate STI and STT'],
-          ['04', 'TEXT EVIDENCE', 'Check category names and aliases'],
-          ['05', 'ROUTING TOP-K', 'Choose candidate pool and rank'],
+          ['04', 'TF-IDF METADATA', 'Match catalog names and descriptions'],
+          ['05', 'CATEGORY + TOP-K', 'Choose candidate pool and rank'],
         ],
         evidenceTitle: 'Three text category routes',
         evidence: [
@@ -108,7 +108,7 @@ const COPY = {
           ['01', 'DUAL INPUT', 'Cropped image + description'],
           ['02', 'CLIP ENCODERS', 'Vision and text embeddings'],
           ['03', 'RAW FUSION', 'Combine SII with ST'],
-          ['04', 'ATTRIBUTES', 'Colour and pattern A(i)'],
+          ['04', 'TF-IDF METADATA', 'Refine with catalog names and descriptions'],
           ['05', 'CATEGORY ROUTE', 'Explicit text: hard · image: dynamic Top-2'],
         ],
         evidenceTitle: 'Combine image and text category evidence',
@@ -127,9 +127,9 @@ function Formula({ mode }) {
     return <><i>S</i><sub>image</sub>(i) = <i>S</i><sub>II</sub>(i) + λ<sub>I</sub> · g(h) · w(c<sub>i</sub>)</>
   }
   if (mode === 'text') {
-    return <><i>S</i><sub>T</sub>(i) = β<i>S</i><sub>TI</sub>(i) + (1 − β)<i>S</i><sub>TT</sub>(i)</>
+    return <><i>S</i><sub>text</sub>(i) = (1 − λ<sub>M</sub>)<i>S</i><sub>T</sub>(i) + λ<sub>M</sub><i>S</i><sub>M</sub>(i)</>
   }
-  return <><i>S</i><sub>base</sub>(i) = ω<sub>I</sub><i>S</i><sub>II</sub>(i) + (1 − ω<sub>I</sub>)<i>S</i><sub>T</sub>(i)</>
+  return <><i>S</i><sub>meta</sub>(i) = (1 − λ<sub>M</sub>)<i>S</i><sub>base</sub>(i) + λ<sub>M</sub><i>S</i><sub>M</sub>(i)</>
 }
 
 export default function RetrievalPipelinePanel() {

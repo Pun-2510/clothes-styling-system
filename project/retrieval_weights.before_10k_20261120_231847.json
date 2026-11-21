@@ -1,0 +1,737 @@
+{
+  "version": 4,
+  "created_utc": "2026-11-10T21:07:40.309678+00:00",
+  "selection_split": "validation",
+  "objective_k": 10,
+  "selection_policy": {
+    "text_and_image_only": "maximize category-macro F1, then query-macro F1",
+    "combined": "use attribute-only validation text, keep the image weight within [0.20, 0.80], and maximize attribute match among candidates within 0.0200 absolute category-macro F1 of the best"
+  },
+  "combined_query_policy": "attribute-only text; the image supplies product and category context",
+  "combined_image_weight_bounds": {
+    "minimum": 0.2,
+    "maximum": 0.8
+  },
+  "weights": {
+    "TEXT_RETRIEVAL_IMAGE_WEIGHT": 0.5,
+    "COMBINED_IMAGE_WEIGHT": 0.7,
+    "COMBINED_ATTRIBUTE_WEIGHT": 0.0,
+    "COMBINED_CATEGORY_WEIGHT": 0.15,
+    "CATEGORY_BONUS": 0.2,
+    "CATEGORY_PROTOTYPE_WEIGHT": 1.0,
+    "CATEGORY_RELATION_NEIGHBORS": 5,
+    "RELATED_TOP1_BONUS_FACTOR": 0.5,
+    "RELATED_TOP2_BONUS_FACTOR": 0.2,
+    "UNRELATED_TOP1_BONUS_FACTOR": 0.1
+  },
+  "selected_metrics": {
+    "text_only": {
+      "text_image_weight": 0.5,
+      "precision": 0.6943600867678955,
+      "recall": 0.17011215013335595,
+      "f1": 0.23644463001133703,
+      "category_macro_precision": 0.6418900075428052,
+      "category_macro_recall": 0.3146729858815657,
+      "category_macro_f1": 0.3734527657001287,
+      "evaluated_queries": 461,
+      "skipped_queries": 0,
+      "selected": true
+    },
+    "image_only": {
+      "image_category_bonus": 0.2,
+      "precision": 0.6060737527114964,
+      "recall": 0.1356137802828688,
+      "f1": 0.18901329275514014,
+      "category_macro_precision": 0.48929354316860924,
+      "category_macro_recall": 0.23141604096859852,
+      "category_macro_f1": 0.2654092436439902,
+      "evaluated_queries": 461,
+      "skipped_queries": 0,
+      "selected": true
+    },
+    "combined": {
+      "stage": "coarse",
+      "image_weight": 0.7000000000000002,
+      "attribute_weight": 0.0,
+      "combined_category_weight": 0.15000000000000002,
+      "eligible_for_selection": true,
+      "precision": 0.5773631840796026,
+      "recall": 0.12115683401958763,
+      "f1": 0.1697292195611816,
+      "category_macro_precision": 0.46384109940671026,
+      "category_macro_recall": 0.2125631677201568,
+      "category_macro_f1": 0.24597602380521602,
+      "evaluated_queries": 402,
+      "skipped_queries": 0,
+      "attribute_queries": 402,
+      "mean_attribute_match": 0.5528689914971442,
+      "all_attributes_match_rate": 0.39427860696517414,
+      "selected": true
+    }
+  },
+  "provenance": {
+    "run_dir": "runs/clip_finetune_cpu_small",
+    "catalog_csv": "data/processed/products.csv",
+    "dataset_sha256": "1c551664b11adeea850399255b85164cb2aeb385ac2ac53749aef0cba664376a",
+    "training_json_sha256": "84110670c62077689507034619ad509f8ca9b01b454255abd8009738a532b0e3",
+    "catalog_sha256": "0257c37cbb8f73ef7ab95d39268c67f5c74043215de3523eaf7bc6e700b0ec65",
+    "validation_queries": 461,
+    "combined_validation_queries": 402,
+    "gallery_size": 5000,
+    "combined_query_text_embeddings": {
+      "architecture": "CLIP text encoder",
+      "embedding_dimension": 512,
+      "encoding_seconds": 8.597391600022092
+    },
+    "category_prototypes": {
+      "architecture": "CLIP text encoder",
+      "embedding_dimension": 512,
+      "encoding_seconds": 3.931188399961684
+    },
+    "category_relation_graph": {
+      "Accessory Gift Set": [
+        "Beauty Accessory",
+        "Free Gifts",
+        "Fragrance Gift Set",
+        "Travel Accessory",
+        "Jewellery Set"
+      ],
+      "Baby Dolls": [],
+      "Backpacks": [
+        "Rucksacks",
+        "Laptop Bag",
+        "Handbags",
+        "Trolley Bag"
+      ],
+      "Bangle": [
+        "Bracelet",
+        "Ring",
+        "Wristbands",
+        "Watches"
+      ],
+      "Basketballs": [
+        "Footballs"
+      ],
+      "Bath Robe": [
+        "Robe"
+      ],
+      "Beauty Accessory": [
+        "Travel Accessory",
+        "Accessory Gift Set",
+        "Shoe Accessories",
+        "Free Gifts",
+        "Hair Accessory"
+      ],
+      "Belts": [
+        "Wristbands",
+        "Ties",
+        "Waist Pouch"
+      ],
+      "Blazers": [
+        "Jackets"
+      ],
+      "Body Lotion": [
+        "Body Wash and Scrub",
+        "Face Serum and Gel",
+        "Deodorant"
+      ],
+      "Body Wash and Scrub": [
+        "Face Wash and Cleanser",
+        "Face Scrub and Exfoliator",
+        "Body Lotion",
+        "Perfume and Body Mist",
+        "Makeup Remover"
+      ],
+      "Booties": [
+        "Heels",
+        "Socks"
+      ],
+      "Boxers": [
+        "Shorts",
+        "Briefs",
+        "Lounge Shorts"
+      ],
+      "Bra": [
+        "Briefs",
+        "Swimwear"
+      ],
+      "Bracelet": [
+        "Bangle",
+        "Wristbands",
+        "Ring",
+        "Watches"
+      ],
+      "Briefs": [
+        "Shorts",
+        "Boxers",
+        "Waist Pouch",
+        "Bra"
+      ],
+      "Camisoles": [
+        "Tops",
+        "Clothing Set",
+        "Free Gifts",
+        "Compact"
+      ],
+      "Capris": [
+        "Trousers",
+        "Shorts",
+        "Jeggings",
+        "Leggings"
+      ],
+      "Caps": [
+        "Hat"
+      ],
+      "Casual Shoes": [
+        "Formal Shoes",
+        "Sports Shoes",
+        "Heels",
+        "Sports Sandals",
+        "Sandals"
+      ],
+      "Churidar": [
+        "Compact",
+        "Patiala",
+        "Kurtis"
+      ],
+      "Clothing Set": [
+        "Free Gifts",
+        "Shirts",
+        "Tops",
+        "Camisoles",
+        "Dresses"
+      ],
+      "Clutches": [
+        "Handbags",
+        "Wallets",
+        "Waist Pouch",
+        "Tablet Sleeve"
+      ],
+      "Compact": [
+        "Free Gifts",
+        "Camisoles",
+        "Ipad",
+        "Churidar",
+        "Flats"
+      ],
+      "Concealer": [
+        "Eyeshadow",
+        "Highlighter and Blush"
+      ],
+      "Cufflinks": [
+        "Ties and Cufflinks"
+      ],
+      "Cushion Covers": [],
+      "Deodorant": [
+        "Body Lotion",
+        "Sunscreen"
+      ],
+      "Dresses": [
+        "Clothing Set"
+      ],
+      "Duffel Bag": [
+        "Trolley Bag",
+        "Messenger Bag",
+        "Rucksacks"
+      ],
+      "Dupatta": [
+        "Salwar and Dupatta",
+        "Sarees",
+        "Salwar",
+        "Stoles",
+        "Scarves"
+      ],
+      "Earrings": [
+        "Jewellery Set",
+        "Pendant",
+        "Necklace and Chains",
+        "Hair Accessory"
+      ],
+      "Eye Cream": [
+        "Face Moisturisers",
+        "Lip Care",
+        "Face Serum and Gel"
+      ],
+      "Eyeshadow": [
+        "Highlighter and Blush",
+        "Concealer",
+        "Makeup Remover"
+      ],
+      "Face Moisturisers": [
+        "Lip Care",
+        "Face Serum and Gel",
+        "Face Wash and Cleanser",
+        "Lip Plumper",
+        "Eye Cream"
+      ],
+      "Face Scrub and Exfoliator": [
+        "Face Wash and Cleanser",
+        "Body Wash and Scrub",
+        "Mask and Peel"
+      ],
+      "Face Serum and Gel": [
+        "Face Moisturisers",
+        "Face Wash and Cleanser",
+        "Eye Cream",
+        "Body Lotion"
+      ],
+      "Face Wash and Cleanser": [
+        "Body Wash and Scrub",
+        "Face Scrub and Exfoliator",
+        "Face Moisturisers",
+        "Face Serum and Gel",
+        "Makeup Remover"
+      ],
+      "Flats": [
+        "Formal Shoes",
+        "Compact"
+      ],
+      "Flip Flops": [
+        "Sandals",
+        "Sports Sandals"
+      ],
+      "Footballs": [
+        "Basketballs"
+      ],
+      "Formal Shoes": [
+        "Casual Shoes",
+        "Heels",
+        "Sports Shoes",
+        "Flats"
+      ],
+      "Foundation and Primer": [],
+      "Fragrance Gift Set": [
+        "Accessory Gift Set",
+        "Perfume and Body Mist"
+      ],
+      "Free Gifts": [
+        "Compact",
+        "Clothing Set",
+        "Accessory Gift Set",
+        "Beauty Accessory",
+        "Camisoles"
+      ],
+      "Gloves": [],
+      "Hair Accessory": [
+        "Headband",
+        "Beauty Accessory",
+        "Earrings",
+        "Hair Colour"
+      ],
+      "Hair Colour": [
+        "Hair Accessory"
+      ],
+      "Handbags": [
+        "Laptop Bag",
+        "Backpacks",
+        "Mobile Pouch",
+        "Clutches"
+      ],
+      "Hat": [
+        "Headband",
+        "Caps"
+      ],
+      "Headband": [
+        "Hair Accessory",
+        "Wristbands",
+        "Hat"
+      ],
+      "Heels": [
+        "Formal Shoes",
+        "Casual Shoes",
+        "Sandals",
+        "Booties",
+        "Sports Shoes"
+      ],
+      "Highlighter and Blush": [
+        "Eyeshadow",
+        "Concealer"
+      ],
+      "Innerwear Vests": [
+        "Swimwear",
+        "Shapewear"
+      ],
+      "Ipad": [
+        "Compact"
+      ],
+      "Jackets": [
+        "Blazers",
+        "Rain Jacket",
+        "Sweatshirts",
+        "Sweaters"
+      ],
+      "Jeans": [
+        "Jeggings"
+      ],
+      "Jeggings": [
+        "Leggings",
+        "Jeans",
+        "Trousers",
+        "Capris",
+        "Tights"
+      ],
+      "Jewellery Set": [
+        "Accessory Gift Set",
+        "Necklace and Chains",
+        "Earrings"
+      ],
+      "Jumpsuit": [
+        "Rompers"
+      ],
+      "Kajal and Eyeliner": [],
+      "Key chain": [
+        "Pendant"
+      ],
+      "Kurta Sets": [
+        "Kurtas",
+        "Salwar",
+        "Salwar and Dupatta"
+      ],
+      "Kurtas": [
+        "Kurta Sets",
+        "Tunics"
+      ],
+      "Kurtis": [
+        "Churidar"
+      ],
+      "Laptop Bag": [
+        "Messenger Bag",
+        "Handbags",
+        "Trolley Bag",
+        "Backpacks"
+      ],
+      "Leggings": [
+        "Tights",
+        "Jeggings",
+        "Trousers",
+        "Capris",
+        "Lounge Pants"
+      ],
+      "Lehenga Choli": [
+        "Salwar and Dupatta"
+      ],
+      "Lip Care": [
+        "Lip Plumper",
+        "Face Moisturisers",
+        "Lip Gloss",
+        "Lipstick",
+        "Eye Cream"
+      ],
+      "Lip Gloss": [
+        "Lip Care",
+        "Lip Plumper",
+        "Lipstick",
+        "Lip Liner"
+      ],
+      "Lip Liner": [
+        "Lip Plumper",
+        "Lipstick",
+        "Lip Gloss"
+      ],
+      "Lip Plumper": [
+        "Lip Care",
+        "Lip Liner",
+        "Lipstick",
+        "Face Moisturisers",
+        "Lip Gloss"
+      ],
+      "Lipstick": [
+        "Lip Plumper",
+        "Lip Care",
+        "Lip Liner",
+        "Lip Gloss",
+        "Nail Polish"
+      ],
+      "Lounge Pants": [
+        "Trousers",
+        "Track Pants",
+        "Rain Trousers",
+        "Leggings",
+        "Lounge Shorts"
+      ],
+      "Lounge Shorts": [
+        "Shorts",
+        "Lounge Pants",
+        "Boxers"
+      ],
+      "Lounge Tshirts": [
+        "Tshirts",
+        "Shirts"
+      ],
+      "Makeup Remover": [
+        "Face Wash and Cleanser",
+        "Body Wash and Scrub",
+        "Eyeshadow"
+      ],
+      "Mascara": [],
+      "Mask and Peel": [
+        "Face Scrub and Exfoliator"
+      ],
+      "Mens Grooming Kit": [],
+      "Messenger Bag": [
+        "Laptop Bag",
+        "Trolley Bag",
+        "Duffel Bag"
+      ],
+      "Mobile Pouch": [
+        "Waist Pouch",
+        "Travel Accessory",
+        "Tablet Sleeve",
+        "Handbags",
+        "Wallets"
+      ],
+      "Mufflers": [],
+      "Nail Essentials": [
+        "Nail Polish"
+      ],
+      "Nail Polish": [
+        "Nail Essentials",
+        "Lipstick"
+      ],
+      "Necklace and Chains": [
+        "Pendant",
+        "Jewellery Set",
+        "Earrings"
+      ],
+      "Nehru Jackets": [
+        "Waistcoat"
+      ],
+      "Night suits": [],
+      "Nightdress": [],
+      "Patiala": [
+        "Churidar",
+        "Salwar"
+      ],
+      "Pendant": [
+        "Necklace and Chains",
+        "Key chain",
+        "Earrings"
+      ],
+      "Perfume and Body Mist": [
+        "Fragrance Gift Set",
+        "Body Wash and Scrub"
+      ],
+      "Rain Jacket": [
+        "Jackets"
+      ],
+      "Rain Trousers": [
+        "Trousers",
+        "Lounge Pants",
+        "Track Pants"
+      ],
+      "Ring": [
+        "Bracelet",
+        "Bangle",
+        "Watches"
+      ],
+      "Robe": [
+        "Bath Robe",
+        "Rompers"
+      ],
+      "Rompers": [
+        "Jumpsuit",
+        "Robe"
+      ],
+      "Rucksacks": [
+        "Backpacks",
+        "Duffel Bag"
+      ],
+      "Salwar": [
+        "Salwar and Dupatta",
+        "Sarees",
+        "Dupatta",
+        "Kurta Sets",
+        "Patiala"
+      ],
+      "Salwar and Dupatta": [
+        "Salwar",
+        "Dupatta",
+        "Sarees",
+        "Lehenga Choli",
+        "Kurta Sets"
+      ],
+      "Sandals": [
+        "Sports Sandals",
+        "Heels",
+        "Flip Flops",
+        "Casual Shoes"
+      ],
+      "Sarees": [
+        "Dupatta",
+        "Salwar and Dupatta",
+        "Salwar"
+      ],
+      "Scarves": [
+        "Stoles",
+        "Ties",
+        "Dupatta"
+      ],
+      "Shapewear": [
+        "Innerwear Vests"
+      ],
+      "Shirts": [
+        "Tshirts",
+        "Lounge Tshirts",
+        "Clothing Set",
+        "Tops"
+      ],
+      "Shoe Accessories": [
+        "Beauty Accessory",
+        "Travel Accessory"
+      ],
+      "Shoe Laces": [],
+      "Shorts": [
+        "Lounge Shorts",
+        "Briefs",
+        "Skirts",
+        "Capris",
+        "Boxers"
+      ],
+      "Shrug": [],
+      "Skirts": [
+        "Shorts"
+      ],
+      "Socks": [
+        "Stockings",
+        "Booties",
+        "Tights"
+      ],
+      "Sports Sandals": [
+        "Sandals",
+        "Sports Shoes",
+        "Casual Shoes",
+        "Flip Flops"
+      ],
+      "Sports Shoes": [
+        "Casual Shoes",
+        "Formal Shoes",
+        "Heels",
+        "Sports Sandals"
+      ],
+      "Stockings": [
+        "Socks",
+        "Tights"
+      ],
+      "Stoles": [
+        "Scarves",
+        "Ties",
+        "Dupatta"
+      ],
+      "Sunglasses": [],
+      "Sunscreen": [
+        "Deodorant"
+      ],
+      "Suspenders": [
+        "Waistcoat"
+      ],
+      "Sweaters": [
+        "Sweatshirts",
+        "Jackets",
+        "Tracksuits"
+      ],
+      "Sweatshirts": [
+        "Sweaters",
+        "Jackets",
+        "Tracksuits"
+      ],
+      "Swimwear": [
+        "Bra",
+        "Innerwear Vests"
+      ],
+      "Tablet Sleeve": [
+        "Mobile Pouch",
+        "Wallets",
+        "Clutches"
+      ],
+      "Ties": [
+        "Ties and Cufflinks",
+        "Belts",
+        "Scarves",
+        "Stoles"
+      ],
+      "Ties and Cufflinks": [
+        "Ties",
+        "Cufflinks"
+      ],
+      "Tights": [
+        "Leggings",
+        "Stockings",
+        "Jeggings",
+        "Socks"
+      ],
+      "Toner": [],
+      "Tops": [
+        "Camisoles",
+        "Clothing Set",
+        "Shirts"
+      ],
+      "Track Pants": [
+        "Lounge Pants",
+        "Tracksuits",
+        "Rain Trousers"
+      ],
+      "Tracksuits": [
+        "Track Pants",
+        "Sweatshirts",
+        "Sweaters"
+      ],
+      "Travel Accessory": [
+        "Beauty Accessory",
+        "Accessory Gift Set",
+        "Shoe Accessories",
+        "Mobile Pouch"
+      ],
+      "Trolley Bag": [
+        "Laptop Bag",
+        "Duffel Bag",
+        "Messenger Bag",
+        "Backpacks"
+      ],
+      "Trousers": [
+        "Rain Trousers",
+        "Lounge Pants",
+        "Capris",
+        "Leggings",
+        "Jeggings"
+      ],
+      "Trunk": [],
+      "Tshirts": [
+        "Shirts",
+        "Lounge Tshirts"
+      ],
+      "Tunics": [
+        "Kurtas"
+      ],
+      "Umbrellas": [],
+      "Waist Pouch": [
+        "Mobile Pouch",
+        "Briefs",
+        "Clutches",
+        "Belts"
+      ],
+      "Waistcoat": [
+        "Nehru Jackets",
+        "Suspenders"
+      ],
+      "Wallets": [
+        "Mobile Pouch",
+        "Clutches",
+        "Tablet Sleeve"
+      ],
+      "Watches": [
+        "Bracelet",
+        "Wristbands",
+        "Ring",
+        "Bangle"
+      ],
+      "Water Bottle": [],
+      "Wristbands": [
+        "Bracelet",
+        "Bangle",
+        "Watches",
+        "Belts",
+        "Headband"
+      ]
+    }
+  }
+}

@@ -77,6 +77,7 @@ class ProductRecommendation(BaseModel):
     audience: str | None = None
     text_to_image_score: float
     text_to_text_score: float | None
+    metadata_match: float | None = None
     final_score: float
     reason_codes: list[str] = Field(default_factory=list)
 
@@ -152,7 +153,7 @@ class CombinedProductRecommendation(BaseModel):
     text_to_image_score: float
     text_to_text_score: float | None
     text_score: float
-    attribute_match: float | None = None
+    metadata_match: float | None = None
     category_match: float | None = None
     final_score: float
     reason_codes: list[str] = Field(default_factory=list)

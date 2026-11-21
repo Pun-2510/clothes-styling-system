@@ -45,8 +45,10 @@ function TextEquation() {
   return (
     <math display="block" aria-label="Text-only retrieval score">
       <mrow>
-        <Score index="T" /><mo>=</mo><mi>β</mi><mo>·</mo><Score index="TI" /><mo>+</mo>
-        <mo>(</mo><mn>1</mn><mo>−</mo><mi>β</mi><mo>)</mo><mo>·</mo><Score index="TT" />
+        <Score index="T" /><mo>=</mo><mo>(</mo><mn>1</mn><mo>−</mo><Subscript symbol="λ" index="M" /><mo>)</mo><mo>·</mo>
+        <mo>[</mo><mi>β</mi><mo>·</mo><Score index="TI" /><mo>+</mo>
+        <mo>(</mo><mn>1</mn><mo>−</mo><mi>β</mi><mo>)</mo><mo>·</mo><Score index="TT" /><mo>]</mo>
+        <mo>+</mo><Subscript symbol="λ" index="M" /><mo>·</mo><Score index="M" />
       </mrow>
     </math>
   )
@@ -63,13 +65,13 @@ function CombinedEquation() {
       </math>
       <math display="block">
         <mrow>
-          <Score index="attr" /><mo>=</mo><mo>(</mo><mn>1</mn><mo>−</mo><Subscript symbol="ω" index="A" /><mo>)</mo><mo>·</mo>
-          <Score index="base" /><mo>+</mo><Subscript symbol="ω" index="A" /><mo>·</mo><mi>A</mi>
+          <Score index="meta" /><mo>=</mo><mo>(</mo><mn>1</mn><mo>−</mo><Subscript symbol="λ" index="M" /><mo>)</mo><mo>·</mo>
+          <Score index="base" /><mo>+</mo><Subscript symbol="λ" index="M" /><mo>·</mo><Score index="M" />
         </mrow>
       </math>
       <math display="block">
         <mrow>
-          <Score index="final" /><mo>=</mo><Score index="attr" /><mo>+</mo><Subscript symbol="λ" index="C" /><mo>·</mo>
+          <Score index="final" /><mo>=</mo><Score index="meta" /><mo>+</mo><Subscript symbol="λ" index="C" /><mo>·</mo>
           <ConfidenceFunction /><mo>·</mo><mi>w</mi><mo>(</mo><Subscript symbol="c" index="i" /><mo>)</mo>
         </mrow>
       </math>

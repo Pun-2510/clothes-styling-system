@@ -64,21 +64,33 @@ def load_category_prototypes(
     use_cache=True,
 ):
     """Encode the same category prompts used by the recommendation backend."""
+    # Import after callers have placed PROJECT on sys.path.
+    from src.category_prompts import (
+        CATEGORY_PROMPT_TEMPLATES,
+        aggregate_category_prompt_embeddings,
+        category_prompt_ensemble,
+    )
+
     labels = [str(value) for value in categories]
-    prompts = [f"a catalog product photo of {category}" for category in labels]
+    prompt_groups = category_prompt_ensemble(labels)
+    prompts = [prompt for group in prompt_groups for prompt in group]
     frame = pd.DataFrame(
         {
-            "product_id": [f"category::{value}" for value in labels],
-            "image_sha256": [""] * len(labels),
+            "product_id": [
+                f"category::{category}::prompt::{prompt_index}"
+                for category in labels
+                for prompt_index in range(len(CATEGORY_PROMPT_TEMPLATES))
+            ],
+            "image_sha256": [""] * len(prompts),
             "evaluation_text": prompts,
         }
     )
     signature = _cache_signature(
         frame,
         {
-            "architecture": "CLIP category text prototype",
+            "architecture": "CLIP category text prompt ensemble",
             "identity": checkpoint_identity,
-            "prompt": "a catalog product photo of {category}",
+            "prompt_templates": list(CATEGORY_PROMPT_TEMPLATES),
         },
     )
     values, metadata = _cached_embeddings(
@@ -88,11 +100,11 @@ def load_category_prototypes(
         lambda: encode_clip_text(prompts, checkpoint, device, batch_size),
         use_cache,
     )
-    values = np.asarray(values, dtype=np.float32)
-    norms = np.linalg.norm(values, axis=1, keepdims=True)
-    if values.ndim != 2 or len(values) != len(labels) or np.any(norms <= 0.0):
-        raise ValueError("Invalid category prototype embeddings.")
-    return values / norms, metadata
+    prototypes = aggregate_category_prompt_embeddings(values, len(labels))
+    metadata = dict(metadata)
+    metadata["prompts_per_category"] = len(CATEGORY_PROMPT_TEMPLATES)
+    metadata["prompt_templates"] = list(CATEGORY_PROMPT_TEMPLATES)
+    return prototypes, metadata
 
 
 def build_category_evidence(

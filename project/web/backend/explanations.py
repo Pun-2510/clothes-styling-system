@@ -8,6 +8,8 @@ from src.category_ranking import category_confidence_strength
 from src.config import (
     CATEGORY_CONFIDENCE_FLOOR,
     CATEGORY_CONFIDENCE_THRESHOLD,
+    COMBINED_METADATA_WEIGHT,
+    TEXT_METADATA_WEIGHT,
 )
 
 
@@ -176,16 +178,22 @@ def build_text_explanation(
     has_text_embeddings = bool(
         getattr(recommender, "text_embeddings", None) is not None
     )
+    has_metadata = bool(getattr(recommender, "has_metadata_index", False))
+    if has_text_embeddings:
+        clip_formula = "β·S_TI + (1−β)·S_TT"
+    else:
+        clip_formula = "S_TI"
+    formula = (
+        f"S_text = (1−λ_M)[{clip_formula}] + λ_M·S_M"
+        if has_metadata
+        else f"S_text = {clip_formula}"
+    )
     return {
         "query_mode": "text",
         "ranking_policy": (
             "explicit_category_filter" if applied_category else "unrestricted"
         ),
-        "formula": (
-            "S_text = β·S_TI + (1−β)·S_TT"
-            if has_text_embeddings
-            else "S_text = S_TI"
-        ),
+        "formula": formula,
         "applied_category": applied_category,
         "category_source": "text" if applied_category else None,
         "category_route": guidance.get("status", "unrestricted"),
@@ -195,6 +203,7 @@ def build_text_explanation(
             "text_to_text": (
                 float(1.0 - image_weight) if has_text_embeddings else 0.0
             ),
+            "metadata": float(TEXT_METADATA_WEIGHT) if has_metadata else 0.0,
         },
         "category_candidates": candidates,
         "graph": build_local_category_graph(
@@ -273,13 +282,19 @@ def build_combined_explanation(
     candidates = _candidate_list([*candidate_labels, applied_category])
     image_weight = float(recommendation.get("image_weight", 0.0))
     text_weight = float(recommendation.get("text_weight", 0.0))
+    has_metadata = bool(getattr(recommender, "has_metadata_index", False))
+    combined_formula = "S_base = ω_I·S_II + (1−ω_I)·S_T; "
+    if has_metadata:
+        combined_formula += (
+            "S_meta = (1−λ_M)·S_base + λ_M·S_M; "
+            "S_final = S_meta + category evidence"
+        )
+    else:
+        combined_formula += "S_final = S_base + category evidence"
     return {
         "query_mode": "combined",
         "ranking_policy": route,
-        "formula": (
-            "S_base = ω_I·S_II + (1−ω_I)·S_T; "
-            "S_final = S_base + attribute/category evidence"
-        ),
+        "formula": combined_formula,
         "applied_category": applied_category,
         "category_source": category_source,
         "category_route": route,
@@ -289,6 +304,9 @@ def build_combined_explanation(
         "weights": {
             "image": image_weight,
             "text": text_weight,
+            "metadata": (
+                float(COMBINED_METADATA_WEIGHT) if has_metadata else 0.0
+            ),
         },
         "category_candidates": candidates,
         "graph": build_local_category_graph(

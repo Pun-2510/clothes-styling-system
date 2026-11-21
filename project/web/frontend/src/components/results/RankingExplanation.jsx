@@ -80,6 +80,7 @@ export default function RankingExplanation({ data, mode }) {
             <>
               <ScoreLine label="Text → image" value={selected.text_to_image_score} weight={weights.text_to_image} />
               <ScoreLine label="Text → text" value={selected.text_to_text_score} weight={weights.text_to_text} />
+              <ScoreLine label={t('explanation.metadataMatch')} value={selected.metadata_match} weight={weights.metadata} />
             </>
           )}
           {mode === 'image' && (
@@ -92,7 +93,7 @@ export default function RankingExplanation({ data, mode }) {
             <>
               <ScoreLine label="Image → image" value={selected.visual_similarity} weight={weights.image} />
               <ScoreLine label={t('explanation.textBranch')} value={selected.text_score} weight={weights.text} />
-              <ScoreLine label={t('explanation.attributeMatch')} value={selected.attribute_match} />
+              <ScoreLine label={t('explanation.metadataMatch')} value={selected.metadata_match} weight={weights.metadata} />
               <ScoreLine label={t('explanation.categoryEvidence')} value={selected.category_match} />
             </>
           )}
