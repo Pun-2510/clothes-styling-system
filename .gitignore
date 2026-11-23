@@ -127,3 +127,5 @@ model/experiments/mini_fashion.local.json
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+/project/retrieval_weights.json
