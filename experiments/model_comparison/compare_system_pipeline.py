@@ -38,6 +38,9 @@ from .category_runtime import (
     validate_policy_settings,
 )
 
+sys.path.insert(0, str(PROJECT))
+from src.category_ranking import apply_category_gated_metadata_refinement
+
 
 DEFAULT_FINETUNED_TEXT = PROJECT / "embeddings" / "text_embeddings.npy"
 
@@ -514,12 +517,6 @@ def main():
         + (1.0 - args.image_weight) * text_clip_scores
     )
     combined_metadata_scores = combined_base_scores.copy()
-    if args.combined_metadata_weight > 0.0 and np.any(metadata_usable):
-        combined_metadata_scores[metadata_usable] = (
-            (1.0 - args.combined_metadata_weight)
-            * combined_base_scores[metadata_usable]
-            + args.combined_metadata_weight * metadata_scores[metadata_usable]
-        )
 
     gallery_categories = gallery.category.fillna("").astype(str).to_numpy()
     query_categories = queries.category.fillna("").astype(str).to_numpy()
@@ -578,6 +575,38 @@ def main():
         routed_explicit_text_categories.append(explicit)
         applied_categories.append(applied_category)
         category_sources.append(category_source)
+
+    # Match website serving: TF-IDF can refine only categories supported by
+    # the image evidence (or one category explicitly written in text). Other
+    # products retain their raw CLIP fusion score and are not hard-filtered.
+    combined_metadata_support = np.zeros_like(
+        combined_base_scores,
+        dtype=np.float32,
+    )
+    for query_index, category_source in enumerate(category_sources):
+        if not metadata_usable[query_index]:
+            continue
+        if category_source == "text" and applied_categories[query_index]:
+            combined_metadata_support[query_index] = (
+                gallery_categories == str(applied_categories[query_index])
+            ).astype(np.float32)
+        elif category_source == "image":
+            for category, factor in category_evidence[query_index]["factors"].items():
+                combined_metadata_support[query_index] += (
+                    float(factor)
+                    * (gallery_categories == str(category)).astype(np.float32)
+                )
+
+    if (
+        args.combined_metadata_weight > 0.0
+        and np.any(combined_metadata_support > 0.0)
+    ):
+        combined_metadata_scores = apply_category_gated_metadata_refinement(
+            combined_base_scores,
+            metadata_scores,
+            combined_metadata_support,
+            args.combined_metadata_weight,
+        )
 
     image_deployed_scores = apply_dynamic_category_bonus(
         visual_scores,
@@ -656,7 +685,7 @@ def main():
             "deployed": True,
             "input": "image + text",
             "formula": (
-                "raw cosine fusion + TF-IDF metadata + explicit-text hard pool "
+                "raw cosine fusion + category-gated TF-IDF + explicit-text hard pool "
                 "or dynamic image category bonus"
             ),
         },
@@ -674,7 +703,7 @@ def main():
             "role": "TF-IDF metadata contribution",
             "deployed": False,
             "input": "image + text",
-            "formula": "raw cosine fusion + TF-IDF metadata refinement",
+            "formula": "raw cosine fusion + category-gated TF-IDF refinement",
         },
         "combined_category": {
             "comparison_group": "combined_ablation",
@@ -692,7 +721,7 @@ def main():
             "deployed": True,
             "input": "image + text",
             "formula": (
-                "raw cosine fusion + TF-IDF metadata + explicit-text hard pool "
+                "raw cosine fusion + category-gated TF-IDF + explicit-text hard pool "
                 "or dynamic image category bonus"
             ),
         },

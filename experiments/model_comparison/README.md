@@ -47,8 +47,9 @@ Tất cả lệnh trong tài liệu này chạy từ thư mục gốc `dacntt/`.
 - Image-only deployed.
 - Text-only deployed.
 - Combined deployed.
-- Raw CLIP fusion, TF-IDF metadata refinement, category contribution và full
-  ranking.
+- Raw CLIP fusion, category-gated TF-IDF metadata refinement, category
+  contribution và full ranking. Trong combined query, TF-IDF chỉ tăng điểm
+  cho category tương thích; ứng viên khác vẫn giữ raw CLIP score.
 
 Mọi bảng báo cáo Precision@K, Recall@K, F1@K, NDCG@K và MAP@K tại
 `K = 1, 5, 10`.
@@ -110,9 +111,12 @@ Cài các dependency của benchmark trước lần chạy đầu tiên:
 
 ## 4. Chạy lại seed 42
 
-Core comparison giữ hậu tố `map_v1`. Category-aware và System Pipeline hiện
-dùng hậu tố `tfidf_prompt_v3`. Mỗi output đều tách khỏi protocol cũ vì thư mục
-kết quả của chương trình phải rỗng trước khi chạy.
+Core comparison giữ hậu tố `map_v1` và Category-aware giữ hậu tố
+`tfidf_prompt_v3`. System Pipeline dùng hậu tố `category_gated_v4` vì combined
+TF-IDF hiện chỉ tăng điểm cho category được ảnh hỗ trợ hoặc một category được
+text nêu rõ. Trước mỗi System Pipeline run phải chọn lại weights bằng
+`src.tune_retrieval_weights`; không tái sử dụng weights `tfidf_prompt_v3`.
+Mỗi output phải dùng thư mục mới vì chương trình không ghi đè kết quả cũ.
 
 ### 4.1. Core comparison
 
@@ -159,7 +163,22 @@ kết quả của chương trình phải rỗng trước khi chạy.
 ### 4.3. System pipeline comparison
 
 ```powershell
-$weights42 = (Get-Content .\experiments\model_comparison\results\diverse_seed_42\weight_tuning_tfidf_prompt_v3\retrieval_weights.json -Raw | ConvertFrom-Json).weights
+Push-Location .\project
+.\.venv\Scripts\python.exe -m src.tune_retrieval_weights `
+  --run-dir runs/clip_finetune_diverse_seed_42 `
+  --catalog-csv data/processed_diverse/products.csv `
+  --image-embeddings embeddings_diverse_seed_42/image_embeddings.npy `
+  --text-embeddings embeddings_diverse_seed_42/text_embeddings.npy `
+  --metadata-index-dir metadata_index_diverse_seed_42 `
+  --expected-gallery-size 5000 `
+  --output-dir ../experiments/model_comparison/results/diverse_seed_42/weight_tuning_category_gated_v4 `
+  --weights-output ../experiments/model_comparison/results/diverse_seed_42/weight_tuning_category_gated_v4/retrieval_weights.json `
+  --device cpu `
+  --batch-size 16 `
+  --objective-k 10
+Pop-Location
+
+$weights42 = (Get-Content .\experiments\model_comparison\results\diverse_seed_42\weight_tuning_category_gated_v4\retrieval_weights.json -Raw | ConvertFrom-Json).weights
 
 .\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_system_pipeline `
   --run-dir .\project\runs\clip_finetune_diverse_seed_42 `
@@ -185,7 +204,7 @@ $weights42 = (Get-Content .\experiments\model_comparison\results\diverse_seed_42
   --related-top1-bonus-factor 0.5 `
   --related-top2-bonus-factor 0.2 `
   --unrelated-top1-bonus-factor 0.1 `
-  --output-dir .\experiments\model_comparison\results\diverse_seed_42\system_pipeline_tfidf_prompt_v3
+  --output-dir .\experiments\model_comparison\results\diverse_seed_42\system_pipeline_category_gated_v4
 ```
 
 ## 5. Chạy lại seed 123
@@ -235,7 +254,22 @@ $weights42 = (Get-Content .\experiments\model_comparison\results\diverse_seed_42
 ### 5.3. System pipeline comparison
 
 ```powershell
-$weights123 = (Get-Content .\experiments\model_comparison\results\diverse_seed_123\weight_tuning_tfidf_prompt_v3\retrieval_weights.json -Raw | ConvertFrom-Json).weights
+Push-Location .\project
+.\.venv\Scripts\python.exe -m src.tune_retrieval_weights `
+  --run-dir runs/clip_finetune_diverse_seed_123 `
+  --catalog-csv data/processed_diverse_seed_123/products.csv `
+  --image-embeddings embeddings_diverse_seed_123/image_embeddings.npy `
+  --text-embeddings embeddings_diverse_seed_123/text_embeddings.npy `
+  --metadata-index-dir metadata_index_diverse_seed_123 `
+  --expected-gallery-size 5000 `
+  --output-dir ../experiments/model_comparison/results/diverse_seed_123/weight_tuning_category_gated_v4 `
+  --weights-output ../experiments/model_comparison/results/diverse_seed_123/weight_tuning_category_gated_v4/retrieval_weights.json `
+  --device cpu `
+  --batch-size 16 `
+  --objective-k 10
+Pop-Location
+
+$weights123 = (Get-Content .\experiments\model_comparison\results\diverse_seed_123\weight_tuning_category_gated_v4\retrieval_weights.json -Raw | ConvertFrom-Json).weights
 
 .\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_system_pipeline `
   --run-dir .\project\runs\clip_finetune_diverse_seed_123 `
@@ -261,7 +295,7 @@ $weights123 = (Get-Content .\experiments\model_comparison\results\diverse_seed_1
   --related-top1-bonus-factor 0.5 `
   --related-top2-bonus-factor 0.2 `
   --unrelated-top1-bonus-factor 0.1 `
-  --output-dir .\experiments\model_comparison\results\diverse_seed_123\system_pipeline_tfidf_prompt_v3
+  --output-dir .\experiments\model_comparison\results\diverse_seed_123\system_pipeline_category_gated_v4
 ```
 
 ## 6. Chạy lại seed 2026
@@ -311,7 +345,22 @@ $weights123 = (Get-Content .\experiments\model_comparison\results\diverse_seed_1
 ### 6.3. System pipeline comparison
 
 ```powershell
-$weights2026 = (Get-Content .\experiments\model_comparison\results\diverse_seed_2026\weight_tuning_tfidf_prompt_v3\retrieval_weights.json -Raw | ConvertFrom-Json).weights
+Push-Location .\project
+.\.venv\Scripts\python.exe -m src.tune_retrieval_weights `
+  --run-dir runs/clip_finetune_diverse_seed_2026 `
+  --catalog-csv data/processed_diverse_seed_2026/products.csv `
+  --image-embeddings embeddings_diverse_seed_2026/image_embeddings.npy `
+  --text-embeddings embeddings_diverse_seed_2026/text_embeddings.npy `
+  --metadata-index-dir metadata_index_diverse_seed_2026 `
+  --expected-gallery-size 5000 `
+  --output-dir ../experiments/model_comparison/results/diverse_seed_2026/weight_tuning_category_gated_v4 `
+  --weights-output ../experiments/model_comparison/results/diverse_seed_2026/weight_tuning_category_gated_v4/retrieval_weights.json `
+  --device cpu `
+  --batch-size 16 `
+  --objective-k 10
+Pop-Location
+
+$weights2026 = (Get-Content .\experiments\model_comparison\results\diverse_seed_2026\weight_tuning_category_gated_v4\retrieval_weights.json -Raw | ConvertFrom-Json).weights
 
 .\project\.venv\Scripts\python.exe -m experiments.model_comparison.compare_system_pipeline `
   --run-dir .\project\runs\clip_finetune_diverse_seed_2026 `
@@ -337,7 +386,7 @@ $weights2026 = (Get-Content .\experiments\model_comparison\results\diverse_seed_
   --related-top1-bonus-factor 0.5 `
   --related-top2-bonus-factor 0.2 `
   --unrelated-top1-bonus-factor 0.1 `
-  --output-dir .\experiments\model_comparison\results\diverse_seed_2026\system_pipeline_tfidf_prompt_v3
+  --output-dir .\experiments\model_comparison\results\diverse_seed_2026\system_pipeline_category_gated_v4
 ```
 
 ## 7. Tổng hợp ba seed vừa chạy lại
@@ -369,10 +418,10 @@ $weights2026 = (Get-Content .\experiments\model_comparison\results\diverse_seed_
 ```powershell
 .\project\.venv\Scripts\python.exe -m experiments.model_comparison.aggregate_seeds `
   --inputs `
-    .\experiments\model_comparison\results\diverse_seed_42\system_pipeline_tfidf_prompt_v3 `
-    .\experiments\model_comparison\results\diverse_seed_123\system_pipeline_tfidf_prompt_v3 `
-    .\experiments\model_comparison\results\diverse_seed_2026\system_pipeline_tfidf_prompt_v3 `
-  --output-dir .\experiments\model_comparison\results\aggregate_diverse_3_seeds_tfidf_prompt_v3\system_pipeline
+    .\experiments\model_comparison\results\diverse_seed_42\system_pipeline_category_gated_v4 `
+    .\experiments\model_comparison\results\diverse_seed_123\system_pipeline_category_gated_v4 `
+    .\experiments\model_comparison\results\diverse_seed_2026\system_pipeline_category_gated_v4 `
+  --output-dir .\experiments\model_comparison\results\aggregate_diverse_3_seeds_category_gated_v4\system_pipeline
 ```
 
 `aggregate_seeds.py` chỉ đọc kết quả có sẵn; nó không prepare dataset, fine-tune,

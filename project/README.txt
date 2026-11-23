@@ -221,7 +221,7 @@ hiện trường hợp index không cùng catalog hoặc sai thứ tự dòng.
   --image-embeddings embeddings/image_embeddings.npy `
   --text-embeddings embeddings/text_embeddings.npy `
   --metadata-index-dir metadata_index `
-  --output-dir validation/weight_tuning `
+  --output-dir validation/weight_tuning_category_gated_v1 `
   --weights-output retrieval_weights.json `
   --objective-k 10 `
   --batch-size 16

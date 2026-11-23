@@ -5,9 +5,13 @@ the appendices. The model-baseline evidence was copied from:
 
 `experiments/model_comparison/results/aggregate_diverse_3_seeds_map_v1/`
 
-The current category-aware and system-pipeline evidence was copied from:
+The category-aware evidence was copied from:
 
-`experiments/model_comparison/results/aggregate_diverse_3_seeds_tfidf_prompt_v3/`
+`experiments/model_comparison/results/aggregate_diverse_3_seeds_tfidf_prompt_v3/category_aware/`
+
+The current system-pipeline evidence was copied from:
+
+`experiments/model_comparison/results/aggregate_diverse_3_seeds_category_gated_v4/system_pipeline/`
 
 The aggregation covers seeds `42`, `123`, and `2026`. Each seed uses a
 controlled 5,000-product gallery. Raw caches, embeddings, checkpoints, and
@@ -19,8 +23,11 @@ from Git.
 - `core_extended_pretrained/`: model and modality comparisons.
 - `category_aware/`: category-aware ranking comparisons using the final
   CLIP-prompt evidence and dynamic category-relation policy.
-- `system_pipeline/`: end-to-end image-only, text-only, and combined queries
-  using the final TF-IDF metadata refinement and category policy.
+- `system_pipeline/`: end-to-end image-only, text-only, combined-query, and
+  combined-ablation results from protocol `category_gated_v4`. In combined
+  retrieval, TF-IDF metadata evidence is applied only to products supported by
+  explicit text category evidence or the image-derived dynamic category
+  policy. Products outside that support retain their raw CLIP fusion score.
 
 Each group contains:
 

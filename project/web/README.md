@@ -22,6 +22,7 @@ tiền xử lý, training, sinh embedding hoặc compare khi khởi động Dock
 ```dotenv
 FASHION_CATALOG_DIR=./data/processed
 FASHION_EMBEDDINGS_DIR=./embeddings
+FASHION_METADATA_INDEX_DIR=./metadata_index
 FASHION_CHECKPOINT_DIR=./runs/clip_finetune/best
 FASHION_IMAGE_DIR=./data/data
 FASHION_RETRIEVAL_WEIGHTS_FILE=./retrieval_weights.json
@@ -39,10 +40,28 @@ Muốn thay số lượng (ví dụ 4.000), tự chạy từ `project/`:
   --csv data/processed/products.csv `
   --model runs/clip_finetune/best `
   --output-dir embeddings
+.\.venv\Scripts\python.exe -m src.build_metadata_index `
+  --catalog-csv data/processed/products.csv `
+  --output-dir metadata_index `
+  --min-df 2 `
+  --max-features 50000
+.\.venv\Scripts\python.exe -m src.tune_retrieval_weights `
+  --run-dir runs/clip_finetune `
+  --catalog-csv data/processed/products.csv `
+  --image-embeddings embeddings/image_embeddings.npy `
+  --text-embeddings embeddings/text_embeddings.npy `
+  --metadata-index-dir metadata_index `
+  --expected-gallery-size 4000 `
+  --output-dir validation/weight_tuning_4000 `
+  --weights-output retrieval_weights.json `
+  --objective-k 10 `
+  --batch-size 16
 docker compose up -d --build --force-recreate backend backend_2
 ```
 
-Hai lệnh Python ghi lại catalog/embeddings web; lưu bản sao nếu cần giữ bộ cũ.
+Các lệnh Python ghi lại catalog, embeddings, TF-IDF index và retrieval weights
+của web; lưu bản sao nếu cần giữ bộ cũ. Nếu thư mục output validation đã tồn
+tại và có dữ liệu, hãy dùng tên mới thay vì ghi đè bằng tay.
 Tạm dừng hai backend trước khi ghi đè artifact đang dùng. Sau khi ghi đè nội dung
 artifact, `up --build` có thể không tự tạo lại backend nếu image/config không đổi;
 dùng `--force-recreate` như trên hoặc restart cả hai để nạp dữ liệu mới.

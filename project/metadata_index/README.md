@@ -5,6 +5,12 @@ This directory stores the local, row-aligned TF-IDF index generated from
 ignored by Git because they must be rebuilt whenever the processed catalog
 changes.
 
+Text-only retrieval may use this score across its eligible candidates. In a
+combined image-text query, the metadata score is category-gated: only products
+in categories supported by image evidence, or one category explicitly stated
+in the text, receive the TF-IDF boost. Products outside those categories keep
+their raw CLIP fusion score.
+
 Run from `project/`:
 
 ```powershell

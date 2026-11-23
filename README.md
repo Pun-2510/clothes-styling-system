@@ -2,8 +2,12 @@
 
 Hệ thống truy xuất sản phẩm thời trang bằng ảnh, văn bản hoặc kết hợp cả hai.
 Fine-tuned CLIP tạo image/text embeddings trong cùng không gian; raw cosine
-similarity, TF-IDF metadata matching và category evidence được dùng để xếp
-hạng Top-K.
+similarity, category-gated TF-IDF metadata matching và category evidence được
+dùng để xếp hạng Top-K. Trong combined query, ảnh giữ loại sản phẩm mặc định,
+còn văn bản tinh chỉnh màu sắc hoặc đặc điểm trong các category được ảnh hỗ
+trợ. Chỉ khi text nêu rõ đúng một category thì yêu cầu tường minh đó mới được
+ưu tiên. Vì vậy, một từ chung như `black` không thể tự kéo sản phẩm khác loại
+lên đầu.
 
 ## Hai phạm vi độc lập
 
