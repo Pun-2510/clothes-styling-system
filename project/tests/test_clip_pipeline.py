@@ -668,6 +668,71 @@ class CombinedRecommendationTests(unittest.TestCase):
         self.assertAlmostEqual(matches["Shirts"], UNRELATED_TOP1_BONUS_FACTOR)
         self.assertAlmostEqual(matches["Boxers"], 0.0)
 
+    def test_combined_metadata_refines_only_image_compatible_categories(self):
+        from src.recommend import FashionRecommender
+
+        recommender = FashionRecommender.__new__(FashionRecommender)
+        recommender.products = pd.DataFrame({
+            "product_id": ["red-sock", "black-sock", "black-shoe"],
+            "product_name": ["Red Socks", "Black Socks", "Black Shoes"],
+            "category": ["Socks", "Socks", "Casual Shoes"],
+            "description": ["red", "black", "black"],
+            "image_reference": ["red.jpg", "black.jpg", "shoe.jpg"],
+        })
+        recommender.categories = ["Socks", "Casual Shoes"]
+        recommender.embeddings = np.eye(3, dtype=np.float32)
+        recommender.text_embeddings = np.eye(3, dtype=np.float32)
+        recommender.encode_image = lambda image: np.ones(3, dtype=np.float32)
+        recommender.encode_text = lambda text: np.ones(3, dtype=np.float32)
+        recommender.predict_category = Mock(return_value=(
+            "Socks",
+            0.55,
+            np.array([0.80, 0.70, 0.79], dtype=np.float32),
+        ))
+        recommender._rank_category_evidence = Mock(return_value={
+            "ranked": [("Socks", 0.30), ("Casual Shoes", 0.29)],
+        })
+        recommender.category_relation_neighbors = {
+            "Socks": (),
+            "Casual Shoes": (),
+        }
+        recommender.metadata_match_scores = Mock(return_value=(
+            np.array([0.0, 0.9, 1.0], dtype=np.float32),
+            True,
+        ))
+
+        with (
+            patch("src.recommend.COMBINED_METADATA_WEIGHT", 0.60),
+            patch("src.recommend.COMBINED_CATEGORY_WEIGHT", 0.0),
+            patch(
+                "src.recommend.cosine_similarity",
+                side_effect=[
+                    np.array([0.0, 0.5, 0.9], dtype=np.float32),
+                    np.array([0.0, 0.5, 0.9], dtype=np.float32),
+                ],
+            ),
+        ):
+            recommendation = recommender.recommend_combined(
+                image=object(),
+                text="black",
+                top_k=3,
+                image_weight=0.5,
+            )
+
+        results = recommendation["results"]
+        self.assertEqual(results.iloc[0].product_id, "black-sock")
+        self.assertGreater(
+            float(results.loc[results.product_id == "black-sock", "similarity"].iloc[0]),
+            float(results.loc[results.product_id == "black-shoe", "similarity"].iloc[0]),
+        )
+        self.assertAlmostEqual(
+            float(results.loc[results.product_id == "black-shoe", "metadata_match"].iloc[0]),
+            0.0,
+        )
+        self.assertTrue(recommendation["metadata_used"])
+        self.assertTrue(recommendation["metadata_applied"])
+        self.assertEqual(recommendation["metadata_candidate_count"], 2)
+
     def test_explicit_text_category_and_metadata_query_override_image_colour(self):
         from src.recommend import FashionRecommender
 

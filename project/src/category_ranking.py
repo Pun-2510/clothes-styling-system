@@ -23,6 +23,45 @@ def category_confidence_strength(confidence, floor, full_threshold):
     return (confidence - floor) / (full_threshold - floor)
 
 
+def apply_category_gated_metadata_refinement(
+    base_scores,
+    metadata_scores,
+    category_support,
+    metadata_weight,
+):
+    """Add lexical metadata evidence only to category-compatible products.
+
+    Combined retrieval treats the image as the product-type reference.  A
+    short text such as ``"black"`` may refine products supported by the
+    image category evidence, but it must not promote unrelated products from
+    the full catalog merely because their metadata contains the same word.
+
+    ``category_support`` may contain binary values or the dynamic category
+    factors used by the ranking policy.  Only whether support is positive is
+    used here.  Unsupported products keep their original CLIP fusion score,
+    so this remains a soft full-catalog reranking rather than a hard filter.
+    """
+    weight = float(metadata_weight)
+    if not 0.0 <= weight <= 1.0:
+        raise ValueError("metadata_weight must be between 0 and 1")
+
+    base = np.asarray(base_scores, dtype=np.float32)
+    metadata = np.asarray(metadata_scores, dtype=np.float32)
+    support = np.asarray(category_support, dtype=np.float32)
+    if base.shape != metadata.shape or base.shape != support.shape:
+        raise ValueError(
+            "base_scores, metadata_scores and category_support must align"
+        )
+
+    adjusted = base.copy()
+    if weight <= 0.0:
+        return adjusted
+
+    compatible = support > 0.0
+    adjusted[compatible] += weight * np.maximum(metadata[compatible], 0.0)
+    return adjusted
+
+
 def rank_category_candidates(scores, category_indices, top_per_class):
     """Rank categories from balanced groups of their strongest visual scores."""
     values = np.asarray(scores, dtype=np.float32)

@@ -283,10 +283,11 @@ def build_combined_explanation(
     image_weight = float(recommendation.get("image_weight", 0.0))
     text_weight = float(recommendation.get("text_weight", 0.0))
     has_metadata = bool(getattr(recommender, "has_metadata_index", False))
+    metadata_applied = bool(recommendation.get("metadata_applied", False))
     combined_formula = "S_base = ω_I·S_II + (1−ω_I)·S_T; "
-    if has_metadata:
+    if has_metadata and metadata_applied:
         combined_formula += (
-            "S_meta = (1−λ_M)·S_base + λ_M·S_M; "
+            "S_meta(i) = S_base(i) + λ_M·G(i)·S_M(i); "
             "S_final = S_meta + category evidence"
         )
     else:
@@ -305,7 +306,9 @@ def build_combined_explanation(
             "image": image_weight,
             "text": text_weight,
             "metadata": (
-                float(COMBINED_METADATA_WEIGHT) if has_metadata else 0.0
+                float(COMBINED_METADATA_WEIGHT)
+                if has_metadata and metadata_applied
+                else 0.0
             ),
         },
         "category_candidates": candidates,

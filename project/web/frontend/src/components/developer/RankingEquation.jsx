@@ -65,8 +65,10 @@ function CombinedEquation() {
       </math>
       <math display="block">
         <mrow>
-          <Score index="meta" /><mo>=</mo><mo>(</mo><mn>1</mn><mo>−</mo><Subscript symbol="λ" index="M" /><mo>)</mo><mo>·</mo>
-          <Score index="base" /><mo>+</mo><Subscript symbol="λ" index="M" /><mo>·</mo><Score index="M" />
+          <Score index="meta" /><mo>(</mo><mi>i</mi><mo>)</mo><mo>=</mo>
+          <Score index="base" /><mo>(</mo><mi>i</mi><mo>)</mo><mo>+</mo>
+          <Subscript symbol="λ" index="M" /><mo>·</mo><mi>G</mi><mo>(</mo><mi>i</mi><mo>)</mo><mo>·</mo>
+          <Score index="M" /><mo>(</mo><mi>i</mi><mo>)</mo>
         </mrow>
       </math>
       <math display="block">

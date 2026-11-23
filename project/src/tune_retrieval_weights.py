@@ -20,6 +20,7 @@ import torch
 from src.clip_data import file_sha256
 from src.clip_runtime import load_clip, model_identity, same_model_identity
 from src.config import BASE_DIR, METADATA_INDEX_DIR
+from src.category_ranking import apply_category_gated_metadata_refinement
 from src.metadata_retrieval import MetadataRetriever
 from src.query_signals import (
     explicit_categories_from_text,
@@ -82,9 +83,18 @@ def arguments():
     )
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--objective-k", type=int, default=10)
-    parser.add_argument("--max-macro-f1-drop", type=float, default=0.02)
-    parser.add_argument("--min-combined-image-weight", type=float, default=0.20)
-    parser.add_argument("--max-combined-image-weight", type=float, default=0.80)
+    parser.add_argument("--max-macro-f1-drop", type=float, default=0.005)
+    parser.add_argument("--min-combined-image-weight", type=float, default=0.60)
+    parser.add_argument("--max-combined-image-weight", type=float, default=0.85)
+    parser.add_argument(
+        "--max-combined-metadata-weight",
+        type=float,
+        default=0.30,
+        help=(
+            "Upper bound for category-gated TF-IDF refinement. The image "
+            "remains the main product-type reference in combined retrieval."
+        ),
+    )
     parser.add_argument("--category-top-per-class", type=int, default=3)
     parser.add_argument("--category-confidence-floor", type=float, default=0.50)
     parser.add_argument("--category-confidence-threshold", type=float, default=0.60)
@@ -117,6 +127,8 @@ def _validate_arguments(args):
         raise ValueError(
             "Combined image-weight bounds must satisfy 0 <= minimum < maximum <= 1."
         )
+    if not 0.0 <= args.max_combined_metadata_weight <= 1.0:
+        raise ValueError("max-combined-metadata-weight must be between 0 and 1.")
     if not (
         0.0
         <= args.category_confidence_floor
@@ -188,20 +200,52 @@ def _metrics(rankings, query_ids, query_categories, gallery_ids, gallery_categor
     }
 
 
-def _metadata_metrics(rankings, metadata_scores, usable_queries, k):
-    eligible = np.flatnonzero(np.asarray(usable_queries, dtype=bool)).tolist()
+def _metadata_metrics(
+    rankings,
+    metadata_scores,
+    usable_queries,
+    k,
+    query_categories,
+    gallery_categories,
+    category_support,
+):
+    usable = np.asarray(usable_queries, dtype=bool)
+    support = np.asarray(category_support, dtype=np.float32)
+    eligible = np.flatnonzero(usable & np.any(support > 0.0, axis=1)).tolist()
+    query_labels = np.asarray(query_categories, dtype=str)
+    gallery_labels = np.asarray(gallery_categories, dtype=str)
     mean_matches = []
     hit_rates = []
+    compatible_mean_matches = []
+    compatible_hit_rates = []
     for query_index in eligible:
         top = np.asarray(rankings[query_index], dtype=np.int64)[:k]
         if len(top):
             selected = metadata_scores[query_index, top]
             mean_matches.append(float(np.mean(selected)))
             hit_rates.append(float(np.mean(selected > 0.0)))
+            compatible = gallery_labels[top] == query_labels[query_index]
+            compatible_values = selected[compatible]
+            compatible_mean_matches.append(
+                float(np.mean(compatible_values)) if len(compatible_values) else 0.0
+            )
+            compatible_hit_rates.append(
+                float(np.mean((selected > 0.0) & compatible))
+            )
     return {
         "metadata_queries": len(eligible),
         "mean_metadata_match": float(np.mean(mean_matches)) if mean_matches else None,
         "metadata_hit_rate": float(np.mean(hit_rates)) if hit_rates else None,
+        "mean_compatible_metadata_match": (
+            float(np.mean(compatible_mean_matches))
+            if compatible_mean_matches
+            else None
+        ),
+        "compatible_metadata_hit_rate": (
+            float(np.mean(compatible_hit_rates))
+            if compatible_hit_rates
+            else None
+        ),
     }
 
 
@@ -227,8 +271,8 @@ def _best_combined_row(rows, maximum_drop):
     return max(
         eligible,
         key=lambda row: (
-            row["metadata_hit_rate"],
-            row["mean_metadata_match"],
+            row["compatible_metadata_hit_rate"],
+            row["mean_compatible_metadata_match"],
             row["category_macro_f1"],
             row["f1"],
         ),
@@ -252,13 +296,15 @@ def self_test():
     assert rankings[1].tolist() == [2]
     rows = [
         {"category_macro_f1": 0.50, "f1": 0.40, "category_macro_precision": 0.6,
-         "metadata_hit_rate": 0.40, "mean_metadata_match": 0.50},
+         "compatible_metadata_hit_rate": 0.40,
+         "mean_compatible_metadata_match": 0.50},
         {"category_macro_f1": 0.49, "f1": 0.39, "category_macro_precision": 0.6,
-         "metadata_hit_rate": 0.70, "mean_metadata_match": 0.80},
+         "compatible_metadata_hit_rate": 0.70,
+         "mean_compatible_metadata_match": 0.80},
     ]
-    assert _best_combined_row(rows, 0.02) is rows[1]
-    bounded = _values_around(0.20, 0.20, 0.05, lower=0.20, upper=0.80)
-    assert min(bounded) >= 0.20 and max(bounded) <= 0.80
+    assert _best_combined_row(rows, 0.005) is rows[0]
+    bounded = _values_around(0.60, 0.20, 0.05, lower=0.60, upper=0.85)
+    assert min(bounded) >= 0.60 and max(bounded) <= 0.85
     print("PASS: top-K ranking and metadata-aware combined-weight selection")
 
 
@@ -503,6 +549,14 @@ def main():
     combined_category_evidence = [
         category_evidence[index] for index in combined_query_indices
     ]
+    combined_category_support = apply_dynamic_category_bonus(
+        np.zeros_like(combined_visual_scores, dtype=np.float32),
+        combined_category_evidence,
+        gallery_categories,
+        1.0,
+    )
+    combined_metadata_support = combined_category_support.copy()
+    combined_metadata_support[~combined_metadata_usable] = 0.0
 
     combined_trials = []
     attempted = set()
@@ -522,11 +576,12 @@ def main():
             image_weight * combined_visual_scores
             + (1.0 - image_weight) * combined_text_scores
         )
-        if metadata_weight > 0.0 and np.any(combined_metadata_usable):
-            scores[combined_metadata_usable] = (
-                (1.0 - metadata_weight) * scores[combined_metadata_usable]
-                + metadata_weight
-                * combined_metadata_scores[combined_metadata_usable]
+        if metadata_weight > 0.0 and np.any(combined_metadata_support > 0.0):
+            scores = apply_category_gated_metadata_refinement(
+                scores,
+                combined_metadata_scores,
+                combined_metadata_support,
+                metadata_weight,
             )
         scores = apply_dynamic_category_bonus(
             scores,
@@ -555,6 +610,9 @@ def main():
                     combined_metadata_scores,
                     combined_metadata_usable,
                     k,
+                    combined_query_categories,
+                    gallery_categories,
+                    combined_metadata_support,
                 ),
             }
         )
@@ -576,7 +634,7 @@ def main():
             args.max_combined_image_weight,
             7,
         ),
-        np.linspace(0.0, 0.5, 6),
+        np.linspace(0.0, args.max_combined_metadata_weight, 7),
         np.linspace(0.0, 0.20, 5),
     ):
         evaluate_combined(*values, stage="coarse")
@@ -589,7 +647,12 @@ def main():
             lower=args.min_combined_image_weight,
             upper=args.max_combined_image_weight,
         ),
-        _values_around(coarse_best["metadata_weight"], 0.10, 0.05, upper=0.60),
+        _values_around(
+            coarse_best["metadata_weight"],
+            0.10,
+            0.05,
+            upper=args.max_combined_metadata_weight,
+        ),
         _values_around(coarse_best["combined_category_weight"], 0.05, 0.025, upper=0.30),
     ):
         evaluate_combined(*values, stage="refined")
@@ -623,7 +686,7 @@ def main():
         ),
     }
     report = {
-        "version": 5,
+        "version": 6,
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "selection_split": "validation",
         "objective_k": k,

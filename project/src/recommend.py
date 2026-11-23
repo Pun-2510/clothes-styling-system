@@ -54,6 +54,7 @@ from src.config import (
 from src.clip_runtime import model_identity, validate_embedding_metadata
 
 from src.category_ranking import (
+    apply_category_gated_metadata_refinement,
     apply_confidence_weighted_category_bonus,
     category_confidence_strength,
     build_mutual_category_neighbors,
@@ -804,14 +805,6 @@ class FashionRecommender:
             + text_weight * text_scores
         )
 
-        metadata_query = metadata_refinement_text(text, explicit_text_categories)
-        metadata_scores, metadata_used = self.metadata_match_scores(metadata_query)
-        if metadata_used and COMBINED_METADATA_WEIGHT > 0.0:
-            final_scores = (
-                (1.0 - COMBINED_METADATA_WEIGHT) * final_scores
-                + COMBINED_METADATA_WEIGHT * metadata_scores
-            )
-
         if category_source == "text":
             category_scores = (
                 self.products["category"]
@@ -831,6 +824,30 @@ class FashionRecommender:
             )
         else:
             category_scores = np.zeros(len(self.products), dtype=np.float32)
+
+        # TF-IDF is a refinement signal, not a second full-catalog search.
+        # The image (or one explicit text category) defines which product
+        # groups may receive a lexical boost. Products outside those groups
+        # remain eligible through the original CLIP fusion score but cannot
+        # win only because a generic word such as "black" occurs in metadata.
+        metadata_query = metadata_refinement_text(text, explicit_text_categories)
+        metadata_scores, metadata_used = self.metadata_match_scores(metadata_query)
+        metadata_applied = bool(
+            metadata_used
+            and COMBINED_METADATA_WEIGHT > 0.0
+            and np.any(category_scores > 0.0)
+        )
+        metadata_candidate_count = int(np.count_nonzero(category_scores > 0.0))
+        effective_metadata_scores = np.zeros_like(metadata_scores, dtype=np.float32)
+        if metadata_applied:
+            metadata_mask = category_scores > 0.0
+            effective_metadata_scores[metadata_mask] = metadata_scores[metadata_mask]
+            final_scores = apply_category_gated_metadata_refinement(
+                final_scores,
+                metadata_scores,
+                category_scores,
+                COMBINED_METADATA_WEIGHT,
+            )
 
         # An image-inferred category is only a soft cue. An explicitly named
         # text category is safe to use as the candidate pool and lets a phrase
@@ -876,7 +893,7 @@ class FashionRecommender:
         if text_to_text_scores is not None:
             results["text_to_text_similarity"] = text_to_text_scores[top_indices]
         results["text_similarity"] = text_scores[top_indices]
-        results["metadata_match"] = metadata_scores[top_indices]
+        results["metadata_match"] = effective_metadata_scores[top_indices]
         results["category_match"] = category_scores[top_indices]
         results["similarity"] = final_scores[top_indices]
 
@@ -918,7 +935,9 @@ class FashionRecommender:
             f"category_bonus={effective_category_bonus:.4f} | "
             f"metadata_query={metadata_query or 'not_used'!r} | "
             f"metadata_used={metadata_used} | "
-            f"metadata_weight={COMBINED_METADATA_WEIGHT if metadata_used else 0.0:.2f} | "
+            f"metadata_applied={metadata_applied} | "
+            f"metadata_candidates={metadata_candidate_count} | "
+            f"metadata_weight={COMBINED_METADATA_WEIGHT if metadata_applied else 0.0:.2f} | "
             f"top_k={actual_k} | "
             f"audience={audience or 'not_used'} | "
             "fusion=raw_cosine | "
@@ -937,6 +956,8 @@ class FashionRecommender:
             "category_strength": category_strength,
             "metadata_query": metadata_query,
             "metadata_used": metadata_used,
+            "metadata_applied": metadata_applied,
+            "metadata_candidate_count": metadata_candidate_count,
             "audience": audience,
             "guidance": guidance,
             "elapsed": elapsed,

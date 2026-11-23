@@ -44,19 +44,19 @@ const COPY = {
       },
       combined: {
         tab: 'IMAGE + TEXT',
-        summary: 'Ảnh giữ ngữ cảnh sản phẩm, text tinh chỉnh yêu cầu; category viết rõ trong text được ưu tiên, nếu không hệ thống dùng confidence và quan hệ Top-2 từ ảnh.',
+        summary: 'Ảnh giữ loại sản phẩm, text tinh chỉnh màu sắc hoặc đặc điểm. TF-IDF chỉ tăng điểm trong nhóm category tương thích để từ chung như “black” không kéo sản phẩm khác loại lên đầu.',
         steps: [
           ['01', 'DUAL INPUT', 'Ảnh đã crop + mô tả'],
           ['02', 'CLIP ENCODERS', 'Vision và text embeddings'],
           ['03', 'RAW FUSION', 'Kết hợp SII với ST'],
-          ['04', 'TF-IDF METADATA', 'Tinh chỉnh bằng tên và mô tả catalog'],
-          ['05', 'CATEGORY ROUTE', 'Text rõ: hard · ảnh: dynamic Top-2'],
+          ['04', 'CATEGORY ROUTE', 'Xác định nhóm sản phẩm tương thích'],
+          ['05', 'GATED TF-IDF + TOP-K', 'Tinh chỉnh metadata trong nhóm rồi xếp hạng'],
         ],
         evidenceTitle: 'Kết hợp category evidence từ ảnh và văn bản',
         evidence: [
-          ['Text rõ ràng', 'Đúng một category trong text tạo candidate pool và được ưu tiên hơn dự đoán từ ảnh.'],
+          ['Text rõ ràng', 'Đúng một category trong text tạo candidate pool; TF-IDF chỉ tinh chỉnh các sản phẩm trong pool đó.'],
           ['Text mơ hồ', 'Nhiều category không kích hoạt hard filter; người dùng nhận gợi ý chọn lại.'],
-          ['Không có category trong text', 'Dùng cùng chính sách ảnh: confidence thấp không bonus; Top-2 liên quan nhận bonus khác nhau; không liên quan chỉ giữ tín hiệu Top-1 yếu.'],
+          ['Không có category trong text', 'Category evidence từ ảnh chọn nhóm được nhận TF-IDF boost và soft bonus. Sản phẩm khác nhóm vẫn còn trong catalog với điểm CLIP gốc.'],
         ],
       },
     },
@@ -103,19 +103,19 @@ const COPY = {
       },
       combined: {
         tab: 'IMAGE + TEXT',
-        summary: 'The image supplies product context while text refines the request; an explicit text category takes priority, otherwise confidence and the image Top-2 relation control category evidence.',
+        summary: 'The image preserves product type while text refines colour or details. TF-IDF boosts only category-compatible products so a generic word such as “black” cannot promote an unrelated product type.',
         steps: [
           ['01', 'DUAL INPUT', 'Cropped image + description'],
           ['02', 'CLIP ENCODERS', 'Vision and text embeddings'],
           ['03', 'RAW FUSION', 'Combine SII with ST'],
-          ['04', 'TF-IDF METADATA', 'Refine with catalog names and descriptions'],
-          ['05', 'CATEGORY ROUTE', 'Explicit text: hard · image: dynamic Top-2'],
+          ['04', 'CATEGORY ROUTE', 'Identify category-compatible products'],
+          ['05', 'GATED TF-IDF + TOP-K', 'Refine inside the group and rank'],
         ],
         evidenceTitle: 'Combine image and text category evidence',
         evidence: [
-          ['Explicit text', 'One exact text category creates the candidate pool and takes priority over the image prediction.'],
+          ['Explicit text', 'One exact text category creates the candidate pool; TF-IDF refines only products inside that pool.'],
           ['Ambiguous text', 'Multiple categories do not trigger a hard filter; the interface asks for a choice.'],
-          ['No text category', 'Use the image policy: no low-confidence bonus, unequal bonuses for a related Top-2 pair, or a weak Top-1 signal when unrelated.'],
+          ['No text category', 'Image category evidence selects which products may receive a TF-IDF boost and soft bonus. Other products retain their original CLIP scores.'],
         ],
       },
     },
@@ -129,7 +129,7 @@ function Formula({ mode }) {
   if (mode === 'text') {
     return <><i>S</i><sub>text</sub>(i) = (1 − λ<sub>M</sub>)<i>S</i><sub>T</sub>(i) + λ<sub>M</sub><i>S</i><sub>M</sub>(i)</>
   }
-  return <><i>S</i><sub>meta</sub>(i) = (1 − λ<sub>M</sub>)<i>S</i><sub>base</sub>(i) + λ<sub>M</sub><i>S</i><sub>M</sub>(i)</>
+  return <><i>S</i><sub>meta</sub>(i) = <i>S</i><sub>base</sub>(i) + λ<sub>M</sub>G(i)<i>S</i><sub>M</sub>(i)</>
 }
 
 export default function RetrievalPipelinePanel() {

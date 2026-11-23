@@ -186,8 +186,12 @@ checkpoint và embedding không bị trộn từ các lần chạy khác nhau.
 
 TF-IDF được xây trực tiếp từ `product_name` và `description` của catalog đã xử
 lý. Artifact này bổ sung mức khớp từ khóa cho text-only và combined query;
-image-only không sử dụng TF-IDF. Category không được đưa vào tài liệu TF-IDF vì
-category đã có cơ chế riêng, nhờ đó một tín hiệu không bị tính hai lần.
+image-only không sử dụng TF-IDF. Với combined query, TF-IDF chỉ tăng điểm cho
+nhóm sản phẩm tương thích với category evidence của ảnh hoặc category được ghi
+rõ trong text. Các sản phẩm khác vẫn được giữ lại bằng điểm CLIP gốc nhưng không
+được đẩy lên chỉ vì chứa một từ chung như `black`. Category không được đưa vào
+tài liệu TF-IDF vì category đã có cơ chế riêng, nhờ đó một tín hiệu không bị
+tính hai lần.
 
 ```powershell
 .\.venv\Scripts\python.exe -m src.build_metadata_index `
@@ -226,7 +230,10 @@ hiện trường hợp index không cùng catalog hoặc sai thứ tự dòng.
 Lệnh chỉ dùng validation split và chọn:
 
 - Tỷ lệ text→image so với text→text và trọng số TF-IDF cho text-only.
-- Trọng số ảnh, TF-IDF metadata và category cho combined query.
+- Trọng số ảnh, TF-IDF metadata có category gate và category bonus cho combined
+  query. Mặc định bộ chọn giữ ảnh là nguồn chính (`image_weight >= 0.60`), giới
+  hạn TF-IDF ở mức tối đa `0.30` và chỉ chấp nhận mức giảm category macro-F1 rất
+  nhỏ so với cấu hình tốt nhất.
 - Category bonus cho image-only.
 
 `--objective-k 10` nghĩa là chọn theo danh sách Top-10; có thể đổi nếu giao diện
@@ -341,8 +348,9 @@ Không dùng `docker compose down -v` nếu muốn giữ Hugging Face và Node c
   nêu rõ đúng một catalog category.
 - Image-only: image→image trên toàn catalog; category prediction chỉ thêm soft
   bonus theo confidence và quan hệ Top-2, không lọc cứng.
-- Image + text: ảnh giữ ngữ cảnh sản phẩm; text bổ sung semantic evidence,
-  TF-IDF metadata refinement và category được nêu rõ nếu có.
+- Image + text: ảnh giữ loại sản phẩm; text bổ sung semantic evidence. TF-IDF
+  chỉ tinh chỉnh sản phẩm thuộc nhóm category tương thích, trong khi sản phẩm
+  ngoài nhóm vẫn giữ điểm CLIP fusion ban đầu.
   Một category được ghi rõ trong text tạo hard candidate pool. Nếu text không
   nêu category, hệ thống dùng confidence và quan hệ Top-2 của ảnh để cộng soft
   bonus động giống Image-only, không loại sản phẩm ngoài category.
