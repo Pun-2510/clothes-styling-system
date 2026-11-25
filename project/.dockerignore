@@ -12,6 +12,10 @@ __pycache__/
 data/
 embeddings/
 embeddings_finetuned/
+embeddings_diverse_seed_*/
+metadata_index/
+metadata_index_diverse_seed_*/
 runs/
 validation/
+retrieval_weights*.json
 archive.zip

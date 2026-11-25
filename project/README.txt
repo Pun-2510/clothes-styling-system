@@ -1,30 +1,44 @@
-# HƯỚNG DẪN CHẠY HỆ THỐNG TRONG `project/`
+# HƯỚNG DẪN CHẠY HỆ THỐNG VÀ CHUẨN BỊ BẢN NỘP
 
 Tài liệu này mô tả pipeline vận hành độc lập của website. Sau khi người dùng
 clone repository, toàn bộ catalog đã xử lý, checkpoint fine-tuned CLIP,
 embeddings, cache validation và retrieval weights đều được tạo bên trong
-`project/`. Website không đọc file từ `experiments/`.
+thư mục này. Trên Git thư mục có tên `project/`; trong gói nộp có thể đổi tên
+thành `source/`. Các lệnh bên dưới được chạy **từ bên trong thư mục đó** và
+không phụ thuộc tên thư mục cha. Website không đọc file từ `experiments/`.
 
-## 1. PHÂN TÁCH HỆ THỐNG VÀ THÍ NGHIỆM
+## 1. PHẠM VI MÃ NGUỒN VÀ BẢN NỘP
 
 ```text
-<repository>/
-├── project/                         Hệ thống chạy thật
-│   ├── data/processed/              Catalog, category audit và audience audit
-│   ├── runs/clip_finetune/          Split, log huấn luyện và best checkpoint
-│   ├── embeddings/                  Image/text embeddings của catalog
-│   ├── validation/                  Cache và bảng thử trọng số validation
-│   ├── retrieval_weights.json       Trọng số website sử dụng
-│   ├── src/                         Tiền xử lý, training, validation, retrieval
-│   ├── web/                         React, FastAPI và Nginx
-│   ├── .env                         Cấu hình cục bộ, Git bỏ qua
-│   └── docker-compose.yml
-└── experiments/                     Đánh giá nghiên cứu, không phục vụ website
+project/ hoặc source/
+├── src/                              Tiền xử lý, training, validation, retrieval
+├── web/                              React, FastAPI và Nginx
+├── tests/                            Kiểm tra code
+├── requirements.txt
+├── .env.example                      Mẫu cấu hình, không chứa cấu hình máy cá nhân
+├── docker-compose.yml
+└── README.txt                        Tài liệu này
+
+Tạo cục bộ sau khi có dữ liệu và chạy offline pipeline:
+data/, runs/, embeddings/, metadata_index/, validation/,
+retrieval_weights.json, .env, .venv/ và logs/.
 ```
 
 `seed = 42` trong hướng dẫn chỉ giúp tái lập catalog và split. Nó không có nghĩa
 website phải đọc thư mục `experiments/.../seed_42`. Có thể đổi seed, nhưng mọi
 artifact của một lần chạy phải được tạo từ cùng catalog và checkpoint.
+
+Gói mã nguồn nộp chỉ cần nội dung của `project/`, đổi tên thư mục ngoài thành
+`source/` nếu được yêu cầu. Không chép các thư mục cấp repository như
+`experiments/`, `model/`, `docs/` vào `source/`. Kết quả thí nghiệm được dẫn
+trong báo cáo hoặc kho Git; chúng không phải đầu vào để chạy website.
+
+Theo thông báo nộp, **file data là thành phần riêng của hồ sơ**. Không đưa
+dataset, checkpoint, embeddings, cache hoặc `.env` vào gói source code. Có
+thể nộp dữ liệu trong `data.zip` riêng, rồi giải nén vào `source/data/` theo
+cấu trúc ở mục 2. Nếu chỉ cung cấp catalog đã xử lý và đúng các ảnh được
+catalog tham chiếu, người nhận bắt đầu từ bước fine-tune ở mục 5.2; muốn chạy
+lại cả bước chuẩn bị dữ liệu 5.1 thì cần `data/data.csv` và các ảnh nguồn.
 
 ## 2. ĐIỀU KIỆN TIÊN QUYẾT
 
@@ -44,10 +58,10 @@ Mini Fashion Product Images and Text Dataset
 https://www.kaggle.com/datasets/nirmalsankalana/mini-product-image-and-text-dataset
 ```
 
-Đặt dữ liệu như sau và đổi tên lại folder thành data/:
+Giải nén dataset (hoặc `data.zip` của hồ sơ nộp) vào thư mục hệ thống:
 
 ```text
-project/
+project/ hoặc source/
 └── data/
     ├── data.csv
     └── data/
@@ -55,18 +69,41 @@ project/
         └── ...
 ```
 
-## 3. CLONE VÀ CHUYỂN VÀO PROJECT
+## 3. VÀO THƯ MỤC HỆ THỐNG
 
 Tên thư mục sau khi clone do người dùng quyết định, vì vậy hướng dẫn không giả
 định repository luôn có tên `dacntt`.
 
 ```powershell
-git clone https://github.com/Pun-2510/clothes-styling-system.git
-Set-Location .\clothes-styling-system\project
+git clone https://github.com/Pun-2510/clothes-styling-system.git fashion-retrieval
+Set-Location .\fashion-retrieval\project
 ```
 
-Nếu clone bằng tên khác, thay `clothes-styling-system` bằng tên đó. Từ mục này
-trở đi, tất cả lệnh vận hành đều chạy tại thư mục `project/`.
+`fashion-retrieval` chỉ là tên thư mục ví dụ; có thể chọn tên khác khi clone.
+Nếu dùng bản nộp đã đổi tên, giải nén `source/` rồi chạy:
+
+```powershell
+Set-Location .\source
+```
+
+Từ đây trở đi, giữ PowerShell ở chính thư mục chứa `README.txt`, `src/` và
+`docker-compose.yml`. Không cần sửa các lệnh chỉ vì thư mục tên `source`.
+
+### Đóng gói source code để nộp
+
+Sau khi commit các thay đổi cần nộp, từ **root của repository** có thể tạo
+`source-code.zip` chỉ gồm các tệp `project/` đang được Git theo dõi:
+
+```powershell
+git archive --format=zip --prefix=source/ --output=source-code.zip HEAD:project
+```
+
+Kiểm tra `source-code.zip` có `source/README.txt`, `source/src/`, `source/web/`,
+`source/docker-compose.yml` và `source/.env.example`. Lệnh này không đưa
+`.env`, `retrieval_weights*.json`, `.venv`, dataset, embeddings, checkpoint
+hoặc cache cục bộ vào gói mã nguồn. Nếu muốn người nhận chạy ngay mà không
+huấn luyện lại, cần bàn giao **một bộ artifact đồng bộ** qua kênh riêng;
+không trộn chúng vào gói source code hoặc Git.
 
 ## 4. TẠO MÔI TRƯỜNG PYTHON
 
@@ -107,7 +144,7 @@ Các tham số có thể thay đổi:
 - `--output`: nơi ghi catalog vận hành. Giữ đường dẫn mặc định giúp `.env` và
   Docker không cần sửa.
 
-Kết quả đều nằm trong `project/data/processed/`:
+Kết quả đều nằm trong `data/processed/` của thư mục đang chạy:
 
 ```text
 products.csv
@@ -207,12 +244,12 @@ tính hai lần.
 - Phải chạy lại bước này khi thay `products.csv`; không cần fine-tune CLIP hay
   sinh lại CLIP embeddings chỉ vì thay TF-IDF index.
 
-Kết quả nằm trong `project/metadata_index/` và có hash catalog để backend phát
+Kết quả nằm trong `metadata_index/` và có hash catalog để backend phát
 hiện trường hợp index không cùng catalog hoặc sai thứ tự dòng.
 
 ### 5.5. Chọn retrieval weights trên validation
 
-Đây là lệnh vận hành trong `project/`, không gọi module trong `experiments/`:
+Đây là lệnh vận hành trong thư mục hệ thống, không gọi module trong `experiments/`:
 
 ```powershell
 .\.venv\Scripts\python.exe -m src.tune_retrieval_weights `
@@ -245,8 +282,8 @@ muốn kiểm tra nghiêm ngặt, thêm đúng giá trị đã prepare, ví dụ
   --expected-gallery-size 5000
 ```
 
-Các bảng thử được lưu trong `validation/weight_tuning/`; file website đọc là
-`project/retrieval_weights.json`. Mỗi lần tune lại nên dùng output mới, ví dụ
+Các bảng thử được lưu trong `validation/weight_tuning_category_gated_v1/`; file website đọc là
+`retrieval_weights.json` ở ngay thư mục hệ thống. Mỗi lần tune lại nên dùng output mới, ví dụ
 `validation/weight_tuning_v2`, vì chương trình không ghi đè thư mục kết quả cũ.
 
 ## 6. CẤU HÌNH CỤC BỘ
@@ -257,7 +294,7 @@ Tạo `.env` một lần:
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
-Cấu hình mặc định hoàn toàn nằm trong `project/`:
+Cấu hình mặc định hoàn toàn nằm trong thư mục hệ thống:
 
 ```env
 FASHION_CATALOG_DIR=./data/processed
@@ -273,7 +310,7 @@ CATEGORY_TOP_PER_CLASS=3
 CATEGORY_PROTOTYPE_WEIGHT=1.0
 ```
 
-Đường dẫn tương đối được Docker Compose hiểu từ `project/`, không phụ thuộc tên
+Đường dẫn tương đối được Docker Compose hiểu từ thư mục chứa `docker-compose.yml`, không phụ thuộc tên
 thư mục repository. Nếu dùng run mới, sửa đồng bộ checkpoint, embeddings,
 catalog và weight file; không trộn artifact từ các lần chạy khác nhau.
 
@@ -365,17 +402,10 @@ Không dùng `docker compose down -v` nếu muốn giữ Hugging Face và Node c
 
 ## 9. THÍ NGHIỆM NGHIÊN CỨU RIÊNG
 
-Các so sánh chính và baseline mở rộng (pretrained/fine-tuned CLIP, TF-IDF,
-BERT, SBERT, ResNet18, EfficientNet và ViT), category ablation, system pipeline
-và tổng hợp nhiều seed nằm ở:
-
-```text
-../experiments/model_comparison/README.md
-```
-
-Thí nghiệm có thể đọc artifact của từng seed để đánh giá, nhưng Docker và code
-trong `project/` không đọc kết quả `experiments/`. Không cần chạy thí nghiệm để
-khởi động website.
+Các so sánh mô hình, category ranking, system pipeline và kết quả nhiều seed
+được lưu ở `experiments/` và phần evidence của **repository gốc**. Chúng không
+nằm trong gói `source/` nộp và không phải đầu vào của website. Docker và code
+vận hành không đọc thư mục đó; không cần chạy thí nghiệm để khởi động website.
 
 ## 10. KIỂM THỬ CODE
 
@@ -405,4 +435,5 @@ Set-Location ../..
 - HTTP 502: xem `docker compose ps` và log hai backend.
 - HTTP 429: chờ rate-limit window hoặc giảm request lặp lại.
 - CPU quá chậm: giảm catalog/batch size để thử flow trước, hoặc dùng CUDA.
-- Git clone vào tên khác: không sửa code; chỉ chuyển đúng vào `<tên-clone>/project`.
+- Clone vào tên khác hoặc đổi `project/` thành `source/`: không sửa code; chỉ
+  chạy các lệnh từ thư mục chứa `docker-compose.yml`.

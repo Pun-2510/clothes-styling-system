@@ -50,6 +50,11 @@ lerna-debug.log*
 
 # Generated ML artefacts
 project/runs/**
+# Keep website retrieval weights local: each JSON is tied to one catalog,
+# checkpoint and validation run. The cloned project regenerates it offline.
+/project/retrieval_weights*.json
+# A temporary submission copy of project/ must not be committed twice.
+/source/
 
 # Local datasets and generated catalog/embedding files. Keep source code and
 # documentation in Git; download or regenerate these runtime artifacts locally.
@@ -106,6 +111,7 @@ lightning_logs/
 # Runtime logs and temporary files
 *.log
 !docs/reports/evidence/**/*.log
+~$*.docx
 model/experiments/results/color/
 model/experiments/mini_fashion.local.json
 *.tmp
@@ -127,5 +133,3 @@ model/experiments/mini_fashion.local.json
 .DS_Store
 Thumbs.db
 Desktop.ini
-
-/project/retrieval_weights.json

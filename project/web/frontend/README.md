@@ -1,8 +1,8 @@
 # React + Vite
 
-This frontend lives in `project/web/frontend/`. Run `npm ci` and `npm run dev`
+This frontend lives in `web/frontend/` under the system directory. Run `npm ci` and `npm run dev`
 from this directory. For the complete Docker application, run
-`docker-compose up -d --build` from `project/`. See [web setup](../README.md).
+`docker-compose up -d --build` from the directory containing `docker-compose.yml`. See [web setup](../README.md).
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

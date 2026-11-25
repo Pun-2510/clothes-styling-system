@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="560" viewBox="0 0 1000 560">
+<rect x="20" y="18" width="960" height="90" rx="9" fill="#F2F6FA" stroke="#345F81" stroke-width="2"/>
+<text x="48" y="63" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#345F81">project/</text>
+<text x="48" y="91" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#465666">Source code and artifacts used by the deployed system</text>
+<rect x="20" y="131" width="455" height="116" rx="8" fill="#FFFFFF" stroke="#A9B8C5" stroke-width="1.5"/>
+<rect x="20" y="131" width="7" height="116" rx="1" fill="#345F81" stroke="#345F81" stroke-width="0"/>
+<text x="44" y="172" font-family="Arial, sans-serif" font-size="25" font-weight="700" fill="#345F81">src/</text>
+<text x="44" y="207" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#465666">Data preparation, CLIP fine-tuning,</text>
+<text x="44" y="232" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#465666">embedding generation and retrieval</text>
+<rect x="525" y="131" width="455" height="116" rx="8" fill="#FFFFFF" stroke="#A9B8C5" stroke-width="1.5"/>
+<rect x="525" y="131" width="7" height="116" rx="1" fill="#345F81" stroke="#345F81" stroke-width="0"/>
+<text x="549" y="172" font-family="Arial, sans-serif" font-size="25" font-weight="700" fill="#345F81">data/</text>
+<text x="549" y="207" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#465666">Original images and metadata;</text>
+<text x="549" y="232" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#465666">processed catalog and audit reports</text>
+<rect x="20" y="264" width="455" height="116" rx="8" fill="#FFFFFF" stroke="#A9B8C5" stroke-width="1.5"/>
+<rect x="20" y="264" width="7" height="116" rx="1" fill="#345F81" stroke="#345F81" stroke-width="0"/>
+<text x="44" y="305" font-family="Arial, sans-serif" font-size="25" font-weight="700" fill="#345F81">runs/ + embeddings/</text>
+<text x="44" y="340" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#465666">Selected CLIP checkpoint and</text>
+<text x="44" y="365" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#465666">catalog image/text embeddings</text>
+<rect x="525" y="264" width="455" height="116" rx="8" fill="#FFFFFF" stroke="#A9B8C5" stroke-width="1.5"/>
+<rect x="525" y="264" width="7" height="116" rx="1" fill="#345F81" stroke="#345F81" stroke-width="0"/>
+<text x="549" y="305" font-family="Arial, sans-serif" font-size="25" font-weight="700" fill="#345F81">metadata_index/ + weights</text>
+<text x="549" y="340" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#465666">TF-IDF index and validation-selected</text>
+<text x="549" y="365" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#465666">retrieval_weights.json</text>
+<rect x="20" y="397" width="455" height="116" rx="8" fill="#FFFFFF" stroke="#A9B8C5" stroke-width="1.5"/>
+<rect x="20" y="397" width="7" height="116" rx="1" fill="#345F81" stroke="#345F81" stroke-width="0"/>
+<text x="44" y="438" font-family="Arial, sans-serif" font-size="25" font-weight="700" fill="#345F81">web/</text>
+<text x="44" y="473" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#465666">React frontend, FastAPI backend,</text>
+<text x="44" y="498" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#465666">Nginx API gateway and reverse proxy</text>
+<rect x="525" y="397" width="455" height="116" rx="8" fill="#FFFFFF" stroke="#A9B8C5" stroke-width="1.5"/>
+<rect x="525" y="397" width="7" height="116" rx="1" fill="#345F81" stroke="#345F81" stroke-width="0"/>
+<text x="549" y="438" font-family="Arial, sans-serif" font-size="25" font-weight="700" fill="#345F81">docker-compose.yml</text>
+<text x="549" y="473" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#465666">Starts the frontend, two backends</text>
+<text x="549" y="498" font-family="Arial, sans-serif" font-size="19" font-weight="400" fill="#465666">and the two Nginx services</text>
+</svg>
