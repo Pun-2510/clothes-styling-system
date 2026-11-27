@@ -4,7 +4,7 @@
 chứa code phục vụ website.
 Logic ML dùng chung vẫn ở `src/`. Catalog, checkpoint, embeddings, validation
 weights và log đều nằm trong thư mục hệ thống (`project/` trên Git hoặc
-`source/` trong bản nộp); website không đọc `experiments/`.
+`source_code/` trong bản nộp); website không đọc `experiments/`.
 
 ## Chạy một lệnh
 
@@ -75,7 +75,7 @@ ghi `retrieval_weights.json` trong thư mục hệ thống. Catalog, embeddings,
 phải cùng một pipeline; không sửa hash để bỏ qua kiểm tra.
 
 Các thí nghiệm so sánh nằm ngoài thư mục hệ thống ở cấp repository gốc,
-hoàn toàn độc lập và không phải đầu vào của website. Bản nộp `source/` không
+hoàn toàn độc lập và không phải đầu vào của website. Bản nộp `source_code/` không
 chứa chúng.
 
 ## Chạy API hoặc frontend riêng ngoài Docker
@@ -104,7 +104,7 @@ Compose, trình duyệt chỉ gọi cùng origin `localhost:80`; Web Reverse Pro
 
 - [Web Reverse Proxy](reverse-proxy/README.md)
 - [API Gateway, load balancing và rate limiting](api-gateway/README.md)
-- [Workflow và toàn bộ câu lệnh](../README.txt)
+- [Workflow và toàn bộ câu lệnh](../readme.txt)
 
 ```powershell
 docker compose config --quiet

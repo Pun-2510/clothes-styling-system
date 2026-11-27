@@ -51,11 +51,11 @@ Ban đầu, sản phẩm được xếp hạng theo độ tương đồng mà kh
 
 | Thư mục | Vai trò |
 | --- | --- |
-| [`project/`](project/) | Pipeline chuẩn bị dữ liệu, huấn luyện, artifact vận hành và website. Có thể đóng gói riêng thành `source/`. |
+| [`project/`](project/) | Pipeline chuẩn bị dữ liệu, huấn luyện, artifact vận hành và website. Có thể đóng gói riêng thành `source_code/`. |
 | [`experiments/`](experiments/) | Script và kết quả so sánh các mô hình, chiến lược xếp hạng; không phải đầu vào của website. |
 | [`docs/reports/evidence/final_experiments/`](docs/reports/evidence/final_experiments/) | Bảng kết quả và hồ sơ chạy cuối cùng. |
 
-Đọc [hướng dẫn chạy trong project/README.txt](project/README.txt) để biết yêu cầu phần mềm, cấu trúc dataset và từng lệnh chuẩn bị catalog, fine-tune, sinh embedding, chọn trọng số và khởi động Docker. Tên thư mục sau khi clone có thể thay đổi; các lệnh trong hướng dẫn được chạy từ bên trong `project/` hoặc bản nộp `source/`.
+Đọc [hướng dẫn chạy từ gói nộp](project/readme.txt) để biết yêu cầu phần mềm, cấu trúc dataset và từng lệnh chuẩn bị catalog, fine-tune, sinh embedding, chọn trọng số và khởi động Docker. Hướng dẫn dành cho người nhận gói ZIP: giải nén và chạy các lệnh từ bên trong `source_code/`.
 
 Khi đã có đủ artifact và `.env`, khởi động từ thư mục `project/`:
 

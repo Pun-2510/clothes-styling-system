@@ -1,109 +1,71 @@
-# HƯỚNG DẪN CHẠY HỆ THỐNG VÀ CHUẨN BỊ BẢN NỘP
+# HƯỚNG DẪN CHẠY HỆ THỐNG TỪ GÓI NỘP
 
-Tài liệu này mô tả pipeline vận hành độc lập của website. Sau khi người dùng
-clone repository, toàn bộ catalog đã xử lý, checkpoint fine-tuned CLIP,
-embeddings, cache validation và retrieval weights đều được tạo bên trong
-thư mục này. Trên Git thư mục có tên `project/`; trong gói nộp có thể đổi tên
-thành `source/`. Các lệnh bên dưới được chạy **từ bên trong thư mục đó** và
-không phụ thuộc tên thư mục cha. Website không đọc file từ `experiments/`.
+Tài liệu này dành cho người nhận file ZIP của dự án. Giải nén gói nộp, mở thư mục
+`source_code/` trong VS Code hoặc File Explorer, rồi mở PowerShell **ngay tại thư
+mục này**. Mọi lệnh bên dưới dùng đường dẫn tương đối từ `source_code/`; không
+cần Git, không cần đổi tên thư mục và không cần gõ `Set-Location`.
 
-## 1. PHẠM VI MÃ NGUỒN VÀ BẢN NỘP
+## 1. THÀNH PHẦN SAU KHI GIẢI NÉN
 
 ```text
-project/ hoặc source/
-├── src/                              Tiền xử lý, training, validation, retrieval
+source_code/
+├── src/                              Tiền xử lý, huấn luyện, validation, retrieval
 ├── web/                              React, FastAPI và Nginx
 ├── tests/                            Kiểm tra code
 ├── requirements.txt
-├── .env.example                      Mẫu cấu hình, không chứa cấu hình máy cá nhân
+├── .env.example                      Mẫu cấu hình
 ├── docker-compose.yml
-└── README.txt                        Tài liệu này
-
-Tạo cục bộ sau khi có dữ liệu và chạy offline pipeline:
-data/, runs/, embeddings/, metadata_index/, validation/,
-retrieval_weights.json, .env, .venv/ và logs/.
+└── readme.txt                        Tài liệu này
 ```
 
-`seed = 42` trong hướng dẫn chỉ giúp tái lập catalog và split. Nó không có nghĩa
-website phải đọc thư mục `experiments/.../seed_42`. Có thể đổi seed, nhưng mọi
-artifact của một lần chạy phải được tạo từ cùng catalog và checkpoint.
+Các thư mục `data/`, `runs/`, `embeddings/`, `metadata_index/`, `validation/`
+và các file `.env`, `retrieval_weights.json` được tạo hoặc bổ sung tại máy chạy.
+Website dùng những artifact trong chính `source_code/`, không đọc kết quả thí
+nghiệm trong thư mục khác. Catalog, checkpoint, embeddings, TF-IDF index và
+retrieval weights phải thuộc cùng cấu hình dữ liệu.
 
-Gói mã nguồn nộp chỉ cần nội dung của `project/`, đổi tên thư mục ngoài thành
-`source/` nếu được yêu cầu. Không chép các thư mục cấp repository như
-`experiments/`, `model/`, `docs/` vào `source/`. Kết quả thí nghiệm được dẫn
-trong báo cáo hoặc kho Git; chúng không phải đầu vào để chạy website.
-
-Theo thông báo nộp, **file data là thành phần riêng của hồ sơ**. Không đưa
-dataset, checkpoint, embeddings, cache hoặc `.env` vào gói source code. Có
-thể nộp dữ liệu trong `data.zip` riêng, rồi giải nén vào `source/data/` theo
-cấu trúc ở mục 2. Nếu chỉ cung cấp catalog đã xử lý và đúng các ảnh được
-catalog tham chiếu, người nhận bắt đầu từ bước fine-tune ở mục 5.2; muốn chạy
-lại cả bước chuẩn bị dữ liệu 5.1 thì cần `data/data.csv` và các ảnh nguồn.
-
-## 2. ĐIỀU KIỆN TIÊN QUYẾT
-
-- Git.
-- Python 3.12 hoặc 3.13.
-- Docker Desktop có Docker Compose v2.
-- Ít nhất khoảng 15–20 GB dung lượng trống cho dataset, model, image Docker và
-  Hugging Face cache.
-- Internet ở lần đầu để tải package, Docker image, CLIP và model dịch VI → EN.
-- GPU NVIDIA là tùy chọn. CPU vẫn chạy được nhưng fine-tuning và validation lâu hơn.
-- Node.js chỉ cần khi chạy frontend ngoài Docker; không cần cho workflow Docker.
-
-Dataset mặc định:
+Nếu hồ sơ nộp chứa `data.zip` riêng, giải nén dữ liệu vào đúng vị trí sau:
 
 ```text
-Mini Fashion Product Images and Text Dataset
-https://www.kaggle.com/datasets/nirmalsankalana/mini-product-image-and-text-dataset
-```
-
-Giải nén dataset (hoặc `data.zip` của hồ sơ nộp) vào thư mục hệ thống:
-
-```text
-project/ hoặc source/
+source_code/
 └── data/
-    ├── data.csv
-    └── data/
+    ├── data.csv                      Metadata nguồn
+    └── data/                         Ảnh mà metadata tham chiếu
         ├── 3238.jpg
         └── ...
 ```
 
-## 3. VÀO THƯ MỤC HỆ THỐNG
+Nếu chỉ có `data/processed/products.csv` và những ảnh được catalog tham chiếu,
+có thể bắt đầu từ bước fine-tune 5.2. Muốn chạy lại cả bước chuẩn bị catalog 5.1
+thì cần metadata nguồn `data/data.csv` và ảnh trong `data/data/`.
 
-Tên thư mục sau khi clone do người dùng quyết định, vì vậy hướng dẫn không giả
-định repository luôn có tên `dacntt`.
+## 2. ĐIỀU KIỆN TIÊN QUYẾT
 
-```powershell
-git clone https://github.com/Pun-2510/clothes-styling-system.git fashion-retrieval
-Set-Location .\fashion-retrieval\project
-```
+- Windows PowerShell, Python 3.12 hoặc 3.13 và Docker Desktop có Compose v2.
+- Ít nhất khoảng 15–20 GB dung lượng trống cho dataset, model, Docker image
+  và Hugging Face cache.
+- Internet ở lần đầu để tải package, Docker image, CLIP và model dịch VI → EN.
+- GPU NVIDIA là tùy chọn. CPU vẫn chạy được nhưng fine-tuning lâu hơn.
+- Node.js chỉ cần nếu tự chạy frontend ngoài Docker.
 
-`fashion-retrieval` chỉ là tên thư mục ví dụ; có thể chọn tên khác khi clone.
-Nếu dùng bản nộp đã đổi tên, giải nén `source/` rồi chạy:
+Dữ liệu gốc được dùng trong dự án là Mini Fashion Product Images and Text
+Dataset: https://www.kaggle.com/datasets/nirmalsankalana/mini-product-image-and-text-dataset
+Nếu gói nộp không kèm dữ liệu, tải và đặt theo cấu trúc ở mục 1.
 
-```powershell
-Set-Location .\source
-```
+## 3. KIỂM TRA THƯ MỤC LÀM VIỆC
 
-Từ đây trở đi, giữ PowerShell ở chính thư mục chứa `README.txt`, `src/` và
-`docker-compose.yml`. Không cần sửa các lệnh chỉ vì thư mục tên `source`.
-
-### Đóng gói source code để nộp
-
-Sau khi commit các thay đổi cần nộp, từ **root của repository** có thể tạo
-`source-code.zip` chỉ gồm các tệp `project/` đang được Git theo dõi:
+Trong PowerShell đang mở tại `source_code/`, chạy:
 
 ```powershell
-git archive --format=zip --prefix=source/ --output=source-code.zip HEAD:project
+(Get-Location).Path
+Test-Path .\docker-compose.yml
+Test-Path .\src
+Test-Path .\readme.txt
 ```
 
-Kiểm tra `source-code.zip` có `source/README.txt`, `source/src/`, `source/web/`,
-`source/docker-compose.yml` và `source/.env.example`. Lệnh này không đưa
-`.env`, `retrieval_weights*.json`, `.venv`, dataset, embeddings, checkpoint
-hoặc cache cục bộ vào gói mã nguồn. Nếu muốn người nhận chạy ngay mà không
-huấn luyện lại, cần bàn giao **một bộ artifact đồng bộ** qua kênh riêng;
-không trộn chúng vào gói source code hoặc Git.
+Ba lệnh `Test-Path` phải trả về `True`. Nếu có `False`, mở lại terminal tại
+`source_code/` trước khi chạy các bước tiếp theo. Không chạy lệnh ở thư mục
+chứa file ZIP hoặc ở cấp cha của `source_code/`.
 
 ## 4. TẠO MÔI TRƯỜNG PYTHON
 
@@ -411,28 +373,15 @@ Không dùng `docker compose down -v` nếu muốn giữ Hugging Face và Node c
 
 ## 9. THÍ NGHIỆM NGHIÊN CỨU RIÊNG
 
-Các so sánh mô hình (bao gồm FashionCLIP, OpenCLIP, SigLIP), category ranking,
-system pipeline Hard Category và kết quả ba seed (42, 123, 2026) được lưu ở
-`experiments/` và `docs/reports/evidence/final_experiments/` của **repository gốc**.
-Đọc README trong thư mục evidence để phân biệt kết quả Hard Category hiện tại
-với các kết quả Dynamic cũ. Chúng không
-nằm trong gói `source/` nộp và không phải đầu vào của website. Docker và code
-vận hành không đọc thư mục đó; không cần chạy thí nghiệm để khởi động website.
+Các bảng so sánh mô hình và category ranking nằm trong báo cáo nộp kèm.
+Chúng là bằng chứng đánh giá, không phải đầu vào của website. Người nhận không
+cần chạy thí nghiệm để khởi động hệ thống trong `source_code/`.
 
 ## 10. KIỂM THỬ CODE
 
 ```powershell
 .\.venv\Scripts\python.exe -m src.tune_retrieval_weights --self-test
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
-```
-
-Build frontend ngoài Docker (tùy chọn):
-
-```powershell
-Set-Location web/frontend
-npm ci
-npm run build
-Set-Location ../..
 ```
 
 ## 11. LỖI THƯỜNG GẶP
@@ -447,5 +396,5 @@ Set-Location ../..
 - HTTP 502: xem `docker compose ps` và log hai backend.
 - HTTP 429: chờ rate-limit window hoặc giảm request lặp lại.
 - CPU quá chậm: giảm catalog/batch size để thử flow trước, hoặc dùng CUDA.
-- Clone vào tên khác hoặc đổi `project/` thành `source/`: không sửa code; chỉ
-  chạy các lệnh từ thư mục chứa `docker-compose.yml`.
+- Lệnh chạy sai vị trí: kiểm tra PowerShell đang mở tại `source_code/` bằng
+  `Test-Path .\docker-compose.yml`.

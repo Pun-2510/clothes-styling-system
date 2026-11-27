@@ -35,7 +35,7 @@ project/
 │   └── reverse-proxy/                # public Nginx entry point
 ├── logs/
 ├── docker-compose.yml
-└── README.txt
+└── readme.txt
 ```
 
 The repository-level `experiments/model_comparison/` directory contains controlled model comparisons and their result folders. The application never needs to load an experimental catalog or checkpoint from this directory. This separation prevents an experiment from changing the deployed website unintentionally.

@@ -3,7 +3,7 @@
 > **Phạm vi riêng:** thư mục này chỉ dùng cho đánh giá nghiên cứu và kết quả
 > nhiều seed. Website trong `project/` không đọc catalog, embeddings, checkpoint
 > hoặc weight JSON từ `experiments/`. Pipeline vận hành và lệnh validation dùng
-> cho website nằm trong `project/README.txt` và chạy bằng
+> cho website nằm trong `project/readme.txt` và chạy bằng
 > `python -m src.tune_retrieval_weights` từ thư mục `project/`.
 
 Các lệnh bên dưới được chạy từ thư mục gốc repository vì chúng cần đồng thời

@@ -10,16 +10,16 @@ The system uses product metadata together with the corresponding catalog images.
 
 **Table A.1. Main input and processed data artifacts**
 
-| Artifact | Repository location | Purpose |
+| Artifact | Submission location | Purpose |
 |---|---|---|
-| Raw product metadata | `project/data/data.csv` | Contains product identifiers, names, descriptions, categories, and image references |
-| Raw product images | `project/data/data/` | Supplies the visual content associated with the metadata |
-| Processed catalog | `project/data/processed/products.csv` | Provides the cleaned and sampled catalog used by the deployed system |
-| Preparation summary | `project/data/processed/products.preparation.json` | Records the source hash, seed, sampling strategy, and preparation statistics |
-| Category audit table | `project/data/processed/products.category_audit.csv` | Gives detailed category counts and audit status |
-| Category audit summary | `project/data/processed/products.category_audit.json` | Gives a machine-readable summary of the audit |
-| Audience audit table | `project/data/processed/products.audience_audit.csv` | Records the metadata-derived audience group assigned to each product |
-| Audience audit summary | `project/data/processed/products.audience_audit.json` | Summarizes audience counts, evidence sources, and rows that require review |
+| Raw product metadata | `source_code/data/data.csv` | Contains product identifiers, names, descriptions, categories, and image references |
+| Raw product images | `source_code/data/data/` | Supplies the visual content associated with the metadata |
+| Processed catalog | `source_code/data/processed/products.csv` | Provides the cleaned and sampled catalog used by the deployed system |
+| Preparation summary | `source_code/data/processed/products.preparation.json` | Records the source hash, seed, sampling strategy, and preparation statistics |
+| Category audit table | `source_code/data/processed/products.category_audit.csv` | Gives detailed category counts and audit status |
+| Category audit summary | `source_code/data/processed/products.category_audit.json` | Gives a machine-readable summary of the audit |
+| Audience audit table | `source_code/data/processed/products.audience_audit.csv` | Records the metadata-derived audience group assigned to each product |
+| Audience audit summary | `source_code/data/processed/products.audience_audit.json` | Summarizes audience counts, evidence sources, and rows that require review |
 
 The preparation stage normalizes metadata, checks image availability, removes duplicate images, and samples products within categories. The current serving catalog uses category-aware diverse sampling. This strategy considers color, foreground shape, a low-resolution visual descriptor, and product metadata so that the selected examples within a category are not unnecessarily repetitive.
 
@@ -142,15 +142,15 @@ Only the reverse proxy publishes a host port. The two backend instances use the 
 
 | Artifact | Default project location |
 |---|---|
-| Processed catalog | `project/data/processed/products.csv` |
-| Catalog images | `project/data/data/` |
-| Fine-tuned CLIP checkpoint | `project/runs/clip_finetune/best/` |
-| Image embeddings | `project/embeddings/image_embeddings.npy` |
-| Text embeddings | `project/embeddings/text_embeddings.npy` |
-| Embedding metadata | `project/embeddings/*.json` |
-| Selected retrieval weights | `project/retrieval_weights.json` |
+| Processed catalog | `source_code/data/processed/products.csv` |
+| Catalog images | `source_code/data/data/` |
+| Fine-tuned CLIP checkpoint | `source_code/runs/clip_finetune/best/` |
+| Image embeddings | `source_code/embeddings/image_embeddings.npy` |
+| Text embeddings | `source_code/embeddings/text_embeddings.npy` |
+| Embedding metadata | `source_code/embeddings/*.json` |
+| Selected retrieval weights | `source_code/retrieval_weights.json` |
 
-The paths may be changed in `project/.env`. All artifacts must originate from the same processed catalog and model run.
+The paths may be changed in `source_code/.env`. All artifacts must originate from the same processed catalog and model run.
 
 ## C.3. Startup and verification commands
 
@@ -301,20 +301,20 @@ Here, \(R_c\) is the combined category evidence and \(\alpha\) controls the cont
 
 **Table F.1. Main implementation and evidence files**
 
-| Purpose | Repository location |
+| Purpose | Submission location |
 |---|---|
-| Data preparation and diverse sampling | `project/src/prepare_dataset.py` |
-| Dataset and category audit | `project/src/audit_dataset.py` |
-| CLIP fine-tuning | `project/src/finetune_clip.py` |
-| Embedding generation | `project/src/generate_clip_embeddings.py` |
-| Retrieval-weight selection | `project/src/tune_retrieval_weights.py` |
-| Runtime retrieval and ranking | `project/src/recommend.py` |
-| Category prompt templates | `project/src/category_prompts.py` |
-| Category-ranking policy | `project/src/category_ranking.py` |
-| Selected serving weights | `project/retrieval_weights.json` |
-| Serving dataset audit | `project/data/processed/products.category_audit.csv` |
-| Serving audience audit | `project/data/processed/products.audience_audit.csv` |
-| Serving training history | `project/runs/clip_finetune/training.json` |
+| Data preparation and diverse sampling | `source_code/src/prepare_dataset.py` |
+| Dataset and category audit | `source_code/src/audit_dataset.py` |
+| CLIP fine-tuning | `source_code/src/finetune_clip.py` |
+| Embedding generation | `source_code/src/generate_clip_embeddings.py` |
+| Retrieval-weight selection | `source_code/src/tune_retrieval_weights.py` |
+| Runtime retrieval and ranking | `source_code/src/recommend.py` |
+| Category prompt templates | `source_code/src/category_prompts.py` |
+| Category-ranking policy | `source_code/src/category_ranking.py` |
+| Selected serving weights | `source_code/retrieval_weights.json` |
+| Serving dataset audit | `source_code/data/processed/products.category_audit.csv` |
+| Serving audience audit | `source_code/data/processed/products.audience_audit.csv` |
+| Serving training history | `source_code/runs/clip_finetune/training.json` |
 | Final evidence guide | `docs/reports/evidence/final_experiments/README.md` |
 | Three-seed aggregate evidence | `docs/reports/evidence/final_experiments/` |
 | Detailed per-seed evidence | `docs/reports/evidence/final_experiments/run_details/seed_<seed>/` |
