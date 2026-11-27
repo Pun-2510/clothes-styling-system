@@ -12,6 +12,8 @@ Mô hình CLIP được fine-tune trên các cặp ảnh–mô tả thời trang
 
 **Trực tuyến:** giao diện gửi ảnh, văn bản hoặc cả hai → Nginx chuyển yêu cầu tới FastAPI → hệ thống mã hóa truy vấn, tính điểm và chọn tập ứng viên → trả Top-K. Ba luồng được xử lý như sau:
 
+![Online Retrieval Pipeline: image, text and combined queries](docs/reports/figures/figure-online-retrieval-pipeline.png)
+
 | Truy vấn | Cách xếp hạng hiện tại |
 | --- | --- |
 | Chỉ ảnh | So sánh ảnh truy vấn với ảnh catalog; dự đoán một danh mục từ bằng chứng thị giác và CLIP category prompts; xếp hạng các sản phẩm trong danh mục đó. |
