@@ -1,8 +1,14 @@
 # Category-Aware Multimodal Fashion Retrieval using CLIP
 
-Hệ thống truy xuất sản phẩm thời trang trong một catalog bằng **ảnh**, **văn bản** hoặc **cả hai**. Người dùng nhận danh sách Top-K sản phẩm tương tự; đây là công cụ tìm kiếm sản phẩm, không phải hệ thống phối đồ hay bán hàng.
+Hệ thống tìm và xếp hạng sản phẩm thời trang có sẵn trong catalog từ **ảnh**, **văn bản** hoặc **cả hai**. Kết quả là danh sách Top-K sản phẩm tương tự, không phải gợi ý phối đồ hay chức năng mua hàng.
 
-Mô hình CLIP được fine-tune trên các cặp ảnh–mô tả thời trang. Ảnh và văn bản được mã hóa thành embedding, sau đó so sánh với sản phẩm trong catalog bằng cosine similarity. TF-IDF bổ sung mức khớp từ khóa giữa truy vấn và tên, mô tả sản phẩm. Hệ thống hiện dùng **Hard Category** để xác định tập ứng viên cho truy vấn ảnh và truy vấn kết hợp.
+## Vấn đề hệ thống giải quyết
+
+Người dùng có thể thấy một món đồ trong ảnh nhưng không biết tên để gõ tìm kiếm. Ngược lại, họ có thể mô tả loại sản phẩm và màu sắc mong muốn nhưng không có ảnh mẫu. Khi ảnh chứa người, phông nền hoặc nhiều món đồ, tìm theo hình dáng đơn thuần cũng dễ trả về sai loại sản phẩm. Hệ thống cho phép dùng thông tin đang có để tìm trong cùng một catalog; người dùng có thể kết hợp ảnh với mô tả để làm rõ sản phẩm cần tìm.
+
+## Tóm tắt
+
+CLIP được fine-tune trên các cặp ảnh–mô tả thời trang để mã hóa truy vấn và sản phẩm. Hệ thống dùng cosine similarity để so sánh các embedding, kết hợp thêm mức khớp từ khóa TF-IDF khi có văn bản. Với truy vấn ảnh, bằng chứng từ sản phẩm tương tự và các câu mô tả danh mục giúp dự đoán loại sản phẩm; bản website hiện chỉ xếp hạng trong danh mục được chọn (**Hard Category**). Dự án so sánh các mô hình và chiến lược xếp hạng trên ba catalog lấy mẫu độc lập, mỗi catalog gồm 5.000 sản phẩm. Kết quả thực nghiệm phản ánh mức khớp theo danh mục và cặp ảnh–văn bản trong các tập dữ liệu đó, không đo đầy đủ mức độ hợp gu của từng người dùng.
 
 ## Quy trình hoạt động
 
@@ -32,6 +38,14 @@ Ban đầu, sản phẩm được xếp hạng theo độ tương đồng mà kh
 4. **Dynamic relation-aware support:** xét thêm quan hệ giữa các danh mục gần nhau và phân bổ mức hỗ trợ tùy tình huống.
 
 **Bản website hiện triển khai hard filter** cho ảnh và truy vấn kết hợp. Danh mục ảnh được dự đoán bằng hai nguồn: các sản phẩm tương tự nhất được lấy cân bằng theo từng danh mục và độ khớp giữa ảnh truy vấn với các câu CLIP prompt mô tả danh mục. Cách này đạt kết quả cao nhất trong thí nghiệm dùng *cùng danh mục* làm tiêu chí đúng. Hạn chế của nó là nếu dự đoán sai danh mục, sản phẩm phù hợp ở danh mục khác sẽ bị loại; người dùng có thể crop lại ảnh hoặc thêm mô tả nêu rõ loại sản phẩm. Các cách soft và dynamic được giữ trong hồ sơ thí nghiệm để giải thích quá trình phát triển, không phải lựa chọn trên website hiện tại.
+
+## Giới hạn của hệ thống
+
+- Hệ thống chỉ trả sản phẩm có trong catalog đã chuẩn bị; dữ liệu nguồn thiếu hoặc gắn sai danh mục sẽ ảnh hưởng kết quả.
+- Nếu dự đoán sai danh mục ảnh, Hard Category có thể loại sản phẩm đúng. Cắt lại ảnh hoặc nêu rõ loại sản phẩm trong mô tả có thể giúp sửa truy vấn.
+- Ảnh có nhiều món đồ, người hoặc phông nền phức tạp vẫn cần người dùng chọn vùng ảnh phù hợp; hệ thống chưa tự tách từng trang phục.
+- TF-IDF chỉ hỗ trợ những chi tiết có trong tên hoặc mô tả sản phẩm. Từ quá chung chung, thuộc tính không được ghi lại hoặc ảnh và văn bản mâu thuẫn có thể cho kết quả kém ổn định.
+- Thí nghiệm dùng ba mẫu từ cùng một nguồn dữ liệu và chủ yếu đánh giá theo danh mục. Các số đo này chưa chứng minh chất lượng trên mọi catalog hoặc mức phù hợp về màu, kiểu dáng và sở thích cá nhân.
 
 ## Cấu trúc và cách chạy
 
