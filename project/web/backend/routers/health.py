@@ -4,20 +4,12 @@ from fastapi import APIRouter, HTTPException, Request, status
 
 from src.config import (
     ACTIVE_CLIP_MODEL,
-    CATEGORY_BONUS,
-    CATEGORY_CONFIDENCE_FLOOR,
-    CATEGORY_CONFIDENCE_THRESHOLD,
     CATEGORY_PROTOTYPE_WEIGHT,
-    CATEGORY_RELATION_NEIGHBORS,
     CATEGORY_TOP_PER_CLASS,
     COMBINED_METADATA_WEIGHT,
-    COMBINED_CATEGORY_WEIGHT,
     COMBINED_IMAGE_WEIGHT,
     TEXT_RETRIEVAL_IMAGE_WEIGHT,
     TEXT_METADATA_WEIGHT,
-    RELATED_TOP1_BONUS_FACTOR,
-    RELATED_TOP2_BONUS_FACTOR,
-    UNRELATED_TOP1_BONUS_FACTOR,
 )
 
 
@@ -121,15 +113,7 @@ async def system_status(request: Request):
             "text_metadata_weight": TEXT_METADATA_WEIGHT,
             "combined_image_weight": COMBINED_IMAGE_WEIGHT,
             "combined_metadata_weight": COMBINED_METADATA_WEIGHT,
-            "combined_category_weight": COMBINED_CATEGORY_WEIGHT,
-            "image_category_bonus": CATEGORY_BONUS,
-            "category_confidence_floor": CATEGORY_CONFIDENCE_FLOOR,
-            "category_confidence_threshold": CATEGORY_CONFIDENCE_THRESHOLD,
             "category_top_per_class": CATEGORY_TOP_PER_CLASS,
             "category_prototype_weight": CATEGORY_PROTOTYPE_WEIGHT,
-            "category_relation_neighbors": CATEGORY_RELATION_NEIGHBORS,
-            "related_top1_bonus_factor": RELATED_TOP1_BONUS_FACTOR,
-            "related_top2_bonus_factor": RELATED_TOP2_BONUS_FACTOR,
-            "unrelated_top1_bonus_factor": UNRELATED_TOP1_BONUS_FACTOR,
         },
     }

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="846" viewBox="0 0 1600 846">
+<style>.t{font:700 31px Times New Roman,serif;fill:#111}.b{font:26px Times New Roman,serif;fill:#111}.n{font:italic 23px Times New Roman,serif;fill:#444}</style>
+<rect width="100%" height="100%" fill="white"/>
+<path d="M20 25 H1580 M20 91 H1580" stroke="#222" stroke-width="2"/>
+<text x="35" y="71" class="t">Algorithm C.2. Image-Only Retrieval with Hard Category Filtering</text>
+<text x="45" y="137" class="b">Input: query image I; catalog images and categories; result count K</text>
+<text x="45" y="195" class="b">Output: ranked products from the selected category</text>
+<text x="45" y="253" class="b">1  Encode I with the fine-tuned CLIP vision encoder.</text>
+<text x="45" y="311" class="b">2  Compute S_II(q,p_i) against every catalog image.</text>
+<text x="45" y="369" class="b">3  Group visual neighbour scores by category; retain a balanced top set.</text>
+<text x="45" y="427" class="b">4  Compare the query image with CLIP category prompt embeddings.</text>
+<text x="45" y="485" class="b">5  Combine visual and prompt evidence; select the highest category c_hat.</text>
+<text x="45" y="543" class="b">6  Calculate category confidence for diagnostics only.</text>
+<text x="45" y="601" class="b">7  Keep products whose category equals c_hat.</text>
+<text x="45" y="659" class="b">8  If the user selected an audience, intersect with that audience group.</text>
+<text x="45" y="717" class="b">9  Rank eligible products by S_II(q,p_i) and return the first K.</text>
+<text x="45" y="775" class="n">Note: A low confidence value does not disable the hard category filter.</text>
+<path d="M20 826 H1580" stroke="#222" stroke-width="2"/>
+</svg>

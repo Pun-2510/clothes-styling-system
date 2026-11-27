@@ -1,0 +1,25 @@
+{
+  "model_family": "openclip",
+  "model_source": "laion/CLIP-ViT-B-32-laion2B-s34B-b79K",
+  "run_dir": "D:\\dacntt\\project\\runs\\clip_finetune_diverse_seed_123",
+  "catalog_csv": "D:\\dacntt\\project\\data\\processed_diverse_seed_123\\products.csv",
+  "catalog_sha256": "2c923ad8d44a30409b41a510705b6d8664fee3b809572362f4ec8deb1db358b2",
+  "dataset_sha256": "937dcc4ddc5618bcf26a2425c5fba5a5e3447bc4842d7dc6a4fc9c9aa50bd345",
+  "training_json_sha256": "f8ae1dbb1cb53bf70a1d05450244868c10f5650aa15ccb8bfc1d16459ccf0b80",
+  "gallery_size": 5000,
+  "query_count": 464,
+  "query_split": "test",
+  "ks": [
+    1,
+    5,
+    10
+  ],
+  "image_weight": 0.5,
+  "text_image_weight": 0.5,
+  "relevance": "same category for modality rows; exact product ID for alignment rows",
+  "category_in_encoder_text": false,
+  "category_policy": "none (frozen raw baseline)",
+  "revision_resolved": "1a25a446712ba5ee05982a381eed697ef9b435cf",
+  "pretrained_tag": "laion2b_s34b_b79k",
+  "revision_note": "OpenCLIP loads the named pretrained tag; the Hugging Face revision is recorded for provenance but is not pinned by the tag."
+}

@@ -405,83 +405,25 @@ class CombinedRecommendationTests(unittest.TestCase):
             "Shirts", "Boxers", relations,
         ))
 
-    def test_ambiguous_related_image_uses_group_bonus_without_candidate_pool(self):
+    def test_image_uses_hard_category_even_when_prediction_is_ambiguous(self):
         from src.recommend import FashionRecommender
 
         recommender = FashionRecommender.__new__(FashionRecommender)
         query = np.array([1.0, 0.0], dtype=np.float32)
-        visual_scores = np.array([0.8, 0.7], dtype=np.float32)
-        expected = pd.DataFrame({"category": ["Shirts", "Kurtas"]})
         recommender.encode_image = Mock(return_value=query)
-        recommender.predict_category = Mock(
-            return_value=("Shirts", 0.55, visual_scores)
-        )
-        recommender._rank_category_evidence = Mock(return_value={
-            "ranked": [("Shirts", 0.30), ("Kurtas", 0.29)],
-        })
-        recommender.category_relation_neighbors = {
-            "Shirts": ("Kurtas",),
-            "Kurtas": ("Shirts",),
-        }
-        recommender.recommend_weighted_categories = Mock(
-            return_value=(expected, 0.01)
-        )
+        recommender.predict_category = Mock(return_value=(
+            "Shirts", 0.55, np.array([0.8, 0.7], dtype=np.float32)
+        ))
+        expected = pd.DataFrame({"category": ["Shirts"]})
+        recommender.recommend_hard_category = Mock(return_value=(expected, 0.01))
 
-        response = recommender.recommend_by_image(
-            image=object(), category_mode="soft_category", top_k=2,
-        )
+        response = recommender.recommend_by_image(image=object(), top_k=2)
 
-        from src.config import (
-            RELATED_TOP1_BONUS_FACTOR,
-            RELATED_TOP2_BONUS_FACTOR,
+        recommender.recommend_hard_category.assert_called_once_with(
+            query, "Shirts", 2,
         )
-        recommender.recommend_weighted_categories.assert_called_once_with(
-            query,
-            0.55,
-            {
-                "Shirts": RELATED_TOP1_BONUS_FACTOR,
-                "Kurtas": RELATED_TOP2_BONUS_FACTOR,
-            },
-            2,
-        )
-        self.assertEqual(response["category_mode"], "soft_category")
-        self.assertEqual(response["candidate_categories"], ["Shirts", "Kurtas"])
-
-    def test_ambiguous_unrelated_image_uses_only_a_weak_top1_bonus(self):
-        from src.recommend import FashionRecommender
-
-        recommender = FashionRecommender.__new__(FashionRecommender)
-        query = np.array([1.0, 0.0], dtype=np.float32)
-        visual_scores = np.array([0.8, 0.7], dtype=np.float32)
-        expected = pd.DataFrame({"category": ["Shirts", "Boxers"]})
-        recommender.encode_image = Mock(return_value=query)
-        recommender.predict_category = Mock(
-            return_value=("Shirts", 0.55, visual_scores)
-        )
-        recommender._rank_category_evidence = Mock(return_value={
-            "ranked": [("Shirts", 0.30), ("Boxers", 0.29)],
-        })
-        recommender.category_relation_neighbors = {
-            "Shirts": (),
-            "Boxers": (),
-        }
-        recommender.recommend_weighted_categories = Mock(
-            return_value=(expected, 0.01)
-        )
-
-        response = recommender.recommend_by_image(
-            image=object(), category_mode="soft_category", top_k=2,
-        )
-
-        from src.config import UNRELATED_TOP1_BONUS_FACTOR
-        recommender.recommend_weighted_categories.assert_called_once_with(
-            query,
-            0.55,
-            {"Shirts": UNRELATED_TOP1_BONUS_FACTOR},
-            2,
-        )
-        self.assertEqual(response["category_mode"], "soft_category")
-        self.assertEqual(response["candidate_categories"], [])
+        self.assertEqual(response["category_mode"], "hard_category")
+        self.assertEqual(response["candidate_categories"], ["Shirts"])
 
     def test_combined_search_fuses_raw_cosine_scores(self):
         from src.recommend import FashionRecommender
@@ -531,11 +473,11 @@ class CombinedRecommendationTests(unittest.TestCase):
         recommender.products = pd.DataFrame({
             "product_id": ["image-match", "text-match"],
             "product_name": ["Image match", "Text match"],
-            "category": ["shirt", "shoe"],
+            "category": ["shirt", "shirt"],
             "description": ["", ""],
             "image_reference": ["a.jpg", "b.jpg"],
         })
-        recommender.categories = ["shirt", "shoe"]
+        recommender.categories = ["shirt"]
         recommender.embeddings = np.eye(2, dtype=np.float32)
         recommender.text_embeddings = np.eye(2, dtype=np.float32)
         recommender.encode_image = lambda image: np.array([1.0, 0.0], dtype=np.float32)
@@ -608,15 +550,10 @@ class CombinedRecommendationTests(unittest.TestCase):
         ))
         self.assertEqual(
             recommendation["category_route"],
-            "ambiguous_related_top2",
+            "image_hard",
         )
-        self.assertEqual(
-            recommendation["candidate_categories"],
-            ["Shirts", "Kurtas"],
-        )
-        self.assertAlmostEqual(matches["Shirts"], RELATED_TOP1_BONUS_FACTOR)
-        self.assertAlmostEqual(matches["Kurtas"], RELATED_TOP2_BONUS_FACTOR)
-        self.assertAlmostEqual(matches["Boxers"], 0.0)
+        self.assertEqual(recommendation["candidate_categories"], ["Shirts"])
+        self.assertEqual(set(recommendation["results"].category), {"Shirts"})
 
     def test_combined_ambiguous_unrelated_image_uses_weak_top1_bonus(self):
         from src.config import UNRELATED_TOP1_BONUS_FACTOR
@@ -662,11 +599,10 @@ class CombinedRecommendationTests(unittest.TestCase):
         ))
         self.assertEqual(
             recommendation["category_route"],
-            "ambiguous_unrelated_top1",
+            "image_hard",
         )
-        self.assertEqual(recommendation["candidate_categories"], [])
-        self.assertAlmostEqual(matches["Shirts"], UNRELATED_TOP1_BONUS_FACTOR)
-        self.assertAlmostEqual(matches["Boxers"], 0.0)
+        self.assertEqual(recommendation["candidate_categories"], ["Shirts"])
+        self.assertEqual(set(recommendation["results"].category), {"Shirts"})
 
     def test_combined_metadata_refines_only_image_compatible_categories(self):
         from src.recommend import FashionRecommender
@@ -721,14 +657,7 @@ class CombinedRecommendationTests(unittest.TestCase):
 
         results = recommendation["results"]
         self.assertEqual(results.iloc[0].product_id, "black-sock")
-        self.assertGreater(
-            float(results.loc[results.product_id == "black-sock", "similarity"].iloc[0]),
-            float(results.loc[results.product_id == "black-shoe", "similarity"].iloc[0]),
-        )
-        self.assertAlmostEqual(
-            float(results.loc[results.product_id == "black-shoe", "metadata_match"].iloc[0]),
-            0.0,
-        )
+        self.assertEqual(set(results.category), {"Socks"})
         self.assertTrue(recommendation["metadata_used"])
         self.assertTrue(recommendation["metadata_applied"])
         self.assertEqual(recommendation["metadata_candidate_count"], 2)
@@ -766,7 +695,7 @@ class CombinedRecommendationTests(unittest.TestCase):
         self.assertEqual(set(results.category), {"Caps"})
         self.assertEqual(recommendation["applied_category"], "Caps")
         self.assertEqual(recommendation["category_source"], "text")
-        self.assertEqual(recommendation["category_route"], "explicit_text")
+        self.assertEqual(recommendation["category_route"], "explicit_text_hard")
         self.assertEqual(recommendation["metadata_query"], "red")
         self.assertFalse(recommendation["metadata_used"])
 
@@ -805,9 +734,9 @@ class CombinedRecommendationTests(unittest.TestCase):
                 image_weight=0.5,
             )
 
-        self.assertEqual(recommendation["results"].iloc[0].product_id, "other")
-        self.assertIsNone(recommendation["applied_category"])
-        self.assertIsNone(recommendation["category_source"])
+        self.assertEqual(set(recommendation["results"].category), {"Dresses"})
+        self.assertEqual(recommendation["applied_category"], "Dresses")
+        self.assertEqual(recommendation["category_source"], "image")
         self.assertEqual(
             recommendation["guidance"]["status"],
             "multiple_categories",

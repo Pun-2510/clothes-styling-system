@@ -32,7 +32,7 @@ export function saveSearchFormState(state) {
 
 export function clearSearchQueryState() {
   const current = loadSearchFormState()
-  writeSessionValue(FORM_KEY, { ...current, query: '', audience: '' })
+  writeSessionValue(FORM_KEY, { ...current, query: '', audience: '', categoryMode: 'hard_category' })
 }
 
 export function loadSearchResult() {

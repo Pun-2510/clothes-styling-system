@@ -127,12 +127,12 @@ function createHistoryId() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`
 }
 
-function requestFingerprint(mode, query, file, audience) {
+function requestFingerprint(mode, query, file, audience, categoryMode) {
   const normalizedQuery = String(query || '').trim().toLocaleLowerCase()
   const imageFingerprint = file
     ? `${file.name}:${file.size}:${file.lastModified}`
     : ''
-  return `${mode}|${normalizedQuery}|${imageFingerprint}|${audience || ''}`
+  return `${mode}|${normalizedQuery}|${imageFingerprint}|${audience || ''}|${mode === 'image' ? categoryMode || 'hard_category' : ''}`
 }
 
 function previewItems(data) {
@@ -174,12 +174,12 @@ export async function loadSearchHistoryFile(id) {
   }
 }
 
-export async function addSearchHistory({ mode, query, language, topK, file, audience, data }) {
+export async function addSearchHistory({ mode, query, language, topK, file, audience, categoryMode, data }) {
   if (!['text', 'image', 'combined'].includes(mode)) return null
 
   const historyGeneration = readHistoryGeneration()
   const id = createHistoryId()
-  const fingerprint = requestFingerprint(mode, query, file, audience)
+  const fingerprint = requestFingerprint(mode, query, file, audience, categoryMode)
   const imageStored = file ? await saveHistoryFile(id, file) : false
   if (readHistoryGeneration() !== historyGeneration) {
     if (imageStored) await removeHistoryFile(id)
@@ -196,6 +196,7 @@ export async function addSearchHistory({ mode, query, language, topK, file, audi
     language: language === 'en' ? 'en' : 'vi',
     topK: Number(topK) || 5,
     audience: ['women', 'men', 'kids', 'unisex'].includes(audience) ? audience : '',
+    categoryMode: 'hard_category',
     createdAt: new Date().toISOString(),
     fingerprint,
     image: file ? {

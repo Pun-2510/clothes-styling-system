@@ -1,0 +1,62 @@
+{
+  "created_utc": "2026-11-26T07:47:26.044429+00:00",
+  "seed_count": 3,
+  "aggregation": "unweighted arithmetic mean and sample standard deviation across seeds",
+  "identity_columns": [
+    "comparison_group",
+    "system",
+    "role",
+    "deployed",
+    "input",
+    "formula",
+    "task",
+    "k"
+  ],
+  "metric_columns": [
+    "precision",
+    "recall",
+    "f1",
+    "ndcg",
+    "map",
+    "category_macro_precision",
+    "category_macro_recall",
+    "category_macro_f1",
+    "category_macro_ndcg",
+    "category_macro_map",
+    "evaluated_queries",
+    "skipped_queries",
+    "gallery_size"
+  ],
+  "inputs": [
+    {
+      "seed": "42",
+      "comparison_csv": "D:\\dacntt\\experiments\\model_comparison\\results\\diverse_seed_42\\fashionclip_raw_v1\\comparison.csv",
+      "experiment_json": "D:\\dacntt\\experiments\\model_comparison\\results\\diverse_seed_42\\fashionclip_raw_v1\\experiment.json",
+      "training_json": "D:\\dacntt\\project\\runs\\clip_finetune_diverse_seed_42\\training.json",
+      "catalog_sha256": "133247fe4ce60f2d3f4c26a5901cf89e263267c1f5df14a8e17e3b5a07849842",
+      "dataset_sha256": "ed83c128a870a3dcc6fc5b4ca3615a0c7db7263e0d31421f68f20c446785f7ab",
+      "query_count": 460,
+      "gallery_size": 5000
+    },
+    {
+      "seed": "123",
+      "comparison_csv": "D:\\dacntt\\experiments\\model_comparison\\results\\diverse_seed_123\\fashionclip_raw_v1\\comparison.csv",
+      "experiment_json": "D:\\dacntt\\experiments\\model_comparison\\results\\diverse_seed_123\\fashionclip_raw_v1\\experiment.json",
+      "training_json": "D:\\dacntt\\project\\runs\\clip_finetune_diverse_seed_123\\training.json",
+      "catalog_sha256": "2c923ad8d44a30409b41a510705b6d8664fee3b809572362f4ec8deb1db358b2",
+      "dataset_sha256": "937dcc4ddc5618bcf26a2425c5fba5a5e3447bc4842d7dc6a4fc9c9aa50bd345",
+      "query_count": 464,
+      "gallery_size": 5000
+    },
+    {
+      "seed": "2026",
+      "comparison_csv": "D:\\dacntt\\experiments\\model_comparison\\results\\diverse_seed_2026\\fashionclip_raw_v1\\comparison.csv",
+      "experiment_json": "D:\\dacntt\\experiments\\model_comparison\\results\\diverse_seed_2026\\fashionclip_raw_v1\\experiment.json",
+      "training_json": "D:\\dacntt\\project\\runs\\clip_finetune_diverse_seed_2026\\training.json",
+      "catalog_sha256": "33149090e023a6c1d5e50385a75bf6b6f9c66c237c8947b360eb4263db9501f8",
+      "dataset_sha256": "a8a23de0d782f0af9696dd269829c646f224517e1a828926d1f5b3abc3169b2c",
+      "query_count": 462,
+      "gallery_size": 5000
+    }
+  ]
+}

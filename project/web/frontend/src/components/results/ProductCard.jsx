@@ -44,9 +44,6 @@ export default function ProductCard({ item, index, mode }) {
               <strong>{Number(item.text_score).toFixed(3)}</strong>
             </div>
           )}
-          {mode === 'image' && Number(item.category_bonus) > 0 && (
-            <div className="bonus"><Icon name="spark" size={14} />+{Number(item.category_bonus).toFixed(2)} {t('product.sameCategory')}</div>
-          )}
           {!hasScore && <span className="product-view">{t('product.view')} <Icon name="arrow" size={15} /></span>}
         </div>
       </a>

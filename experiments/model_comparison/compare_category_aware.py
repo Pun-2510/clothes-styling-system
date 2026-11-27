@@ -177,6 +177,109 @@ def _classification_diagnostics(actual, predicted):
     }
 
 
+def _hard_dynamic_recovery(
+    hard_rankings,
+    dynamic_rankings,
+    predicted_categories,
+    query_ids,
+    query_categories,
+    gallery_ids,
+    gallery_categories,
+    ks,
+):
+    """Paired Top-K diagnosis under the same-category relevance definition.
+
+    Recovery@K is conditional on a wrong category prediction. The companion
+    loss rate shows how often Dynamic loses a hit that Hard had, preventing a
+    one-sided claim based only on rescued queries.
+    """
+    predicted = np.asarray(predicted_categories, dtype=str)
+    query_ids = np.asarray(query_ids, dtype=str)
+    actual = np.asarray(query_categories, dtype=str)
+    gallery_ids = np.asarray(gallery_ids, dtype=str)
+    gallery_categories = np.asarray(gallery_categories, dtype=str)
+    if not (
+        len(hard_rankings) == len(dynamic_rankings) == len(predicted)
+        == len(query_ids) == len(actual)
+    ):
+        raise ValueError("Hard, Dynamic and query arrays must align.")
+    if len(gallery_ids) != len(gallery_categories):
+        raise ValueError("Gallery IDs and categories must align.")
+
+    per_query = []
+    for query_index, (hard, dynamic) in enumerate(
+        zip(hard_rankings, dynamic_rankings)
+    ):
+        relevant = (
+            (gallery_ids != query_ids[query_index])
+            & (gallery_categories == actual[query_index])
+        )
+        if not actual[query_index].strip() or not np.any(relevant):
+            continue
+        hard = np.asarray(hard, dtype=np.int64)
+        dynamic = np.asarray(dynamic, dtype=np.int64)
+        if (np.any(hard < 0) or np.any(hard >= len(gallery_ids))
+                or np.any(dynamic < 0) or np.any(dynamic >= len(gallery_ids))):
+            raise ValueError("Ranking contains an invalid gallery index.")
+        record = {
+            "product_id": query_ids[query_index],
+            "actual_category": actual[query_index],
+            "predicted_category": predicted[query_index],
+            "prediction_correct": bool(predicted[query_index] == actual[query_index]),
+        }
+        for k in ks:
+            hard_hit = bool(np.any(relevant[hard[:k]]))
+            dynamic_hit = bool(np.any(relevant[dynamic[:k]]))
+            record[f"hard_hit_at_{k}"] = hard_hit
+            record[f"dynamic_hit_at_{k}"] = dynamic_hit
+            record[f"dynamic_rescue_at_{k}"] = not hard_hit and dynamic_hit
+            record[f"dynamic_loss_at_{k}"] = hard_hit and not dynamic_hit
+        per_query.append(record)
+
+    details = pd.DataFrame(per_query)
+    if details.empty:
+        raise ValueError("No eligible same-category queries for recovery diagnostics.")
+    rows = []
+    for k in ks:
+        wrong = details.loc[~details["prediction_correct"]]
+        right = details.loc[details["prediction_correct"]]
+        hard_hits = details[f"hard_hit_at_{k}"]
+        dynamic_hits = details[f"dynamic_hit_at_{k}"]
+        rescued = int(wrong[f"dynamic_rescue_at_{k}"].sum())
+        lost = int(right[f"dynamic_loss_at_{k}"].sum())
+        rows.append({
+            "k": k,
+            "eligible_queries": len(details),
+            "wrong_prediction_queries": len(wrong),
+            "right_prediction_queries": len(right),
+            "hard_hits": int(hard_hits.sum()),
+            "dynamic_hits": int(dynamic_hits.sum()),
+            "rescued_queries": rescued,
+            "recovery_at_k": rescued / len(wrong) if len(wrong) else 0.0,
+            "lost_queries": lost,
+            "loss_at_k": lost / len(right) if len(right) else 0.0,
+            "net_hit_rate_change": (
+                float(dynamic_hits.mean() - hard_hits.mean()) if len(details) else 0.0
+            ),
+        })
+    return rows, details
+
+
+def _recovery_markdown(rows):
+    lines = [
+        "| K | Eligible | Wrong prediction | Rescued | Recovery@K | Lost | Loss@K | Net Hit@K change |",
+        "|---:|---:|---:|---:|---:|---:|---:|---:|",
+    ]
+    for row in rows:
+        lines.append(
+            f"| {row['k']} | {row['eligible_queries']} | "
+            f"{row['wrong_prediction_queries']} | {row['rescued_queries']} | "
+            f"{row['recovery_at_k']:.4f} | {row['lost_queries']} | "
+            f"{row['loss_at_k']:.4f} | {row['net_hit_rate_change']:.4f} |"
+        )
+    return lines
+
+
 def self_test():
     sys.path.insert(0, str(PROJECT))
     from src.category_ranking import (
@@ -220,6 +323,18 @@ def self_test():
         0.2,
     )
     assert np.allclose(dynamic, [[0.75, 0.62, 0.5]])
+    recovery, cases = _hard_dynamic_recovery(
+        [np.array([1]), np.array([2])],
+        [np.array([0, 1, 2]), np.array([1, 2, 0])],
+        ["shirt", "shoe"], ["query-a", "query-b"],
+        ["shorts", "shoe"], ["a", "b", "c"],
+        ["shorts", "shirt", "shoe"], [1, 2],
+    )
+    assert len(cases) == 2
+    assert recovery[0]["rescued_queries"] == 1
+    assert recovery[0]["lost_queries"] == 1
+    assert recovery[0]["recovery_at_k"] == 1.0
+    assert recovery[0]["loss_at_k"] == 1.0
     print("PASS: hard, legacy and dynamic category ranking")
 
 
@@ -371,8 +486,8 @@ def main():
         },
         "hard_category_filter": {
             "comparison_group": "category_aware_ablation",
-            "role": "hard predicted-category filter",
-            "deployed": False,
+            "role": "default image-only hard predicted-category filter",
+            "deployed": True,
             "input": "image",
             "formula": "rank only c_i=c_hat",
         },
@@ -392,8 +507,8 @@ def main():
         },
         "dynamic_relation_category": {
             "comparison_group": "category_aware_ablation",
-            "role": "deployed prototype-and-relation policy",
-            "deployed": True,
+            "role": "historical flexible ablation, not served by the website",
+            "deployed": False,
             "input": "image",
             "formula": "S_II + lambda*g(h)*w(c_i)",
         },
@@ -442,6 +557,17 @@ def main():
         }
     )
 
+    recovery_rows, recovery_cases = _hard_dynamic_recovery(
+        rankings["hard_category_filter"],
+        rankings["dynamic_relation_category"],
+        predicted_categories,
+        query_ids,
+        query_categories,
+        gallery_ids,
+        gallery_categories,
+        ks,
+    )
+
     output = _prepare_output(args.output_dir)
     predictions = pd.DataFrame(
         {
@@ -455,6 +581,8 @@ def main():
         }
     )
     predictions.to_csv(output / "category_predictions.csv", index=False)
+    pd.DataFrame(recovery_rows).to_csv(output / "hard_dynamic_recovery.csv", index=False)
+    recovery_cases.to_csv(output / "hard_dynamic_queries.csv", index=False)
     pd.DataFrame(rows).to_csv(output / "comparison.csv", index=False)
     pd.DataFrame(category_rows).to_csv(
         output / "comparison_by_category.csv", index=False
@@ -473,6 +601,7 @@ def main():
         "category_prototypes": prototype_metadata,
         "category_relation_graph": relation_graph,
         "category_prediction": classification,
+        "hard_dynamic_recovery": recovery_rows,
         "metrics": metrics,
     }
     (output / "comparison.json").write_text(
@@ -495,6 +624,14 @@ def main():
         f"- Confidence-weighted coverage: {classification['weighted_coverage']:.4f}",
         f"- Mean category strength: {classification['mean_category_strength']:.4f}",
         f"- Dynamic route counts: {classification['route_counts']}",
+        "",
+        "## Hard versus Dynamic: paired category recovery",
+        "",
+        "Recovery@K = wrong-category queries rescued by Dynamic / eligible wrong-category queries.",
+        "Loss@K = correct-category queries where Hard hits but Dynamic misses / eligible correct-category queries.",
+        "A hit means at least one other product of the query's true category appears in Top-K; it does not verify style or attributes.",
+        "",
+        *_recovery_markdown(recovery_rows),
     ]
     (output / "summary.md").write_text("\n".join(summary) + "\n", encoding="utf-8")
 

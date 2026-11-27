@@ -16,16 +16,16 @@ const COPY = {
     topology: 'Kiến trúc phục vụ', topologyText: 'Trình duyệt → Web Reverse Proxy :80 → frontend hoặc API Gateway → backend / backend_2 → fine-tuned CLIP và catalog embeddings',
     offline: 'Offline pipeline', online: 'Online retrieval pipeline',
     offlineSteps: ['Chuẩn bị catalog theo số lượng yêu cầu và tự sinh category audit trong project/data/processed.', 'Chia train/validation/test và fine-tune CLIP bằng category-balanced sampling trong project/runs.', 'Chọn checkpoint tốt nhất trên validation set.', 'Sinh image/text embeddings từ cùng checkpoint và catalog vào project/embeddings.', 'Sinh TF-IDF metadata index từ tên và mô tả catalog vào project/metadata_index.', 'Chọn trọng số retrieval bằng lệnh project-local và ghi project/retrieval_weights.json.', 'Kiểm tra artifact rồi khởi động Docker Compose; experiments không phải đầu vào của website.'],
-    onlineSteps: ['Tự nhận biết truy vấn text-only, image-only hoặc combined.', 'Mã hóa query bằng fine-tuned CLIP; tiếng Việt được dịch sang tiếng Anh trước khi encode.', 'Tính raw cosine similarity với toàn bộ catalog embeddings.', 'Với text-only, TF-IDF bổ sung mức khớp từ tên và mô tả catalog.', 'Ảnh kết hợp láng giềng cân bằng và CLIP prompt-ensemble prototype rồi kiểm tra quan hệ Top-2.', 'Trong combined, category evidence xác định nhóm tương thích; TF-IDF chỉ tinh chỉnh trong nhóm đó còn sản phẩm khác giữ điểm CLIP gốc.', 'Xếp hạng Top-K và trả kết quả qua Nginx load balancer.'],
+    onlineSteps: ['Tự nhận biết truy vấn text-only, image-only hoặc combined.', 'Mã hóa query bằng fine-tuned CLIP; tiếng Việt được dịch sang tiếng Anh trước khi encode.', 'Tính raw cosine similarity với toàn bộ catalog embeddings.', 'Với text-only, TF-IDF bổ sung mức khớp từ tên và mô tả catalog.', 'Với image-only, dự đoán category từ láng giềng cân bằng và CLIP prompt rồi chỉ xếp hạng trong danh mục đó.', 'Với combined, một danh mục nêu rõ trong text được ưu tiên; nếu không, dùng danh mục ảnh dự đoán. TF-IDF tinh chỉnh trong danh mục được chọn.', 'Xếp hạng Top-K và trả kết quả qua Nginx load balancer.'],
     scoreLegend: 'Các score đều bắt đầu từ cosine similarity; percentile không được sử dụng trong pipeline hiện tại.',
     cosine: 'Cosine similarity', imageOnly: 'Image-only', textOnly: 'Text-only', combined: 'Image + text', categoryConfidence: 'Category confidence',
     cosineNote: 'Độ tương đồng giữa hai embedding đã chuẩn hóa; giá trị cao hơn nghĩa là hai biểu diễn gần nhau hơn.',
-    imageOnlyNote: 'Ảnh được so với toàn bộ image embeddings. Category evidence kết hợp láng giềng cân bằng và prototype trung bình từ nhiều CLIP prompt; confidence cùng quan hệ Top-2 quyết định trọng số bonus mà không lọc cứng catalog.',
+    imageOnlyNote: 'Only products in the predicted category are ranked by image cosine similarity.',
     textOnlyNote: 'CLIP so sánh text với image/text embeddings; TF-IDF bổ sung mức khớp từ khóa với tên và mô tả catalog.',
-    combinedNote: 'Ảnh giữ loại sản phẩm; văn bản tinh chỉnh qua CLIP. TF-IDF chỉ tăng điểm cho sản phẩm có category tương thích G(i), còn sản phẩm khác giữ nguyên điểm fusion CLIP.',
-    categoryNote: 'g(h) đưa confidence về khoảng 0–1 giữa floor và threshold. Ở mức trung bình, hai category chỉ cùng nhận bonus khi chúng là láng giềng lẫn nhau trong graph CLIP; nếu không, Top-1 chỉ nhận tín hiệu nhỏ.',
-    symbols: 'Ký hiệu', symbolText: 'SII: image→image · STI: text→image · STT: text→text · SM: TF-IDF metadata match · G(i): 1 khi sản phẩm thuộc nhóm category tương thích · w(ci): trọng số category của sản phẩm i.',
-    liveWeights: 'Trọng số runtime', textImageWeight: 'β · text→image', textMetadataWeight: 'λM · text metadata', combinedImageWeight: 'ωI · image', metadataWeight: 'λM · combined metadata', categoryWeight: 'λC · combined category', imageCategoryBonus: 'λI · image category', confidenceRange: 'Khoảng confidence', topPerClass: 'Top láng giềng/category', prototypeWeight: 'Category prototype', relationNeighbours: 'Láng giềng graph/category', relatedTop1: 'Top-1 khi liên quan', relatedTop2: 'Top-2 khi liên quan', unrelatedTop1: 'Top-1 khi không liên quan',
+    combinedNote: 'Kết hợp điểm CLIP từ ảnh và văn bản; TF-IDF chỉ tinh chỉnh sản phẩm trong danh mục được chọn.',
+    categoryNote: 'Hard Category dự đoán một danh mục từ láng giềng ảnh và CLIP prompts, rồi chỉ xếp hạng sản phẩm trong danh mục đó.',
+    symbols: 'Ký hiệu', symbolText: 'SII: ảnh→ảnh; STI: chữ→ảnh; STT: chữ→chữ; SM: điểm khớp TF-IDF; Gi = 1 nếu sản phẩm thuộc danh mục đã chọn, ngược lại bằng 0. Chỉ xếp hạng sản phẩm trong danh mục đó.',
+    liveWeights: 'Trọng số runtime', textImageWeight: 'β · text→image', textMetadataWeight: 'λM · text metadata', combinedImageWeight: 'ωI · image', metadataWeight: 'λM · combined metadata', categoryWeight: 'λC · combined category', imageCategoryBonus: 'λI · image category', confidenceRange: 'Khoảng confidence', topPerClass: 'Top láng giềng/category', prototypeWeight: 'Category prototype',
     quickStart: 'Các lệnh project-local', prepare: '1. Chuẩn bị dữ liệu và audit', train: '2. Fine-tune CLIP', embeddings: '3. Sinh embeddings', metadata: '4. Sinh TF-IDF metadata index', weights: '5. Chọn trọng số trên validation', configure: '6. Tạo cấu hình cục bộ', serve: '7. Khởi động website',
     noRuntime: 'Chưa nhận được dữ liệu runtime từ backend.', localOnly: 'Trang dành cho quan sát kỹ thuật; không thay đổi model hoặc dữ liệu.',
   },
@@ -40,16 +40,16 @@ const COPY = {
     topology: 'Serving architecture', topologyText: 'Browser → Web Reverse Proxy :80 → frontend or API Gateway → backend / backend_2 → fine-tuned CLIP and catalog embeddings',
     offline: 'Offline pipeline', online: 'Online retrieval pipeline',
     offlineSteps: ['Prepare the requested catalog size and write its category audit to project/data/processed.', 'Create train/validation/test splits and fine-tune CLIP with category-balanced sampling under project/runs.', 'Select the best checkpoint on the validation split.', 'Generate image/text embeddings from the same checkpoint and catalog under project/embeddings.', 'Build the TF-IDF metadata index from catalog names and descriptions under project/metadata_index.', 'Run the project-local validation command and write project/retrieval_weights.json.', 'Verify the artifacts and start Docker Compose; experiments are not website inputs.'],
-    onlineSteps: ['Detect text-only, image-only, or combined input automatically.', 'Encode the query with fine-tuned CLIP; Vietnamese text is translated before encoding.', 'Calculate raw cosine similarity against all catalog embeddings.', 'For text-only retrieval, TF-IDF adds lexical matching against catalog names and descriptions.', 'Image evidence combines balanced neighbours with CLIP prompt-ensemble prototypes and inspects the Top-2 relation.', 'For combined retrieval, category evidence defines a compatible group; TF-IDF refines only that group while other products retain their original CLIP scores.', 'Rank Top-K products and return them through the Nginx load balancer.'],
+    onlineSteps: ['Detect text-only, image-only, or combined input automatically.', 'Encode the query with fine-tuned CLIP; Vietnamese text is translated before encoding.', 'Calculate raw cosine similarity against all catalog embeddings.', 'For text-only retrieval, TF-IDF adds lexical matching against catalog names and descriptions.', 'For image-only retrieval, predict one category from balanced neighbours and CLIP prompts, then rank only within that category.', 'For combined retrieval, one explicit text category takes precedence; otherwise use the predicted image category. TF-IDF refines within the selected category.', 'Rank Top-K products and return them through the Nginx load balancer.'],
     scoreLegend: 'Every score starts from cosine similarity; percentile normalization is not used by the current pipeline.',
     cosine: 'Cosine similarity', imageOnly: 'Image-only', textOnly: 'Text-only', combined: 'Image + text', categoryConfidence: 'Category confidence',
     cosineNote: 'Similarity between two normalized embeddings; a higher value means the representations are closer.',
-    imageOnlyNote: 'The query image is compared with every image embedding. Category evidence combines balanced neighbours with prototypes averaged from multiple CLIP prompts; confidence and the Top-2 relation determine soft bonus weights without hard filtering.',
+    imageOnlyNote: 'Only products in the predicted category are ranked by image cosine similarity.',
     textOnlyNote: 'CLIP compares text with image/text embeddings; TF-IDF adds lexical matching against catalog names and descriptions.',
-    combinedNote: 'The image preserves product type and text refines it through CLIP. TF-IDF boosts only products with compatible category gate G(i); all other products retain the raw CLIP fusion score.',
-    categoryNote: 'g(h) maps confidence to 0–1 between the floor and threshold. At medium confidence, both labels receive bonuses only when they are mutual CLIP graph neighbours; otherwise Top-1 receives a weak signal.',
-    symbols: 'Symbols', symbolText: 'SII: image→image · STI: text→image · STT: text→text · SM: TF-IDF metadata match · G(i): 1 for category-compatible products · w(ci): category weight for product i.',
-    liveWeights: 'Runtime weights', textImageWeight: 'β · text→image', textMetadataWeight: 'λM · text metadata', combinedImageWeight: 'ωI · image', metadataWeight: 'λM · combined metadata', categoryWeight: 'λC · combined category', imageCategoryBonus: 'λI · image category', confidenceRange: 'Confidence range', topPerClass: 'Top neighbours/category', prototypeWeight: 'Category prototype', relationNeighbours: 'Graph neighbours/category', relatedTop1: 'Related Top-1', relatedTop2: 'Related Top-2', unrelatedTop1: 'Unrelated Top-1',
+    combinedNote: 'Image and text scores are fused; one category is selected, then TF-IDF refines products within that category.',
+    categoryNote: 'Hard Category selects one category from balanced visual neighbours and CLIP prompts, then ranks products within it.',
+    symbols: 'Symbols', symbolText: 'SII: image to image; STI: text to image; STT: text to text; SM: TF-IDF metadata match; Gi = 1 for the selected category, otherwise 0. Only products in that category are ranked.',
+    liveWeights: 'Runtime weights', textImageWeight: 'β · text→image', textMetadataWeight: 'λM · text metadata', combinedImageWeight: 'ωI · image', metadataWeight: 'λM · combined metadata', categoryWeight: 'λC · combined category', imageCategoryBonus: 'λI · image category', confidenceRange: 'Confidence range', topPerClass: 'Top neighbours/category', prototypeWeight: 'Category prototype',
     quickStart: 'Project-local commands', prepare: '1. Prepare data and audit', train: '2. Fine-tune CLIP', embeddings: '3. Generate embeddings', metadata: '4. Build TF-IDF metadata index', weights: '5. Select validation weights', configure: '6. Create local configuration', serve: '7. Start the website',
     noRuntime: 'Runtime data has not been received from the backend.', localOnly: 'This page is read-only and does not modify the model or data.',
   },
@@ -139,15 +139,8 @@ export default function DeveloperPage() {
     [copy.textMetadataWeight, formatWeight(retrieval?.text_metadata_weight)],
     [copy.combinedImageWeight, formatWeight(retrieval?.combined_image_weight)],
     [copy.metadataWeight, formatWeight(retrieval?.combined_metadata_weight)],
-    [copy.categoryWeight, formatWeight(retrieval?.combined_category_weight)],
-    [copy.imageCategoryBonus, formatWeight(retrieval?.image_category_bonus)],
-    [copy.confidenceRange, retrieval ? `${formatWeight(retrieval.category_confidence_floor)} → ${formatWeight(retrieval.category_confidence_threshold)}` : '—'],
     [copy.topPerClass, retrieval?.category_top_per_class ?? '—'],
     [copy.prototypeWeight, formatWeight(retrieval?.category_prototype_weight)],
-    [copy.relationNeighbours, retrieval?.category_relation_neighbors ?? '—'],
-    [copy.relatedTop1, formatWeight(retrieval?.related_top1_bonus_factor)],
-    [copy.relatedTop2, formatWeight(retrieval?.related_top2_bonus_factor)],
-    [copy.unrelatedTop1, formatWeight(retrieval?.unrelated_top1_bonus_factor)],
   ], [copy, retrieval])
 
   return (
@@ -226,7 +219,6 @@ export default function DeveloperPage() {
               <FormulaCard title={copy.imageOnly} type="image" note={copy.imageOnlyNote} />
               <FormulaCard title={copy.textOnly} type="text" note={copy.textOnlyNote} />
               <FormulaCard title={copy.combined} type="combined" note={copy.combinedNote} />
-              <FormulaCard title={copy.categoryConfidence} type="category" note={copy.categoryNote} wide />
             </div>
             <div className="dev-symbols"><strong>{copy.symbols}</strong><span>{copy.symbolText}</span></div>
           </section>

@@ -37,10 +37,6 @@ from src.config import (
     TOP_K,
     CATEGORY_TOP_PER_CLASS,
     CATEGORY_PROTOTYPE_WEIGHT,
-    CATEGORY_RELATION_NEIGHBORS,
-    RELATED_TOP1_BONUS_FACTOR,
-    RELATED_TOP2_BONUS_FACTOR,
-    UNRELATED_TOP1_BONUS_FACTOR,
     CATEGORY_CONFIDENCE_FLOOR,
     CATEGORY_CONFIDENCE_THRESHOLD,
     CATEGORY_BONUS,
@@ -57,8 +53,6 @@ from src.category_ranking import (
     apply_category_gated_metadata_refinement,
     apply_confidence_weighted_category_bonus,
     category_confidence_strength,
-    build_mutual_category_neighbors,
-    categories_are_mutual_neighbors,
     combine_category_evidence,
     rank_category_score_mapping,
     rank_category_candidates,
@@ -310,16 +304,6 @@ class FashionRecommender:
         self.category_prototype_embeddings = (
             self._encode_category_prototypes()
         )
-        self.category_relation_neighbors = build_mutual_category_neighbors(
-            self.categories,
-            self.category_prototype_embeddings,
-            CATEGORY_RELATION_NEIGHBORS,
-        )
-        relation_count = sum(
-            len(values)
-            for values in self.category_relation_neighbors.values()
-        ) // 2
-
         log_info(
             f"Loaded products="
             f"{len(self.products):,}"
@@ -328,12 +312,6 @@ class FashionRecommender:
         log_info(
             f"Loaded categories="
             f"{len(self.categories)}"
-        )
-
-        log_info(
-            "Category prototype relation graph | "
-            f"mutual_neighbors={CATEGORY_RELATION_NEIGHBORS} | "
-            f"relations={relation_count}"
         )
 
         log_info(
@@ -704,82 +682,20 @@ class FashionRecommender:
         predicted_category, category_confidence, visual_scores = (
             self.predict_category(image_query, request_id)
         )
-        image_category_strength = category_confidence_strength(
-            category_confidence,
-            CATEGORY_CONFIDENCE_FLOOR,
-            CATEGORY_CONFIDENCE_THRESHOLD,
-        )
-
-        explicit_text_categories = explicit_categories_from_text(
-            text,
-            self.categories,
-        )
+        explicit_text_categories = explicit_categories_from_text(text, self.categories)
         text_category = (
             explicit_text_categories[0]
             if len(explicit_text_categories) == 1
             else None
         )
-        category_factors = {}
-        candidate_categories = []
-        category_route = "none"
-
-        # An explicit text category is the clearest user instruction.  It
-        # therefore takes precedence over the image prediction and is handled
-        # as a hard candidate constraint below.  Image evidence is only used
-        # when text does not name a category; in that case the same dynamic
-        # Top-2 policy as image-only retrieval is applied to the fused score.
-        if text_category is not None:
-            applied_category = text_category
-            category_source = "text"
-            category_route = "explicit_text"
-            contextual_text = add_audience_context(text, audience)
-        elif len(explicit_text_categories) > 1:
-            applied_category = None
-            category_source = None
-            category_route = "multiple_text_categories"
-            contextual_text = add_audience_context(text, audience)
-        elif image_category_strength > 0.0:
-            category_evidence = self._rank_category_evidence(
-                image_query,
-                visual_scores,
-            )
-            leading_categories = [
-                category
-                for category, _ in category_evidence["ranked"][:2]
-            ]
-            applied_category = leading_categories[0]
-            category_source = "image"
-
-            if category_confidence >= CATEGORY_CONFIDENCE_THRESHOLD:
-                category_factors = {applied_category: 1.0}
-                category_route = "confident_top1"
-            else:
-                is_related_pair = (
-                    len(leading_categories) == 2
-                    and categories_are_mutual_neighbors(
-                        leading_categories[0],
-                        leading_categories[1],
-                        self.category_relation_neighbors,
-                    )
-                )
-                if is_related_pair:
-                    candidate_categories = leading_categories
-                    category_factors = {
-                        leading_categories[0]: RELATED_TOP1_BONUS_FACTOR,
-                        leading_categories[1]: RELATED_TOP2_BONUS_FACTOR,
-                    }
-                    category_route = "ambiguous_related_top2"
-                else:
-                    category_factors = {
-                        applied_category: UNRELATED_TOP1_BONUS_FACTOR,
-                    }
-                    category_route = "ambiguous_unrelated_top1"
-            contextual_text = add_audience_context(text, audience)
-        else:
-            applied_category = None
-            category_source = None
-            category_route = "low_confidence"
-            contextual_text = add_audience_context(text, audience)
+        # An unambiguous category named by the user takes precedence. Otherwise
+        # the image prediction defines the candidate category, regardless of
+        # confidence; text still refines the products inside that category.
+        applied_category = text_category or predicted_category
+        category_source = "text" if text_category else "image"
+        category_route = "explicit_text_hard" if text_category else "image_hard"
+        candidate_categories = [applied_category] if applied_category else []
+        contextual_text = add_audience_context(text, audience)
 
         text_query = self.encode_text(contextual_text)
         text_to_image_scores = cosine_similarity(text_query, self.embeddings)
@@ -805,31 +721,18 @@ class FashionRecommender:
             + text_weight * text_scores
         )
 
-        if category_source == "text":
-            category_scores = (
-                self.products["category"]
-                .astype(str)
-                .eq(applied_category)
-                .astype(np.float32)
-                .to_numpy()
-            )
-        elif category_source == "image":
-            category_scores = (
-                self.products["category"]
-                .astype(str)
-                .map(category_factors)
-                .fillna(0.0)
-                .astype(np.float32)
-                .to_numpy()
-            )
-        else:
-            category_scores = np.zeros(len(self.products), dtype=np.float32)
+        category_scores = (
+            self.products["category"]
+            .astype(str)
+            .eq(applied_category)
+            .astype(np.float32)
+            .to_numpy()
+        )
 
         # TF-IDF is a refinement signal, not a second full-catalog search.
         # The image (or one explicit text category) defines which product
-        # groups may receive a lexical boost. Products outside those groups
-        # remain eligible through the original CLIP fusion score but cannot
-        # win only because a generic word such as "black" occurs in metadata.
+        # groups may receive a lexical boost. Hard category filtering below
+        # excludes products outside the selected group from the final ranking.
         metadata_query = metadata_refinement_text(text, explicit_text_categories)
         metadata_scores, metadata_used = self.metadata_match_scores(metadata_query)
         metadata_applied = bool(
@@ -849,37 +752,17 @@ class FashionRecommender:
                 COMBINED_METADATA_WEIGHT,
             )
 
-        # An image-inferred category is only a soft cue. An explicitly named
-        # text category is safe to use as the candidate pool and lets a phrase
-        # such as "red cap" override the blue colour in the reference image.
-        if category_source == "image":
-            final_scores, category_strength, effective_category_bonus = (
-                apply_confidence_weighted_category_bonus(
-                    final_scores,
-                    category_scores,
-                    category_confidence,
-                    COMBINED_CATEGORY_WEIGHT,
-                    CATEGORY_CONFIDENCE_FLOOR,
-                    CATEGORY_CONFIDENCE_THRESHOLD,
-                )
-            )
-        elif category_source == "text":
-            category_strength = 1.0
-            effective_category_bonus = 0.0
-        else:
-            category_strength = 0.0
-            effective_category_bonus = 0.0
-
-        if category_source == "text":
-            category_indices = np.flatnonzero(category_scores)
-            if len(category_indices) > 0:
-                constrained_indices = np.intersect1d(
-                    eligible_indices,
-                    category_indices,
-                    assume_unique=True,
-                )
-                if len(constrained_indices) > 0:
-                    eligible_indices = constrained_indices
+        # Hard category applies to both image-only and combined retrieval.
+        # When audience and category have no intersection, return no products
+        # instead of silently broadening the candidate pool.
+        category_strength = 1.0
+        effective_category_bonus = 0.0
+        category_indices = np.flatnonzero(category_scores)
+        eligible_indices = np.intersect1d(
+            eligible_indices,
+            category_indices,
+            assume_unique=True,
+        )
 
         actual_k = min(int(top_k), len(eligible_indices))
         local_indices = top_k_indices(
@@ -1373,7 +1256,7 @@ class FashionRecommender:
     def recommend_by_image(
         self,
         image,
-        category_mode="no_category",
+        category_mode="hard_category",
         top_k=TOP_K,
         request_id=None,
         audience=None,
@@ -1400,17 +1283,13 @@ class FashionRecommender:
             else {"eligible_indices": audience_indices}
         )
 
-        valid_modes = {
-            "no_category",
-            "hard_category",
-            "soft_category",
-        }
+        valid_modes = {"no_category", "hard_category"}
 
         if category_mode not in valid_modes:
 
             raise ValueError(
                 "category_mode phải là một trong: "
-                "no_category, hard_category, soft_category."
+                "no_category, hard_category."
             )
 
         total_start = (
@@ -1446,120 +1325,13 @@ class FashionRecommender:
                 request_id
             )
 
-            if category_mode == "hard_category":
-
-                results, ranking_time = (
-                    self.recommend_hard_category(
-                        query_embedding,
-                        predicted_category,
-                        top_k,
-                        **audience_kwargs,
-                    )
-                )
-
-            else:
-
-                category_strength = category_confidence_strength(
-                    confidence,
-                    CATEGORY_CONFIDENCE_FLOOR,
-                    CATEGORY_CONFIDENCE_THRESHOLD,
-                )
-
-                if category_strength <= 0.0:
-
-                    log_info(
-                        f"request={request_id} | "
-                        "CATEGORY_FALLBACK | "
-                        f"predicted={predicted_category} | "
-                        f"confidence={confidence:.4f} | "
-                        f"floor={CATEGORY_CONFIDENCE_FLOOR:.4f} | "
-                        "applied=no_category"
-                    )
-
-                    results, ranking_time = (
-                        self.recommend_no_category(
-                            query_embedding,
-                            top_k,
-                            **audience_kwargs,
-                        )
-                    )
-
-                    category_mode = "no_category"
-                else:
-                    is_ambiguous_category = (
-                        confidence < CATEGORY_CONFIDENCE_THRESHOLD
-                    )
-                    if is_ambiguous_category:
-                        category_evidence = self._rank_category_evidence(
-                            query_embedding,
-                            visual_scores,
-                        )
-                        leading_categories = [
-                            category
-                            for category, _ in category_evidence["ranked"][
-                                :2
-                            ]
-                        ]
-                        is_related_pair = (
-                            len(leading_categories) == 2
-                            and categories_are_mutual_neighbors(
-                                leading_categories[0],
-                                leading_categories[1],
-                                self.category_relation_neighbors,
-                            )
-                        )
-                        if is_related_pair:
-                            candidate_categories = leading_categories
-                            results, ranking_time = (
-                                self.recommend_weighted_categories(
-                                    query_embedding,
-                                    confidence,
-                                    {
-                                        leading_categories[0]: RELATED_TOP1_BONUS_FACTOR,
-                                        leading_categories[1]: RELATED_TOP2_BONUS_FACTOR,
-                                    },
-                                    top_k,
-                                    **audience_kwargs,
-                                )
-                            )
-                            log_info(
-                                f"request={request_id} | "
-                                "RELATED_CATEGORY_BONUS | "
-                                f"categories={candidate_categories} | "
-                                f"top1_factor={RELATED_TOP1_BONUS_FACTOR:.4f} | "
-                                f"top2_factor={RELATED_TOP2_BONUS_FACTOR:.4f} | "
-                                f"confidence={confidence:.4f}"
-                            )
-                        else:
-                            results, ranking_time = (
-                                self.recommend_weighted_categories(
-                                    query_embedding,
-                                    confidence,
-                                    {
-                                        leading_categories[0]: UNRELATED_TOP1_BONUS_FACTOR,
-                                    },
-                                    top_k,
-                                    **audience_kwargs,
-                                )
-                            )
-                            log_info(
-                                f"request={request_id} | "
-                                "AMBIGUOUS_UNRELATED_WEAK_BONUS | "
-                                f"categories={leading_categories} | "
-                                f"top1_factor={UNRELATED_TOP1_BONUS_FACTOR:.4f} | "
-                                f"confidence={confidence:.4f} | "
-                                f"applied={leading_categories[0]}"
-                            )
-                    else:
-                        results, ranking_time = (
-                            self.recommend_soft_category(
-                                query_embedding,
-                                predicted_category,
-                                confidence,
-                                top_k,
-                                **audience_kwargs,
-                            )
-                        )
+            results, ranking_time = self.recommend_hard_category(
+                query_embedding,
+                predicted_category,
+                top_k,
+                **audience_kwargs,
+            )
+            candidate_categories = [predicted_category]
 
         total_time = (
             time.perf_counter()

@@ -10,19 +10,19 @@ const COPY = {
     modes: {
       image: {
         tab: 'IMAGE QUERY',
-        summary: 'Ảnh luôn được so với toàn bộ catalog. Category được suy ra từ láng giềng ảnh và CLIP prompt-ensemble prototype; quan hệ Top-2 chỉ điều chỉnh bonus, không lọc cứng sản phẩm.',
+        summary: 'Ảnh được mã hóa bằng CLIP và so với catalog. Category evidence dự đoán danh mục; hệ thống chỉ xếp hạng sản phẩm trong danh mục đó.',
         steps: [
-          ['01', 'CROP ẢNH', 'Chọn vùng trang phục cần tìm'],
-          ['02', 'CLIP + SII', 'Mã hóa ảnh và tính cosine với catalog'],
-          ['03', 'CATEGORY EVIDENCE', 'Láng giềng cân bằng + CLIP prompt ensemble'],
-          ['04', 'CONFIDENCE ROUTE', 'Đánh giá h và quan hệ Top-2'],
-          ['05', 'SOFT TOP-K', 'Cộng bonus có trọng số rồi xếp hạng'],
+          ['01', 'CHỌN VÙNG ẢNH', 'Chọn trang phục cần tìm'],
+          ['02', 'CLIP VISION', 'Tạo image embedding'],
+          ['03', 'COSINE SII', 'So sánh ảnh với catalog'],
+          ['04', 'DỰ ĐOÁN DANH MỤC', 'Láng giềng cân bằng và CLIP prompt'],
+          ['05', 'HARD CATEGORY + TOP-K', 'Chỉ xếp hạng trong danh mục dự đoán'],
         ],
-        evidenceTitle: 'Category evidence quay lại bước xếp hạng',
+        evidenceTitle: 'Cách dùng category evidence',
         evidence: [
-          ['Confidence thấp', 'h ≤ h₀: không cộng category bonus; giữ nguyên cosine ranking.'],
-          ['Confidence trung bình', 'Top-2 liên quan: ưu tiên cả hai với mức khác nhau. Không liên quan: chỉ cộng tín hiệu Top-1 rất nhỏ.'],
-          ['Confidence cao', 'h ≥ h₁: dùng soft bonus đầy đủ cho Top-1; toàn bộ catalog vẫn được giữ lại.'],
+          ['Dự đoán danh mục', 'Kết hợp láng giềng ảnh và CLIP prompt để chọn một danh mục.'],
+          ['Lọc theo danh mục', 'Chỉ sản phẩm thuộc danh mục được chọn mới vào Top-K.'],
+          ['Nếu kết quả chưa đúng', 'Thêm mô tả loại sản phẩm hoặc chọn lại vùng ảnh để tìm kết hợp.'],
         ],
       },
       text: {
@@ -44,19 +44,19 @@ const COPY = {
       },
       combined: {
         tab: 'IMAGE + TEXT',
-        summary: 'Ảnh giữ loại sản phẩm, text tinh chỉnh màu sắc hoặc đặc điểm. TF-IDF chỉ tăng điểm trong nhóm category tương thích để từ chung như “black” không kéo sản phẩm khác loại lên đầu.',
+        summary: 'Ảnh và văn bản cùng tạo điểm CLIP. Nếu văn bản nêu rõ một danh mục, dùng danh mục đó; nếu không, dùng danh mục ảnh dự đoán. TF-IDF hỗ trợ khớp thuộc tính trong danh mục đã chọn.',
         steps: [
-          ['01', 'DUAL INPUT', 'Ảnh đã crop + mô tả'],
-          ['02', 'CLIP ENCODERS', 'Vision và text embeddings'],
-          ['03', 'RAW FUSION', 'Kết hợp SII với ST'],
-          ['04', 'CATEGORY ROUTE', 'Xác định nhóm sản phẩm tương thích'],
-          ['05', 'GATED TF-IDF + TOP-K', 'Tinh chỉnh metadata trong nhóm rồi xếp hạng'],
+          ['01', 'ẢNH + MÔ TẢ', 'Ảnh đã chọn vùng và văn bản'],
+          ['02', 'CLIP ENCODERS', 'Tạo image và text embeddings'],
+          ['03', 'RAW FUSION', 'Kết hợp điểm ảnh và văn bản'],
+          ['04', 'SELECT CATEGORY', 'Ưu tiên danh mục rõ trong text, còn lại dùng ảnh'],
+          ['05', 'TF-IDF + FILTER + TOP-K', 'Tinh chỉnh và xếp hạng trong danh mục'],
         ],
-        evidenceTitle: 'Kết hợp category evidence từ ảnh và văn bản',
+        evidenceTitle: 'Chọn danh mục cho truy vấn kết hợp',
         evidence: [
-          ['Text rõ ràng', 'Đúng một category trong text tạo candidate pool; TF-IDF chỉ tinh chỉnh các sản phẩm trong pool đó.'],
-          ['Text mơ hồ', 'Nhiều category không kích hoạt hard filter; người dùng nhận gợi ý chọn lại.'],
-          ['Không có category trong text', 'Category evidence từ ảnh chọn nhóm được nhận TF-IDF boost và soft bonus. Sản phẩm khác nhóm vẫn còn trong catalog với điểm CLIP gốc.'],
+          ['Text nêu rõ một danh mục', 'Dùng đúng danh mục người dùng yêu cầu.'],
+          ['Text không nêu danh mục', 'Dùng danh mục được dự đoán từ ảnh.'],
+          ['Text nêu nhiều danh mục', 'Dùng danh mục ảnh dự đoán và gợi ý người dùng làm rõ.'],
         ],
       },
     },
@@ -69,19 +69,19 @@ const COPY = {
     modes: {
       image: {
         tab: 'IMAGE QUERY',
-        summary: 'The image is always compared with the full catalog. Category evidence combines visual neighbours and CLIP prompt-ensemble prototypes; the Top-2 relation only adjusts bonuses and never hard-filters products.',
+        summary: 'CLIP encodes the image and compares it with the catalog. Category evidence predicts one category; only products in that category are ranked.',
         steps: [
-          ['01', 'IMAGE CROP', 'Select the target garment'],
-          ['02', 'CLIP + SII', 'Encode the image and score the catalog'],
-          ['03', 'CATEGORY EVIDENCE', 'Balanced neighbours + CLIP prompt ensemble'],
-          ['04', 'CONFIDENCE ROUTE', 'Evaluate h and the Top-2 relation'],
-          ['05', 'SOFT TOP-K', 'Apply weighted bonuses and rank'],
+          ['01', 'SELECT IMAGE REGION', 'Choose the target garment'],
+          ['02', 'CLIP VISION', 'Create an image embedding'],
+          ['03', 'COSINE SII', 'Compare with catalog images'],
+          ['04', 'PREDICT CATEGORY', 'Balanced neighbours and CLIP prompts'],
+          ['05', 'HARD CATEGORY + TOP-K', 'Rank only the predicted category'],
         ],
-        evidenceTitle: 'Category evidence feeds back into ranking',
+        evidenceTitle: 'How category evidence is used',
         evidence: [
-          ['Low confidence', 'h ≤ h₀: apply no category bonus and preserve cosine ranking.'],
-          ['Medium confidence', 'Related Top-2 labels receive unequal bonuses; otherwise only a very weak Top-1 signal is used.'],
-          ['High confidence', 'h ≥ h₁: apply the full Top-1 soft bonus while retaining the complete catalog.'],
+          ['Predict category', 'Combine visual neighbours and CLIP prompts to select one category.'],
+          ['Restrict results', 'Only products in the selected category may enter Top-K.'],
+          ['If results are wrong', 'Add a product description or select a different image region.'],
         ],
       },
       text: {
@@ -103,19 +103,19 @@ const COPY = {
       },
       combined: {
         tab: 'IMAGE + TEXT',
-        summary: 'The image preserves product type while text refines colour or details. TF-IDF boosts only category-compatible products so a generic word such as “black” cannot promote an unrelated product type.',
+        summary: 'Image and text contribute CLIP scores. One explicit text category takes precedence; otherwise the image prediction selects the category. TF-IDF refines attributes within that category.',
         steps: [
-          ['01', 'DUAL INPUT', 'Cropped image + description'],
-          ['02', 'CLIP ENCODERS', 'Vision and text embeddings'],
-          ['03', 'RAW FUSION', 'Combine SII with ST'],
-          ['04', 'CATEGORY ROUTE', 'Identify category-compatible products'],
-          ['05', 'GATED TF-IDF + TOP-K', 'Refine inside the group and rank'],
+          ['01', 'IMAGE + DESCRIPTION', 'Selected image region and text'],
+          ['02', 'CLIP ENCODERS', 'Create image and text embeddings'],
+          ['03', 'RAW FUSION', 'Combine image and text scores'],
+          ['04', 'SELECT CATEGORY', 'Explicit text category or image prediction'],
+          ['05', 'TF-IDF + FILTER + TOP-K', 'Refine and rank within the category'],
         ],
-        evidenceTitle: 'Combine image and text category evidence',
+        evidenceTitle: 'Select a category for combined retrieval',
         evidence: [
-          ['Explicit text', 'One exact text category creates the candidate pool; TF-IDF refines only products inside that pool.'],
-          ['Ambiguous text', 'Multiple categories do not trigger a hard filter; the interface asks for a choice.'],
-          ['No text category', 'Image category evidence selects which products may receive a TF-IDF boost and soft bonus. Other products retain their original CLIP scores.'],
+          ['One explicit text category', 'Use the category requested by the user.'],
+          ['No text category', 'Use the predicted image category.'],
+          ['Multiple text categories', 'Use the image prediction and ask the user to clarify.'],
         ],
       },
     },
@@ -124,12 +124,12 @@ const COPY = {
 
 function Formula({ mode }) {
   if (mode === 'image') {
-    return <><i>S</i><sub>image</sub>(i) = <i>S</i><sub>II</sub>(i) + λ<sub>I</sub> · g(h) · w(c<sub>i</sub>)</>
+    return <><i>S</i><sub>final</sub>(i) = <i>S</i><sub>II</sub>(i), c<sub>i</sub> = ĉ</>
   }
   if (mode === 'text') {
     return <><i>S</i><sub>text</sub>(i) = (1 − λ<sub>M</sub>)<i>S</i><sub>T</sub>(i) + λ<sub>M</sub><i>S</i><sub>M</sub>(i)</>
   }
-  return <><i>S</i><sub>meta</sub>(i) = <i>S</i><sub>base</sub>(i) + λ<sub>M</sub>G(i)<i>S</i><sub>M</sub>(i)</>
+  return <><i>S</i><sub>final</sub>(i) = <i>S</i><sub>base</sub>(i) + λ<sub>M</sub><i>S</i><sub>M</sub>(i), c<sub>i</sub> = ĉ</>
 }
 
 export default function RetrievalPipelinePanel() {

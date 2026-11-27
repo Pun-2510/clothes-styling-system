@@ -2,4 +2,5 @@ sentence-transformers>=3.0
 scikit-learn>=1.5
 torchvision>=0.20
 transformers>=4.40
+open_clip_torch>=2.30
 

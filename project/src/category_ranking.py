@@ -31,15 +31,10 @@ def apply_category_gated_metadata_refinement(
 ):
     """Add lexical metadata evidence only to category-compatible products.
 
-    Combined retrieval treats the image as the product-type reference.  A
-    short text such as ``"black"`` may refine products supported by the
-    image category evidence, but it must not promote unrelated products from
-    the full catalog merely because their metadata contains the same word.
-
-    ``category_support`` may contain binary values or the dynamic category
-    factors used by the ranking policy.  Only whether support is positive is
-    used here.  Unsupported products keep their original CLIP fusion score,
-    so this remains a soft full-catalog reranking rather than a hard filter.
+    In deployed combined retrieval, ``category_support`` is one for products
+    in the selected hard category and zero elsewhere. This helper adds the
+    TF-IDF score only where support is positive. The caller separately filters
+    the candidate set to the selected category before ranking Top-K.
     """
     weight = float(metadata_weight)
     if not 0.0 <= weight <= 1.0:

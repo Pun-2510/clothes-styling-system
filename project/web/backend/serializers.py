@@ -22,12 +22,6 @@ def serialize_text_results(
         text_score = row.get("text_similarity")
         metadata_match = optional_float(row.get("metadata_match"))
 
-        reason_codes = ["text_image_match"]
-        if text_score is not None and not pd.isna(text_score):
-            reason_codes.append("text_description_match")
-        if metadata_match is not None and metadata_match > 0:
-            reason_codes.append("metadata_match")
-
         items.append(
             ProductRecommendation(
                 product_id=str(row["product_id"]),
@@ -51,7 +45,6 @@ def serialize_text_results(
                 ),
                 metadata_match=metadata_match,
                 final_score=float(row["similarity"]),
-                reason_codes=reason_codes,
             )
         )
 
@@ -71,11 +64,6 @@ def serialize_image_results(
     items = []
 
     for _, row in results.iterrows():
-        category_bonus = optional_float(row.get("category_bonus"))
-        reason_codes = ["visual_similarity"]
-        if category_bonus is not None and category_bonus > 0:
-            reason_codes.append("category_bonus")
-
         items.append(
             ImageProductRecommendation(
                 product_id=str(row["product_id"]),
@@ -92,11 +80,9 @@ def serialize_image_results(
                 visual_similarity=float(
                     row["visual_similarity"]
                 ),
-                category_bonus=category_bonus,
                 final_score=float(
                     row["similarity"]
                 ),
-                reason_codes=reason_codes,
             )
         )
 
@@ -111,12 +97,6 @@ def serialize_combined_results(
     for _, row in results.iterrows():
         metadata_match = optional_float(row.get("metadata_match"))
         category_match = optional_float(row.get("category_match"))
-        reason_codes = ["visual_similarity", "text_query_match"]
-        if metadata_match is not None and metadata_match > 0:
-            reason_codes.append("metadata_match")
-        if category_match is not None and category_match > 0:
-            reason_codes.append("category_evidence")
-
         items.append(
             CombinedProductRecommendation(
                 product_id=str(row["product_id"]),
@@ -133,7 +113,6 @@ def serialize_combined_results(
                 metadata_match=metadata_match,
                 category_match=category_match,
                 final_score=float(row["similarity"]),
-                reason_codes=reason_codes,
             )
         )
 

@@ -17,8 +17,8 @@
   <rect x="50" y="220" width="1285" height="170" class="lane1"/><text x="75" y="257" class="title">A. Image-only</text>
   <rect x="75" y="280" width="245" height="80" class="box"/><text x="197" y="313" text-anchor="middle" class="title">Image / optional crop</text><text x="197" y="341" text-anchor="middle" class="small">target garment region</text>
   <rect x="370" y="280" width="245" height="80" class="box"/><text x="492" y="313" text-anchor="middle" class="title">Compare query image</text><text x="492" y="341" text-anchor="middle" class="small">CLIP embedding + cosine score</text>
-  <rect x="665" y="270" width="350" height="100" class="policy"/><text x="840" y="306" text-anchor="middle" class="title">Dynamic category evidence</text><text x="840" y="337" text-anchor="middle" class="small">visual neighbours + prompts + confidence</text>
-  <rect x="1065" y="280" width="245" height="80" class="box"/><text x="1187" y="313" text-anchor="middle" class="title">Final image score</text><text x="1187" y="341" text-anchor="middle" class="small">soft category support</text>
+  <rect x="665" y="270" width="350" height="100" class="policy"/><text x="840" y="306" text-anchor="middle" class="title">Predict image category</text><text x="840" y="337" text-anchor="middle" class="small">prompts + balanced visual neighbours</text>
+  <rect x="1065" y="280" width="245" height="80" class="box"/><text x="1187" y="313" text-anchor="middle" class="title">Hard category filter</text><text x="1187" y="341" text-anchor="middle" class="small">rank by cosine within category</text>
   <path d="M320 320 H370" class="line"/><path d="M615 320 H665" class="line"/><path d="M1015 320 H1065" class="line"/>
   <rect x="50" y="420" width="1285" height="170" class="lane2"/><text x="75" y="457" class="title">B. Text-only</text>
   <rect x="75" y="480" width="245" height="80" class="box"/><text x="197" y="513" text-anchor="middle" class="title">Text normalization</text><text x="197" y="541" text-anchor="middle" class="small">optional VI → EN</text>
@@ -29,13 +29,13 @@
   <rect x="50" y="620" width="1285" height="170" class="lane3"/><text x="75" y="657" class="title">C. Combined image–text</text>
   <rect x="75" y="680" width="245" height="80" class="box"/><text x="197" y="713" text-anchor="middle" class="title">Encode both inputs</text><text x="197" y="741" text-anchor="middle" class="small">vision + text encoders</text>
   <rect x="370" y="680" width="245" height="80" class="box"/><text x="492" y="713" text-anchor="middle" class="title">Combine query scores</text><text x="492" y="741" text-anchor="middle" class="small">weighted raw cosine fusion</text>
-  <rect x="665" y="670" width="350" height="100" class="policy"/><text x="840" y="706" text-anchor="middle" class="title">Category policy</text><text x="840" y="737" text-anchor="middle" class="small">explicit text category or image evidence</text>
-  <rect x="1065" y="680" width="245" height="80" class="box"/><text x="1187" y="713" text-anchor="middle" class="title">Category-gated TF-IDF</text><text x="1187" y="741" text-anchor="middle" class="small">refine products allowed by policy</text>
+  <rect x="665" y="670" width="350" height="100" class="policy"/><text x="840" y="706" text-anchor="middle" class="title">Category policy</text><text x="840" y="737" text-anchor="middle" class="small">text category first; otherwise image</text>
+  <rect x="1065" y="680" width="245" height="80" class="box"/><text x="1187" y="713" text-anchor="middle" class="title">Gated TF-IDF</text><text x="1187" y="741" text-anchor="middle" class="small">refine selected category</text>
   <path d="M320 720 H370" class="line"/><path d="M615 720 H665" class="line"/><path d="M1015 720 H1065" class="line"/>
   <path d="M1152 177 V200 H25 V320 H75" class="line"/><path d="M25 320 V520 H75" class="line"/><path d="M25 520 V720 H75" class="line"/>
   <path d="M1310 320 H1410 V815 H1172" class="join"/><path d="M1310 520 H1410" class="join"/><path d="M1310 720 H1410" class="join"/>
   <circle cx="1172" cy="815" r="6" fill="#243041"/>
   <path d="M1172 821 V860" class="line"/>
-  <rect x="980" y="860" width="385" height="100" class="output"/><text x="1172" y="899" text-anchor="middle" class="outTitle">Rank eligible products</text><text x="1172" y="932" text-anchor="middle" class="outBody">return Top-K results and explanations</text>
-  <rect x="50" y="865" width="825" height="90" class="artifact"/><text x="462" y="899" text-anchor="middle" class="title">Loaded runtime artifacts</text><text x="462" y="929" text-anchor="middle" class="small">catalog - checkpoint - embeddings - TF-IDF index - category prompts - relation graph - weights</text><path d="M875 910 H980" class="line"/>
+  <rect x="980" y="860" width="385" height="100" class="output"/><text x="1172" y="899" text-anchor="middle" class="outTitle">Rank eligible products</text><text x="1172" y="932" text-anchor="middle" class="outBody">return ranked Top-K products</text>
+  <rect x="50" y="865" width="825" height="90" class="artifact"/><text x="462" y="899" text-anchor="middle" class="title">Loaded runtime artifacts</text><text x="462" y="929" text-anchor="middle" class="small">catalog - checkpoint - embeddings - TF-IDF index - category prompts - weights</text><path d="M875 910 H980" class="line"/>
 </svg>

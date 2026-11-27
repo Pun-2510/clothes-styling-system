@@ -128,15 +128,15 @@ def rank_tfidf(
     return rankings, metadata
 
 
-def encode_clip_text(texts, source, device="cpu", batch_size=16):
+def encode_clip_text(texts, source, device="cpu", batch_size=16, revision=None):
     """Encode the same category-free text with a CLIP text encoder."""
     import torch
     from transformers import AutoProcessor, CLIPModel
 
     source_path = Path(source)
     source_name = str(source_path.resolve()) if source_path.exists() else str(source)
-    processor = AutoProcessor.from_pretrained(source_name)
-    model = CLIPModel.from_pretrained(source_name).to(device).eval()
+    processor = AutoProcessor.from_pretrained(source_name, revision=revision)
+    model = CLIPModel.from_pretrained(source_name, revision=revision).to(device).eval()
     batches = []
     with torch.inference_mode():
         for start in range(0, len(texts), batch_size):
@@ -168,7 +168,7 @@ def encode_clip_text(texts, source, device="cpu", batch_size=16):
     return _normalize(embeddings), metadata
 
 
-def encode_clip_images(image_paths, source, device="cpu", batch_size=16):
+def encode_clip_images(image_paths, source, device="cpu", batch_size=16, revision=None):
     """Encode held-out images with the selected CLIP vision encoder."""
     import torch
     from PIL import Image
@@ -176,8 +176,8 @@ def encode_clip_images(image_paths, source, device="cpu", batch_size=16):
 
     source_path = Path(source)
     source_name = str(source_path.resolve()) if source_path.exists() else str(source)
-    processor = AutoProcessor.from_pretrained(source_name)
-    model = CLIPModel.from_pretrained(source_name).to(device).eval()
+    processor = AutoProcessor.from_pretrained(source_name, revision=revision)
+    model = CLIPModel.from_pretrained(source_name, revision=revision).to(device).eval()
     paths = [Path(path) for path in image_paths]
     batches = []
     with torch.inference_mode():

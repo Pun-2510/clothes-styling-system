@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="904" viewBox="0 0 1600 904">
+<style>.t{font:700 31px Times New Roman,serif;fill:#111}.b{font:26px Times New Roman,serif;fill:#111}.n{font:italic 23px Times New Roman,serif;fill:#444}</style>
+<rect width="100%" height="100%" fill="white"/>
+<path d="M20 25 H1580 M20 91 H1580" stroke="#222" stroke-width="2"/>
+<text x="35" y="71" class="t">Algorithm C.4. Combined Retrieval with Hard Category and TF-IDF</text>
+<text x="45" y="137" class="b">Input: image I; text T; catalog embeddings and TF-IDF index; result count K</text>
+<text x="45" y="195" class="b">Output: ranked products from the selected category</text>
+<text x="45" y="253" class="b">1  Encode I and T with the fine-tuned CLIP encoders.</text>
+<text x="45" y="311" class="b">2  Compute S_II(q,p_i), S_TI(q,p_i), and available S_TT(q,p_i).</text>
+<text x="45" y="369" class="b">3  Fuse CLIP scores with the validation-selected text and image weights.</text>
+<text x="45" y="427" class="b">4  Detect exact catalog-category expressions in T.</text>
+<text x="45" y="485" class="b">5  If exactly one category is stated, use that category.</text>
+<text x="45" y="543" class="b">6  Otherwise, predict one category from I using Algorithm C.2 evidence.</text>
+<text x="45" y="601" class="b">7  Keep only products in the selected category and optional audience group.</text>
+<text x="45" y="659" class="b">8  Remove recognized category words from the TF-IDF refinement query.</text>
+<text x="45" y="717" class="b">9  If usable metadata words remain, add gated TF-IDF similarity.</text>
+<text x="45" y="775" class="b">10 Rank eligible products by the resulting score and return the first K.</text>
+<text x="45" y="833" class="n">Note: Confidence is diagnostic; no dynamic relation bonus is added.</text>
+<path d="M20 884 H1580" stroke="#222" stroke-width="2"/>
+</svg>

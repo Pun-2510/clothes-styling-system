@@ -235,6 +235,16 @@ button:focus-visible, textarea:focus-visible, select:focus-visible, input:focus-
   padding: 0;
   border: 0;
 }
+.image-category-mode-fieldset { margin: 18px 0 0; padding: 0; border: 0; }
+.pipeline-mode--image .pipeline-mode-summary code span { display: block; }
+.pipeline-mode--image .pipeline-mode-summary code span + span { margin-top: 5px; }
+.image-category-mode-fieldset legend { margin-bottom: 8px; color: #515151; font-size: 11px; font-weight: 750; }
+.image-category-mode-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.image-category-mode-options button { min-height: 66px; padding: 11px 14px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 5px; border: 1px solid #c9c9c9; border-radius: 4px; color: #333; background: #fff; cursor: pointer; text-align: left; }
+.image-category-mode-options button:hover { border-color: var(--primary); }
+.image-category-mode-options button.active { border-color: var(--primary); background: #fff9ed; box-shadow: inset 3px 0 var(--primary); }
+.image-category-mode-options strong { font-size: 11px; }
+.image-category-mode-options small { color: var(--muted); font-size: 10px; line-height: 1.4; }
 .audience-preference-fieldset legend {
   margin-bottom: 6px;
 }
@@ -310,6 +320,7 @@ button:focus-visible, textarea:focus-visible, select:focus-visible, input:focus-
 
 @media (max-width: 900px) {
   .search-preferences-layout { grid-template-columns: 1fr; align-items: stretch; }
+  .image-category-mode-options { grid-template-columns: 1fr; }
   .search-basic-preferences { max-width: 360px; }
   .audience-preference-options { grid-template-columns: minmax(190px, 1.6fr) repeat(4, minmax(64px, 1fr)); }
 }

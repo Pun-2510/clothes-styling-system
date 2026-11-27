@@ -8,46 +8,6 @@ AudiencePreference = Literal["women", "men", "kids", "unisex"]
 class CategoryMode(str, Enum):
     NO_CATEGORY = "no_category"
     HARD_CATEGORY = "hard_category"
-    SOFT_CATEGORY = "soft_category"
-
-
-class CategoryEvidenceCandidate(BaseModel):
-    category: str
-    score: float | None = None
-
-
-class ExplanationGraphNode(BaseModel):
-    id: str
-    label: str
-    role: Literal["query", "predicted", "candidate", "related", "result"]
-    score: float | None = None
-
-
-class ExplanationGraphEdge(BaseModel):
-    source: str
-    target: str
-    relation: Literal["evidence", "explicit", "mutual_neighbor", "result"]
-    label: str | None = None
-
-
-class ExplanationGraph(BaseModel):
-    nodes: list[ExplanationGraphNode] = Field(default_factory=list)
-    edges: list[ExplanationGraphEdge] = Field(default_factory=list)
-
-
-class RankingExplanation(BaseModel):
-    query_mode: Literal["text", "image", "combined"]
-    ranking_policy: str
-    formula: str
-    applied_category: str | None = None
-    category_source: Literal["text", "image"] | None = None
-    category_route: str
-    category_strength: float = 0.0
-    weights: dict[str, float] = Field(default_factory=dict)
-    category_candidates: list[CategoryEvidenceCandidate] = Field(
-        default_factory=list
-    )
-    graph: ExplanationGraph
 
 
 class TextRecommendationRequest(BaseModel):
@@ -79,7 +39,6 @@ class ProductRecommendation(BaseModel):
     text_to_text_score: float | None
     metadata_match: float | None = None
     final_score: float
-    reason_codes: list[str] = Field(default_factory=list)
 
 
 class CategorySuggestion(BaseModel):
@@ -110,7 +69,6 @@ class TextRecommendationResponse(BaseModel):
     elapsed_seconds: float
     guidance: TextQueryGuidance
     items: list[ProductRecommendation]
-    explanation: RankingExplanation
 
 
 class ImageProductRecommendation(BaseModel):
@@ -121,9 +79,7 @@ class ImageProductRecommendation(BaseModel):
     audience: str | None = None
 
     visual_similarity: float
-    category_bonus: float | None
     final_score: float
-    reason_codes: list[str] = Field(default_factory=list)
 
 
 class ImageProcessingTimes(BaseModel):
@@ -140,7 +96,6 @@ class ImageRecommendationResponse(BaseModel):
     audience: AudiencePreference | None = None
     processing_times: ImageProcessingTimes
     items: list[ImageProductRecommendation]
-    explanation: RankingExplanation
 
 
 class CombinedProductRecommendation(BaseModel):
@@ -156,7 +111,6 @@ class CombinedProductRecommendation(BaseModel):
     metadata_match: float | None = None
     category_match: float | None = None
     final_score: float
-    reason_codes: list[str] = Field(default_factory=list)
 
 
 class CombinedRecommendationResponse(BaseModel):
@@ -171,4 +125,3 @@ class CombinedRecommendationResponse(BaseModel):
     elapsed_seconds: float
     guidance: TextQueryGuidance
     items: list[CombinedProductRecommendation]
-    explanation: RankingExplanation

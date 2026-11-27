@@ -1,0 +1,10 @@
+{
+  "signature": "3d15f6a883649fe94ee44b6e9defa98a4da84acbc411642c8d2e9b22da260b4a",
+  "rows": 460,
+  "created_utc": "2026-11-26T06:47:19.657768+00:00",
+  "model": {
+    "architecture": "CLIP text encoder",
+    "embedding_dimension": 512,
+    "encoding_seconds": 1.9677330001723021
+  }
+}

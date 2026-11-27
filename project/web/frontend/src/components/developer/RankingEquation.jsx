@@ -31,13 +31,11 @@ function CosineEquation() {
 
 function ImageEquation() {
   return (
-    <math display="block" aria-label="Image-only retrieval score">
-      <mrow>
-        <Score index="image" /><mo>=</mo><Score index="II" /><mo>+</mo>
-        <Subscript symbol="λ" index="I" /><mo>·</mo><ConfidenceFunction /><mo>·</mo>
-        <mi>w</mi><mo>(</mo><Subscript symbol="c" index="i" /><mo>)</mo>
-      </mrow>
-    </math>
+    <div className="dev-equation-lines" aria-label="Image-only retrieval within the predicted category">
+      <math display="block">
+        <mrow><Score index="final" /><mo>(</mo><mi>i</mi><mo>)</mo><mo>=</mo><Score index="II" /><mo>(</mo><mi>i</mi><mo>)</mo><mspace width="0.5em" /><mtext>if</mtext><mspace width="0.5em" /><Subscript symbol="c" index="i" /><mo>=</mo><mi>ĉ</mi></mrow>
+      </math>
+    </div>
   )
 }
 
@@ -56,7 +54,7 @@ function TextEquation() {
 
 function CombinedEquation() {
   return (
-    <div className="dev-equation-lines" aria-label="Combined image and text retrieval equations">
+    <div className="dev-equation-lines" aria-label="Combined retrieval within the selected category">
       <math display="block">
         <mrow>
           <Score index="base" /><mo>=</mo><Subscript symbol="ω" index="I" /><mo>·</mo><Score index="II" /><mo>+</mo>
@@ -65,16 +63,9 @@ function CombinedEquation() {
       </math>
       <math display="block">
         <mrow>
-          <Score index="meta" /><mo>(</mo><mi>i</mi><mo>)</mo><mo>=</mo>
+          <Score index="final" /><mo>(</mo><mi>i</mi><mo>)</mo><mo>=</mo>
           <Score index="base" /><mo>(</mo><mi>i</mi><mo>)</mo><mo>+</mo>
-          <Subscript symbol="λ" index="M" /><mo>·</mo><mi>G</mi><mo>(</mo><mi>i</mi><mo>)</mo><mo>·</mo>
-          <Score index="M" /><mo>(</mo><mi>i</mi><mo>)</mo>
-        </mrow>
-      </math>
-      <math display="block">
-        <mrow>
-          <Score index="final" /><mo>=</mo><Score index="meta" /><mo>+</mo><Subscript symbol="λ" index="C" /><mo>·</mo>
-          <ConfidenceFunction /><mo>·</mo><mi>w</mi><mo>(</mo><Subscript symbol="c" index="i" /><mo>)</mo>
+          <Subscript symbol="λ" index="M" /><mo>·</mo><Subscript symbol="G" index="i" /><mo>·</mo><Score index="M" /><mo>(</mo><mi>i</mi><mo>)</mo>
         </mrow>
       </math>
     </div>

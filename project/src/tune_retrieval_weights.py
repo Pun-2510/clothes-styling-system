@@ -34,7 +34,6 @@ from src.retrieval_validation import (
     DEFAULT_RESULTS,
     DEFAULT_RUN,
     DEFAULT_TEXT_EMBEDDINGS,
-    apply_dynamic_category_bonus,
     build_category_evidence,
     cache_signature,
     cached_embeddings,
@@ -161,8 +160,7 @@ def _top_rank_rows(scores, excluded_positions, top_k, candidate_groups=None):
         if candidate_groups is not None and candidate_groups[query_index] is not None:
             requested = np.asarray(candidate_groups[query_index], dtype=np.int64)
             requested = requested[requested != excluded_positions[query_index]]
-            if len(requested):
-                candidates = requested
+            candidates = requested
         count = min(int(top_k), len(candidates))
         if count == 0:
             rankings.append(np.asarray([], dtype=np.int64))
@@ -294,6 +292,13 @@ def self_test():
     )
     assert rankings[0].tolist() == [2]
     assert rankings[1].tolist() == [2]
+    hard_rankings = _top_rank_rows(
+        np.asarray([[1.0, 0.2, 0.9], [0.1, 1.0, 0.8]], dtype=np.float32),
+        np.asarray([0, 1]), 2,
+        [np.asarray([0, 1]), np.asarray([1])],
+    )
+    assert hard_rankings[0].tolist() == [1]
+    assert hard_rankings[1].tolist() == []
     rows = [
         {"category_macro_f1": 0.50, "f1": 0.40, "category_macro_precision": 0.6,
          "compatible_metadata_hit_rate": 0.40,
@@ -459,29 +464,19 @@ def main():
     text_image_weight = selected_text["text_image_weight"]
     text_metadata_weight = selected_text["text_metadata_weight"]
 
-    image_trials = []
-    for image_category_bonus in np.linspace(0.0, 0.20, 9):
-        adjusted = apply_dynamic_category_bonus(
-            visual_scores,
-            category_evidence,
-            gallery_categories,
-            image_category_bonus,
-        )
-        rankings = _top_rank_rows(adjusted, query_positions, k)
-        image_trials.append(
-            {
-                "image_category_bonus": float(image_category_bonus),
-                **_metrics(
-                    rankings,
-                    query_ids,
-                    query_categories,
-                    gallery_ids,
-                    gallery_categories,
-                    k,
-                ),
-            }
-        )
-    selected_image = _best_retrieval_row(image_trials)
+    # Image serving always searches inside the predicted category.
+    image_candidate_groups = [
+        category_indices[item["predicted"]] for item in category_evidence
+    ]
+    image_rankings = _top_rank_rows(
+        visual_scores, query_positions, k, image_candidate_groups,
+    )
+    image_trials = [{
+        "image_category_bonus": 0.0,
+        **_metrics(image_rankings, query_ids, query_categories,
+                   gallery_ids, gallery_categories, k),
+    }]
+    selected_image = image_trials[0]
 
     derived_refinement_queries = metadata_retriever.refinement_queries_for_rows(
         query_positions,
@@ -549,14 +544,22 @@ def main():
     combined_category_evidence = [
         category_evidence[index] for index in combined_query_indices
     ]
-    combined_category_support = apply_dynamic_category_bonus(
-        np.zeros_like(combined_visual_scores, dtype=np.float32),
-        combined_category_evidence,
-        gallery_categories,
-        1.0,
+    combined_applied_categories = []
+    for local_index, text in enumerate(combined_query_texts):
+        explicit = explicit_categories_from_text(text, catalog_categories)
+        combined_applied_categories.append(
+            explicit[0] if len(explicit) == 1 else
+            combined_category_evidence[local_index]["predicted"]
+        )
+    combined_candidate_groups = [
+        category_indices[category] for category in combined_applied_categories
+    ]
+    combined_metadata_support = np.zeros_like(
+        combined_visual_scores, dtype=np.float32,
     )
-    combined_metadata_support = combined_category_support.copy()
-    combined_metadata_support[~combined_metadata_usable] = 0.0
+    for local_index, group in enumerate(combined_candidate_groups):
+        if combined_metadata_usable[local_index]:
+            combined_metadata_support[local_index, group] = 1.0
 
     combined_trials = []
     attempted = set()
@@ -583,13 +586,9 @@ def main():
                 combined_metadata_support,
                 metadata_weight,
             )
-        scores = apply_dynamic_category_bonus(
-            scores,
-            combined_category_evidence,
-            gallery_categories,
-            category_bonus,
+        rankings = _top_rank_rows(
+            scores, combined_positions, k, combined_candidate_groups,
         )
-        rankings = _top_rank_rows(scores, combined_positions, k)
         combined_trials.append(
             {
                 "stage": stage,
@@ -620,7 +619,7 @@ def main():
     evaluate_combined(
         0.50,
         0.25,
-        0.10,
+        0.0,
         stage="previous_default",
         eligible_for_selection=(
             args.min_combined_image_weight
@@ -635,7 +634,7 @@ def main():
             7,
         ),
         np.linspace(0.0, args.max_combined_metadata_weight, 7),
-        np.linspace(0.0, 0.20, 5),
+        [0.0],
     ):
         evaluate_combined(*values, stage="coarse")
     coarse_best = _best_combined_row(combined_trials, args.max_macro_f1_drop)
@@ -653,7 +652,7 @@ def main():
             0.05,
             upper=args.max_combined_metadata_weight,
         ),
-        _values_around(coarse_best["combined_category_weight"], 0.05, 0.025, upper=0.30),
+        [0.0],
     ):
         evaluate_combined(*values, stage="refined")
     selected_combined = _best_combined_row(
@@ -686,7 +685,8 @@ def main():
         ),
     }
     report = {
-        "version": 6,
+        "version": 7,
+        "category_policy": "hard predicted-category pool for image; explicit text else image pool for combined",
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "selection_split": "validation",
         "objective_k": k,

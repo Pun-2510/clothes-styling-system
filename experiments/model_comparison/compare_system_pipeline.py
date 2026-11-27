@@ -31,7 +31,6 @@ from .encoders import encode_clip_text
 from .evaluation import evaluate_query_gallery_category_rankings
 from .category_runtime import (
     CategoryPolicySettings,
-    apply_dynamic_category_bonus,
     build_category_evidence,
     evidence_columns,
     load_category_prototypes,
@@ -252,8 +251,7 @@ def _rank_rows(scores, excluded_positions, candidate_groups=None):
         if candidate_groups is not None and candidate_groups[query_index] is not None:
             requested = np.asarray(candidate_groups[query_index], dtype=np.int64)
             requested = requested[requested != excluded_positions[query_index]]
-            if len(requested):
-                candidates = requested
+            candidates = requested
         rankings.append(candidates[np.argsort(-row[candidates], kind="stable")])
     return rankings
 
@@ -285,54 +283,19 @@ def _metadata_metrics(rankings_by_system, metadata_scores, usable_queries, ks):
     return rows
 
 
-def _combined_category_route(
-    explicit_categories,
-    predicted_category,
-    category_strength,
-):
-    """Mirror the deployed combined-query category precedence.
-
-    One explicit text category is the clearest user instruction and therefore
-    becomes a hard candidate pool. Multiple explicit categories are treated as
-    ambiguous. Image evidence is used only when text does not name a category.
-    """
+def _combined_category_route(explicit_categories, predicted_category, category_strength):
+    """One explicit text category wins; otherwise use the image prediction."""
     explicit = [str(value) for value in explicit_categories]
     if len(explicit) == 1:
         return explicit[0], "text"
-    if len(explicit) > 1:
-        return None, None
-    if float(category_strength) > 0.0:
-        return str(predicted_category), "image"
-    return None, None
+    return str(predicted_category), "image"
 
 
-def _category_policy_rankings(
-    scores,
-    category_sources,
-    applied_categories,
-    category_evidence,
-    gallery_categories,
-    category_indices,
-    excluded_positions,
-    soft_bonus,
-):
-    adjusted = np.asarray(scores, dtype=np.float32).copy()
-    dynamic_adjusted = apply_dynamic_category_bonus(
-        adjusted,
-        category_evidence,
-        gallery_categories,
-        soft_bonus,
-    )
-    candidate_groups = []
-    for query_index, source in enumerate(category_sources):
-        if source == "image":
-            adjusted[query_index] = dynamic_adjusted[query_index]
-            candidate_groups.append(None)
-        elif source == "text":
-            candidate_groups.append(category_indices[applied_categories[query_index]])
-        else:
-            candidate_groups.append(None)
-    return _rank_rows(adjusted, excluded_positions, candidate_groups)
+def _category_policy_rankings(scores, applied_categories, category_indices,
+                              excluded_positions):
+    """Apply the website's hard category pool after scoring."""
+    groups = [category_indices[value] for value in applied_categories]
+    return _rank_rows(scores, excluded_positions, groups)
 
 
 def _write_group(output, name, rows, category_rows):
@@ -362,12 +325,19 @@ def self_test():
         "text",
     )
     assert _combined_category_route(["Shirts", "Tshirts"], "Shirts", 1.0) == (
-        None,
-        None,
+        "Shirts", "image",
     )
     assert _combined_category_route([], "Shirts", 0.5) == ("Shirts", "image")
-    assert _combined_category_route([], "Shirts", 0.0) == (None, None)
-    print("PASS: query routing, self exclusion and metadata diagnostics")
+    assert _combined_category_route([], "Shirts", 0.0) == ("Shirts", "image")
+    hard_rankings = _category_policy_rankings(
+        scores,
+        ["Shirts", "Tshirts"],
+        {"Shirts": np.asarray([0, 2]), "Tshirts": np.asarray([1])},
+        np.asarray([0, 1]),
+    )
+    assert hard_rankings[0].tolist() == [2]
+    assert hard_rankings[1].tolist() == []
+    print("PASS: hard category routing, self exclusion and metadata diagnostics")
 
 
 def main():
@@ -396,7 +366,7 @@ def main():
 
     ks = sorted(set(args.ks))
     settings = {
-        "protocol": "deployed query modes over held-out queries and full catalog",
+        "protocol": "hard-category deployed query modes over held-out queries and full catalog",
         "run_dir": str(args.run_dir.resolve()),
         "catalog_csv": str(args.catalog_csv.resolve()),
         "dataset_sha256": experiment["dataset_sha256"],
@@ -411,8 +381,12 @@ def main():
         "text_metadata_weight": args.text_metadata_weight,
         "combined_metadata_weight": args.combined_metadata_weight,
         "metadata_index_dir": str(args.metadata_index_dir.resolve()),
-        "image_category_bonus": args.image_category_bonus,
-        "combined_category_bonus": args.combined_category_bonus,
+        "image_category_bonus": 0.0,
+        "combined_category_bonus": 0.0,
+        "legacy_bonus_flags_ignored": {
+            "image_category_bonus": args.image_category_bonus,
+            "combined_category_bonus": args.combined_category_bonus,
+        },
         "category_top_per_class": args.category_top_per_class,
         "category_confidence_floor": args.category_confidence_floor,
         "category_confidence_threshold": args.category_confidence_threshold,
@@ -576,44 +550,18 @@ def main():
         applied_categories.append(applied_category)
         category_sources.append(category_source)
 
-    # Match website serving: TF-IDF can refine only categories supported by
-    # the image evidence (or one category explicitly written in text). Other
-    # products retain their raw CLIP fusion score and are not hard-filtered.
-    combined_metadata_support = np.zeros_like(
-        combined_base_scores,
-        dtype=np.float32,
-    )
-    for query_index, category_source in enumerate(category_sources):
-        if not metadata_usable[query_index]:
-            continue
-        if category_source == "text" and applied_categories[query_index]:
-            combined_metadata_support[query_index] = (
-                gallery_categories == str(applied_categories[query_index])
-            ).astype(np.float32)
-        elif category_source == "image":
-            for category, factor in category_evidence[query_index]["factors"].items():
-                combined_metadata_support[query_index] += (
-                    float(factor)
-                    * (gallery_categories == str(category)).astype(np.float32)
-                )
-
-    if (
-        args.combined_metadata_weight > 0.0
-        and np.any(combined_metadata_support > 0.0)
-    ):
+    # The serving route gives TF-IDF support only inside its selected hard pool.
+    combined_metadata_support = np.zeros_like(combined_base_scores, dtype=np.float32)
+    for query_index, category in enumerate(applied_categories):
+        if metadata_usable[query_index]:
+            combined_metadata_support[query_index, category_indices[category]] = 1.0
+    if args.combined_metadata_weight > 0.0 and np.any(combined_metadata_support):
         combined_metadata_scores = apply_category_gated_metadata_refinement(
-            combined_base_scores,
-            metadata_scores,
-            combined_metadata_support,
+            combined_base_scores, metadata_scores, combined_metadata_support,
             args.combined_metadata_weight,
         )
 
-    image_deployed_scores = apply_dynamic_category_bonus(
-        visual_scores,
-        category_evidence,
-        gallery_categories,
-        args.image_category_bonus,
-    )
+    image_candidate_groups = [category_indices[value] for value in predicted_categories]
 
     text_candidate_groups = [
         category_indices[value] if value is not None else None
@@ -630,28 +578,14 @@ def main():
         combined_metadata_scores, query_positions
     )
     combined_category_rankings = _category_policy_rankings(
-        combined_base_scores,
-        category_sources,
-        applied_categories,
-        category_evidence,
-        gallery_categories,
-        category_indices,
-        query_positions,
-        args.combined_category_bonus,
+        combined_base_scores, applied_categories, category_indices, query_positions,
     )
     combined_full_rankings = _category_policy_rankings(
-        combined_metadata_scores,
-        category_sources,
-        applied_categories,
-        category_evidence,
-        gallery_categories,
-        category_indices,
-        query_positions,
-        args.combined_category_bonus,
+        combined_metadata_scores, applied_categories, category_indices, query_positions,
     )
 
     query_mode_rankings = {
-        "image_only_deployed": _rank_rows(image_deployed_scores, query_positions),
+        "image_only_deployed": _rank_rows(visual_scores, query_positions, image_candidate_groups),
         "text_only_deployed": text_deployed_rankings,
         "combined_full_deployed": combined_full_rankings,
     }
@@ -667,7 +601,7 @@ def main():
             "role": "deployed image query",
             "deployed": True,
             "input": "image",
-            "formula": "S_II + lambda_I*g(h)*w(c_i)",
+            "formula": "S_II within predicted-category hard pool",
         },
         "text_only_deployed": {
             "comparison_group": "query_mode",
@@ -685,8 +619,8 @@ def main():
             "deployed": True,
             "input": "image + text",
             "formula": (
-                "raw cosine fusion + category-gated TF-IDF + explicit-text hard pool "
-                "or dynamic image category bonus"
+                "raw cosine fusion + category-gated TF-IDF + hard pool "
+                "(explicit text category else image prediction)"
             ),
         },
     }
@@ -711,8 +645,7 @@ def main():
             "deployed": False,
             "input": "image + text",
             "formula": (
-                "raw fusion + explicit-text hard pool or dynamic image "
-                "category bonus"
+                "raw fusion + hard pool (explicit text category else image prediction)"
             ),
         },
         "combined_full": {
@@ -721,8 +654,8 @@ def main():
             "deployed": True,
             "input": "image + text",
             "formula": (
-                "raw cosine fusion + category-gated TF-IDF + explicit-text hard pool "
-                "or dynamic image category bonus"
+                "raw cosine fusion + category-gated TF-IDF + hard pool "
+                "(explicit text category else image prediction)"
             ),
         },
     }

@@ -1,7 +1,5 @@
-import { useState } from 'react'
 import Icon from '../common/Icon'
 import ProductCard from './ProductCard'
-import RankingExplanation from './RankingExplanation'
 import { useLanguage } from '../../i18n'
 
 function QueryGuidance({ guidance, onUseSuggestion, t }) {
@@ -43,7 +41,6 @@ function QueryGuidance({ guidance, onUseSuggestion, t }) {
 
 export default function ResultsSection({ data, mode, sectionRef, onNewSearch, onUseSuggestion, onRefineWithText }) {
   const { t } = useLanguage()
-  const [activeTab, setActiveTab] = useState('products')
   if (!data) return null
 
   const items = data.items || []
@@ -69,11 +66,9 @@ export default function ResultsSection({ data, mode, sectionRef, onNewSearch, on
             {mode === 'combined' && data.query_used !== data.query && data.query_used && (
               <span>{t('results.translated', { query: data.query_used })}</span>
             )}
-            {mode === 'image' && data.category_mode === 'soft_category' && data.predicted_category && (
-              <span>{t('results.categoryPriority', {
-                category: (data.candidate_categories?.length > 1
-                  ? data.candidate_categories.join(' / ')
-                  : data.predicted_category),
+            {mode === 'image' && data.category_mode === 'hard_category' && data.predicted_category && (
+              <span>{t('results.hardCategory', {
+                category: data.predicted_category,
                 confidence: Math.round((data.category_confidence || 0) * 100),
               })}</span>
             )}
@@ -110,40 +105,12 @@ export default function ResultsSection({ data, mode, sectionRef, onNewSearch, on
         <QueryGuidance guidance={data.guidance} onUseSuggestion={onUseSuggestion} t={t} />
       )}
 
-      {items.length > 0 && (
-        <div className="result-view-tabs" role="tablist" aria-label={t('results.tabs.label')}>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === 'products'}
-            className={activeTab === 'products' ? 'active' : ''}
-            onClick={() => setActiveTab('products')}
-          >
-            {t('results.tabs.products')}
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === 'explanation'}
-            className={activeTab === 'explanation' ? 'active' : ''}
-            onClick={() => setActiveTab('explanation')}
-          >
-            {t('results.tabs.explanation')}
-          </button>
-        </div>
-      )}
-
       {items.length === 0 && <div className="empty-result">{t('results.empty')}</div>}
-      {items.length > 0 && activeTab === 'products' && (
-        <div className="product-grid result-tab-panel" role="tabpanel">
+      {items.length > 0 && (
+        <div className="product-grid">
           {items.map((item, index) => (
             <ProductCard key={`${item.product_id}-${index}`} item={item} index={index} mode={mode} />
           ))}
-        </div>
-      )}
-      {items.length > 0 && activeTab === 'explanation' && (
-        <div className="result-tab-panel" role="tabpanel">
-          <RankingExplanation data={data} mode={mode} />
         </div>
       )}
     </section>

@@ -222,13 +222,13 @@ checkpoint và embedding không bị trộn từ các lần chạy khác nhau.
 ### 5.4. Sinh TF-IDF metadata index
 
 TF-IDF được xây trực tiếp từ `product_name` và `description` của catalog đã xử
-lý. Artifact này bổ sung mức khớp từ khóa cho text-only và combined query;
-image-only không sử dụng TF-IDF. Với combined query, TF-IDF chỉ tăng điểm cho
-nhóm sản phẩm tương thích với category evidence của ảnh hoặc category được ghi
-rõ trong text. Các sản phẩm khác vẫn được giữ lại bằng điểm CLIP gốc nhưng không
-được đẩy lên chỉ vì chứa một từ chung như `black`. Category không được đưa vào
-tài liệu TF-IDF vì category đã có cơ chế riêng, nhờ đó một tín hiệu không bị
-tính hai lần.
+lý. Nó bổ sung mức khớp từ khóa cho text-only và combined query; image-only
+không dùng TF-IDF. Text-only tính điểm TF-IDF rồi, nếu truy vấn nêu rõ đúng một
+category, chỉ xếp hạng ứng viên trong category đó. Combined chọn category từ
+văn bản nêu rõ hoặc từ ảnh; TF-IDF chỉ tăng điểm cho sản phẩm thuộc category
+đã chọn, sau đó Top-K cũng chỉ lấy từ category này. Vì vậy một từ chung như
+`black` không kéo sản phẩm khác loại vào kết quả combined. Trường category
+không được đưa vào tài liệu TF-IDF để tránh tính lặp cùng một bằng chứng.
 
 ```powershell
 .\.venv\Scripts\python.exe -m src.build_metadata_index `
@@ -267,11 +267,14 @@ hiện trường hợp index không cùng catalog hoặc sai thứ tự dòng.
 Lệnh chỉ dùng validation split và chọn:
 
 - Tỷ lệ text→image so với text→text và trọng số TF-IDF cho text-only.
-- Trọng số ảnh, TF-IDF metadata có category gate và category bonus cho combined
-  query. Mặc định bộ chọn giữ ảnh là nguồn chính (`image_weight >= 0.60`), giới
-  hạn TF-IDF ở mức tối đa `0.30` và chỉ chấp nhận mức giảm category macro-F1 rất
-  nhỏ so với cấu hình tốt nhất.
-- Category bonus cho image-only.
+- Trọng số ảnh và TF-IDF metadata cho combined query. Website chỉ xếp hạng
+  trong một danh mục: danh mục nêu rõ trong text hoặc danh mục ảnh dự đoán.
+  Bộ chọn giữ ảnh là nguồn chính (`image_weight >= 0.60`), giới hạn TF-IDF ở
+  mức tối đa `0.30` và chỉ chấp nhận mức giảm category macro-F1 rất nhỏ so với
+  cấu hình tốt nhất.
+- Website hiện dùng Hard Category cho image-only và combined; các tham số
+  category bonus của phương pháp soft/dynamic chỉ phục vụ đối chiếu lịch sử,
+  không được cộng vào điểm của hai luồng đang triển khai.
 
 `--objective-k 10` nghĩa là chọn theo danh sách Top-10; có thể đổi nếu giao diện
 chủ yếu trả Top-5. `--batch-size` điều khiển encode các query validation. Không
@@ -309,6 +312,10 @@ CATEGORY_CONFIDENCE_THRESHOLD=0.60
 CATEGORY_TOP_PER_CLASS=3
 CATEGORY_PROTOTYPE_WEIGHT=1.0
 ```
+
+`CATEGORY_TOP_PER_CLASS` và `CATEGORY_PROTOTYPE_WEIGHT` tham gia dự đoán
+category từ ảnh. Confidence vẫn được ghi để xem và phân tích lỗi, nhưng giá
+trị floor/threshold không bật hoặc tắt hard filter của website hiện tại.
 
 Đường dẫn tương đối được Docker Compose hiểu từ thư mục chứa `docker-compose.yml`, không phụ thuộc tên
 thư mục repository. Nếu dùng run mới, sửa đồng bộ checkpoint, embeddings,
@@ -383,15 +390,17 @@ Không dùng `docker compose down -v` nếu muốn giữ Hugging Face và Node c
 
 - Text-only: kết hợp text→image và text→text; chỉ hard-filter khi câu truy vấn
   nêu rõ đúng một catalog category.
-- Image-only: image→image trên toàn catalog; category prediction chỉ thêm soft
-  bonus theo confidence và quan hệ Top-2, không lọc cứng.
-- Image + text: ảnh giữ loại sản phẩm; text bổ sung semantic evidence. TF-IDF
-  chỉ tinh chỉnh sản phẩm thuộc nhóm category tương thích, trong khi sản phẩm
-  ngoài nhóm vẫn giữ điểm CLIP fusion ban đầu.
-  Một category được ghi rõ trong text tạo hard candidate pool. Nếu text không
-  nêu category, hệ thống dùng confidence và quan hệ Top-2 của ảnh để cộng soft
-  bonus động giống Image-only, không loại sản phẩm ngoài category.
-- Tất cả nhánh dùng raw cosine similarity; percentile không được dùng.
+- Image-only: hệ thống mã hóa ảnh bằng CLIP, dự đoán một danh mục từ ảnh,
+  sau đó chỉ xếp hạng sản phẩm thuộc danh mục đó theo cosine similarity.
+- Image + text: ảnh và văn bản cùng đóng góp vào điểm CLIP. Nếu văn bản nêu rõ
+  đúng một danh mục, hệ thống chỉ tìm trong danh mục đó; nếu không, hệ thống
+  dùng danh mục dự đoán từ ảnh. TF-IDF tinh chỉnh điểm bằng tên và mô tả
+  sản phẩm trong danh mục đã chọn. Nếu văn bản nêu nhiều danh mục, giao diện
+  gợi ý chọn một danh mục để tìm lại.
+- Tất cả nhánh bắt đầu từ raw cosine similarity của CLIP; text-only và
+  combined còn dùng TF-IDF để tinh chỉnh thứ hạng. Percentile không được dùng.
+- Website có duyệt category, chi tiết sản phẩm, Favorites và lịch sử tìm kiếm
+  lưu trên thiết bị, không yêu cầu đăng nhập.
 - Catalog browsing có thêm bộ lọc metadata `Women / Men / Kids / Unisex`.
   Nhãn này được suy ra bảo thủ từ tên sản phẩm và category; mô tả chỉ là nguồn
   dự phòng khi có cụm từ rõ ràng. Hệ thống không đoán
@@ -402,8 +411,11 @@ Không dùng `docker compose down -v` nếu muốn giữ Hugging Face và Node c
 
 ## 9. THÍ NGHIỆM NGHIÊN CỨU RIÊNG
 
-Các so sánh mô hình, category ranking, system pipeline và kết quả nhiều seed
-được lưu ở `experiments/` và phần evidence của **repository gốc**. Chúng không
+Các so sánh mô hình (bao gồm FashionCLIP, OpenCLIP, SigLIP), category ranking,
+system pipeline Hard Category và kết quả ba seed (42, 123, 2026) được lưu ở
+`experiments/` và `docs/reports/evidence/final_experiments/` của **repository gốc**.
+Đọc README trong thư mục evidence để phân biệt kết quả Hard Category hiện tại
+với các kết quả Dynamic cũ. Chúng không
 nằm trong gói `source/` nộp và không phải đầu vào của website. Docker và code
 vận hành không đọc thư mục đó; không cần chạy thí nghiệm để khởi động website.
 

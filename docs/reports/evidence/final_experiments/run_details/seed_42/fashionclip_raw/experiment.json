@@ -1,0 +1,23 @@
+{
+  "model": "patrickjohncyh/fashion-clip",
+  "revision_requested": "main",
+  "run_dir": "D:\\dacntt\\project\\runs\\clip_finetune_diverse_seed_42",
+  "catalog_csv": "D:\\dacntt\\project\\data\\processed_diverse\\products.csv",
+  "catalog_sha256": "133247fe4ce60f2d3f4c26a5901cf89e263267c1f5df14a8e17e3b5a07849842",
+  "dataset_sha256": "ed83c128a870a3dcc6fc5b4ca3615a0c7db7263e0d31421f68f20c446785f7ab",
+  "training_json_sha256": "ae540b648f3b616cd67bc8c96f2c5c0d26e0c9f7dfbfe01e6f4649040aa353f5",
+  "gallery_size": 5000,
+  "query_count": 460,
+  "query_split": "test",
+  "ks": [
+    1,
+    5,
+    10
+  ],
+  "image_weight": 0.5,
+  "text_image_weight": 0.5,
+  "relevance": "same category for modality rows; exact product ID for alignment rows",
+  "category_in_encoder_text": false,
+  "category_policy": "none (frozen raw baseline)",
+  "revision_resolved": "7e3ba62ce16b379a1ab479346b66f192e76f51b7"
+}

@@ -39,7 +39,7 @@ class WebPackageTests(unittest.TestCase):
             model.assert_called_once()
             translator.assert_called_once()
 
-    def test_image_route_reports_mode_applied_after_automatic_fallback(self):
+    def test_image_route_uses_hard_category_by_default(self):
         results = pd.DataFrame({
             "product_id": ["1"],
             "product_name": ["Product"],
@@ -49,9 +49,9 @@ class WebPackageTests(unittest.TestCase):
             "similarity": [0.8],
         })
         recommend_by_image = Mock(return_value={
-            "category_mode": "no_category",
-            "predicted_category": None,
-            "category_confidence": None,
+            "category_mode": "hard_category",
+            "predicted_category": "Shirts",
+            "category_confidence": 0.55,
             "ranking_time": 0.01,
             "total_time": 0.02,
             "results": results,
@@ -73,17 +73,16 @@ class WebPackageTests(unittest.TestCase):
                 "/api/recommendations/image",
                 data={
                     "top_k": "5",
-                    "category_mode": "soft_category",
                     "audience": "women",
                 },
                 files={"file": ("query.png", image_buffer.getvalue(), "image/png")},
             )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["category_mode"], "no_category")
+        self.assertEqual(response.json()["category_mode"], "hard_category")
         self.assertEqual(
             recommend_by_image.call_args.kwargs["category_mode"],
-            "soft_category",
+            "hard_category",
         )
         self.assertEqual(
             recommend_by_image.call_args.kwargs["audience"],

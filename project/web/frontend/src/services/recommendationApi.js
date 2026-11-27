@@ -2,7 +2,6 @@ import { trackedFetch } from './networkActivity'
 import { getInterfaceLanguage, translateMessage } from '../i18n'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
-const AUTOMATIC_CATEGORY_MODE = 'soft_category'
 
 function getErrorMessage(error) {
   const language = getInterfaceLanguage()
@@ -52,7 +51,7 @@ export async function searchByImage({ file, topK, audience }) {
   const payload = new FormData()
   payload.append('file', file)
   payload.append('top_k', String(topK))
-  payload.append('category_mode', AUTOMATIC_CATEGORY_MODE)
+  payload.append('category_mode', 'hard_category')
   if (audience) payload.append('audience', audience)
 
   try {
