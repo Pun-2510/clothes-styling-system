@@ -1,0 +1,4 @@
+mode,queries,runs,top_k,mean_ms,median_ms,p95_ms,server_median_ms,mean_request_kib,mean_response_kib
+text_only,10,100,10,101.17,92.47,140.31,59.79,0.08,5.05
+image_only,10,100,10,127.98,127.94,144.94,91.48,11.4,3.98
+combined,10,100,10,292.13,293.8,314.59,250.83,11.51,6.15

@@ -53,3 +53,16 @@ Nguồn hiện tại: `aggregate_system_pipeline_hard_v1/`,
 `aggregate_siglip_raw_v1/` dưới `experiments/model_comparison/results/`.
 Các cache, embeddings và checkpoint lớn chỉ lưu tại máy chạy. Hồ sơ trong
 `run_details/` là bản ghi có cấu trúc, không phải log terminal tự tạo lại.
+
+## API latency (website 10,000 products)
+
+[`api_latency_100/performance_summary.csv`](api_latency_100/performance_summary.csv)
+contains client-side HTTP latency for text-only, image-only, and combined
+queries through the public reverse proxy. The benchmark uses 10 product
+cases, 2 warmup rounds, and 10 measured rounds: 100 requests per mode.
+`request_latency.csv` stores each measurement; `benchmark_cases.csv` and
+`benchmark_protocol.json` record the cases and run settings. These are
+runtime measurements on the 10,000-product website catalog, separate from
+the three-seed, 5,000-product retrieval-quality comparisons above. The
+80-request `api_latency_10k_v1` run was a preliminary measurement and is
+not included in this final evidence set.

@@ -1,0 +1,17 @@
+{
+  "base_url": "http://localhost",
+  "catalog_csv": "D:\\dacntt\\project\\data\\processed\\products.csv",
+  "image_dir": "D:\\dacntt\\project\\data\\data",
+  "sample_size": 10,
+  "seed": 42,
+  "top_k": 10,
+  "warmup_rounds": 2,
+  "measured_rounds": 10,
+  "pause_seconds": 0.3,
+  "sequential_requests": true,
+  "mode_order": "shuffled per round",
+  "language": "en",
+  "audience_filter": null,
+  "measurement": "warm client end-to-end HTTP time through public reverse proxy",
+  "server_elapsed_note": "backend-reported time; may exclude API serialization and translation"
+}
